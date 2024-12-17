@@ -1,0 +1,2 @@
+subdirs(QtAdvancedDocking)
+subdirs(SARibbonBar)

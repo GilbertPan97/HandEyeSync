@@ -1,0 +1,73 @@
+QMainWindow {
+    background-color: #181818;
+}
+
+QMainWindow::title {
+    background-color: #353535;
+    color: white;
+    font-weight: bold;
+    padding-left: 10px;
+}
+
+QTextEdit {
+    background-color: #1E1E1E;
+    color: rgb(0, 0, 0);
+    border: 1px solid #444444;
+}
+
+QToolBar {
+    background-color: #353535;
+    border: 1px solid #444444;
+}
+
+QToolBar QToolButton {
+    color: rgb(255, 255, 255);
+    /* font-weight: bold; */
+}
+
+QToolButton:hover {
+    background-color: #444444;
+}
+
+QMenuBar {
+    background-color: #222831;
+    color: rgb(255, 255, 255);
+    spacing: 10px;  /* Add space between menus */
+}
+
+QMenuBar::item {
+    padding: 10px;  /* Add padding inside each menu item */
+    margin: 0 5px;  /* Optional: add space between menu items */
+}
+
+QMenuBar::item:selected {
+    background-color: #555555;
+}
+
+QMenu {
+    background-color: #3C3F41;
+    border: 1px solid #444444;
+    padding: 5px 0;  /* Space around the menu items */
+    border-radius: 5px;  /* Optional: rounded corners for the menu */
+}
+
+QMenu::item {
+    padding: 10px 20px;  /* Increase padding for menu items */
+    margin: 5px 0;  /* Optional: add space between menu items */
+    border-radius: 5px;  /* Round corners for each item */
+}
+
+QMenu::item:selected {
+    background-color: #555555;
+}
+
+QMenu::item:hover {
+    background-color: #444444;  /* Hover background color */
+    border-radius: 5px;  /* Rounded corners on hover */
+    border: 1px solid #888888;  /* Border color on hover */
+}
+
+QStatusBar {
+    background-color: #3C3F41;
+    color: white;
+}

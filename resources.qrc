@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>styles/style.qss</file>
+        <file>icons/add-document.png</file>
+        <file>icons/tools.png</file>
+        <file>icons/globe.png</file>
+    </qresource>
+</RCC>
