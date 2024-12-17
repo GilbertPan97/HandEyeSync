@@ -29,7 +29,7 @@ add_executable(${PROJECT_NAME} ${SRC_FILES} ${QRC_FILE})
 
 # Link the required Qt5 libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets)
-target_link_libraries(${PROJECT_NAME} PRIVATE QtAdvancedDocking SARibbonBar)
+target_link_libraries(${PROJECT_NAME} PRIVATE QtAdvancedDocking)
 
 # Enable automatic MOC, UIC, and RCC processing for Qt5
 set_target_properties(${PROJECT_NAME} PROPERTIES

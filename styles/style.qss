@@ -18,15 +18,36 @@ QTextEdit {
 QToolBar {
     background-color: #353535;
     border: 1px solid #444444;
+    padding-top: 10px;
+    padding-bottom: 10px;      
 }
 
 QToolBar QToolButton {
-    color: rgb(255, 255, 255);
-    /* font-weight: bold; */
+    color: rgb(255, 255, 255);      /* 设置图标和文本的颜色 */
+    icon-size: 32px;                 /* 设置图标的大小 */
+    padding: 5px;                    /* 设置按钮的内边距 */
+    text-align: center;              /* 设置文本居中 */
+    vertical-align: middle;          /* 设置文本垂直居中 */
+    spacing: 2px;                    /* 设置图标和文本之间的间距 */
+}
+
+QToolButton {
+    text-align: center;              /* 设置文本居中 */
+    padding-left: 5px;               /* 设置左边距 */
+    padding-right: 5px;              /* 设置右边距 */
+    padding-top: 5px;               /* 设置按钮顶部的内边距，增加上边距 */
+    padding-bottom: 5px;             /* 设置按钮底部的内边距 */
+}
+
+QToolButton::text {
+    color: rgb(255, 255, 255);       /* 设置按钮文本的颜色 */
+    font-size: 10px;                 /* 设置文本的字体大小 */
+    font-weight: bold;               /* 设置文本的字体加粗 */
+    line-height: 1;                /* 设置文本的行距 */
 }
 
 QToolButton:hover {
-    background-color: #444444;
+    background-color: #444444;       /* 鼠标悬停时的背景颜色 */
 }
 
 QMenuBar {

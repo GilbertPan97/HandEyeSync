@@ -137,9 +137,11 @@ install(TARGETS ${LIB_NAME}
 install(FILES ${SARIBBON_HEADER_FILES} DESTINATION include/SARibbon)
 
 if(WIN32)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/WinResource.cmake)
 	create_win32_resource_version(
 		TARGET ${LIB_NAME}
 		FILENAME ${LIB_NAME}
+        VERSION "1"
 		EXT "dll"
 		DESCRIPTION "Ribbon control library for Qt"
 	)
