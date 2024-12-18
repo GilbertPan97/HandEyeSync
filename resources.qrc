@@ -2,11 +2,12 @@
     <qresource prefix="/">
         <file>styles/style.qss</file>
 
-        <file>icons/add-document.png</file>
-        <file>icons/folder.png</file>
+        <file>icons/new-file.png</file>
         <file>icons/open.png</file>
         <file>icons/save-file.png</file>
 
+        <file>icons/globe.png</file>
+        <file>icons/download.png</file>
         <file>icons/add-images.png</file>
         <file>icons/add-robot.png</file>
 

@@ -14,6 +14,7 @@
 #include <QSettings>
 #include <QRadioButton>
 #include <QButtonGroup>
+#include <QComboBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -33,15 +34,17 @@ MainWindow::MainWindow(QWidget *parent)
     dockManager_ = new ads::CDockManager(this);
     ads::CDockWidget* viewerWin = new ads::CDockWidget("Viewer", this);
     ads::CDockWidget* logWin = new ads::CDockWidget("Logger", this);
-    ads::CDockWidget* browserWin = new ads::CDockWidget("Data Brower", this);
+    ads::CDockWidget* browserWin = new ads::CDockWidget("Data Browser", this);
+    ads::CDockWidget* propertyWin = new ads::CDockWidget("Property Browser", this);
 
-    dockManager_->addDockWidget(ads::TopDockWidgetArea, logWin);
-    auto topDockWidgetArea = dockManager_->addDockWidget(ads::TopDockWidgetArea, viewerWin);
+    dockManager_->addDockWidget(ads::TopDockWidgetArea, viewerWin);
+    auto rightDockWidgetArea = dockManager_->addDockWidget(ads::RightDockWidgetArea, propertyWin);
+    auto bottomDockWidgetArea = dockManager_->addDockWidget(ads::BottomDockWidgetArea, logWin);
     auto leftDockWidgetArea = dockManager_->addDockWidget(ads::LeftDockWidgetArea, browserWin);
 
     int width = this->width();
     int height = this->height();
-    dockManager_->setSplitterSizes(topDockWidgetArea, {static_cast<int>(height * 0.7), static_cast<int>(height * 0.3)});
+    dockManager_->setSplitterSizes(bottomDockWidgetArea, {static_cast<int>(height * 0.7), static_cast<int>(height * 0.3)});
     dockManager_->setSplitterSizes(leftDockWidgetArea, {static_cast<int>(width * 0.15), static_cast<int>(width * 0.85)});
     centralLayout->addWidget(dockManager_);
 
@@ -117,7 +120,7 @@ void MainWindow::createToolBar()
 
     /* ========================= Section Page ========================= */
     QToolButton *newButton = new QToolButton();
-    newButton->setIcon(QIcon(":/icons/folder.png"));
+    newButton->setIcon(QIcon(":/icons/new-file.png"));
     newButton->setText("New Section");
     newButton->setToolTip("Create a new section");
 
@@ -136,6 +139,25 @@ void MainWindow::createToolBar()
     topToolBar_->addSeparator();
 
     /* ========================= Dataset Page ========================= */
+    QVBoxLayout *onlineCollectLayout = new QVBoxLayout(this);
+    onlineCollectLayout->setSpacing(10);
+    QPushButton *onlineCollectBtn = new QPushButton("Online Collect", this);
+    onlineCollectBtn->setIcon(QIcon(":/icons/globe.png"));
+    
+    QHBoxLayout *collectLayout = new QHBoxLayout(this);
+    QLabel *indexLabel = new QLabel("Index", this);
+    QComboBox *comboBox = new QComboBox(this);
+    comboBox->addItem("0");
+    QPushButton *downloadButton = new QPushButton(this);
+    downloadButton->setIcon(QIcon(":/icons/download.png"));
+    downloadButton->setToolTip("Collect");
+    collectLayout->addWidget(indexLabel, 0, Qt::AlignVCenter);
+    collectLayout->addWidget(comboBox, 0, Qt::AlignVCenter);
+    collectLayout->addWidget(downloadButton, 0, Qt::AlignVCenter);
+
+    onlineCollectLayout->addWidget(onlineCollectBtn);
+    onlineCollectLayout->addLayout(collectLayout);
+
     QMenu *addImgMenu = new QMenu(this);
     QAction *addImage1Action = addImgMenu->addAction("Local Images");
     QAction *addImage2Action = addImgMenu->addAction("Receive From Camera");
@@ -144,6 +166,8 @@ void MainWindow::createToolBar()
     addImgButton->setIcon(QIcon(":/icons/add-images.png"));
     addImgButton->setText("Add Images");
     addImgButton->setMenu(addImgMenu);
+    addImgButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    addImgButton->setPopupMode(QToolButton::MenuButtonPopup);
 
     QMenu *addRobMenu = new QMenu(this);
     QAction *addRob1Action = addRobMenu->addAction("Local Robot Data");
@@ -153,10 +177,17 @@ void MainWindow::createToolBar()
     addRobButton->setIcon(QIcon(":/icons/add-robot.png"));
     addRobButton->setText("Add Robot Data");
     addRobButton->setMenu(addRobMenu);
+    addRobButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    addRobButton->setPopupMode(QToolButton::MenuButtonPopup);
+
+    QHBoxLayout *datasetLayout = new QHBoxLayout(this);
+    datasetLayout->addLayout(onlineCollectLayout);
+    datasetLayout->addWidget(addImgButton);
+    datasetLayout->addWidget(addRobButton);
 
     // Group the buttons using setToolBarGroup
     QList<QToolButton*> data_btnList = { addImgButton, addRobButton };
-    setToolBarGroup(data_btnList, "DATASET");
+    setToolBarGroup(datasetLayout, "DATASET");
 
     topToolBar_->addSeparator();
 
