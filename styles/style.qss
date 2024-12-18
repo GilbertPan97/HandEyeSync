@@ -35,8 +35,8 @@ QToolButton {
     text-align: center;              /* 设置文本居中 */
     padding-left: 5px;               /* 设置左边距 */
     padding-right: 5px;              /* 设置右边距 */
-    padding-top: 5px;               /* 设置按钮顶部的内边距，增加上边距 */
-    padding-bottom: 5px;             /* 设置按钮底部的内边距 */
+    padding-top: 0px;               /* 设置按钮顶部的内边距，增加上边距 */
+    padding-bottom: 0px;             /* 设置按钮底部的内边距 */
 }
 
 QToolButton::text {
@@ -48,6 +48,14 @@ QToolButton::text {
 
 QToolButton:hover {
     background-color: #444444;       /* 鼠标悬停时的背景颜色 */
+}
+
+QRadioButton {
+    font-size: 10px;  /* Set the font size */
+}
+
+QLabel {
+    font-size: 12px;  /* Set the font size */
 }
 
 QMenuBar {

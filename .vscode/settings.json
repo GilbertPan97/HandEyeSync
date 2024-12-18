@@ -2,6 +2,8 @@
     "files.associations": {
         "qvboxlayout": "cpp",
         "qmainwindow": "cpp",
-        "qtextedit": "cpp"
+        "qtextedit": "cpp",
+        "qpushbutton": "cpp",
+        "qtoolbutton": "cpp"
     }
 }

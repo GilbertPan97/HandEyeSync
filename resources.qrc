@@ -9,5 +9,13 @@
 
         <file>icons/add-images.png</file>
         <file>icons/add-robot.png</file>
+
+        <file>icons/play.png</file>
+        <file>icons/pause.png</file>
+
+        <file>icons/setting.png</file>
+
+        <file>icons/check.png</file>
+        <file>icons/export.png</file>
     </qresource>
 </RCC>

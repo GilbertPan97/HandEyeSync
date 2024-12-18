@@ -12,6 +12,8 @@
 #include <QMenuBar>
 #include <QActionGroup>
 #include <QSettings>
+#include <QRadioButton>
+#include <QButtonGroup>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -56,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     createToolBar();
 
     // Set the window title
-    setWindowTitle("Qt Toolbar Layout Example");
+    setWindowTitle("HandEyeSync");
 
     // Adjust the DockOptions to avoid any unwanted gap
     setDockOptions(QMainWindow::AllowNestedDocks | QMainWindow::AnimatedDocks);
@@ -108,48 +110,210 @@ void MainWindow::createMenuBar()
 void MainWindow::createToolBar()
 {
     // Create the top toolbar (horizontal)
-    topToolBar = addToolBar("Top Toolbar");  // Add a horizontal toolbar
+    topToolBar_ = addToolBar("Top Toolbar");  // Add a horizontal toolbar
 
     // Ensure text is shown under the icon
-    topToolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    topToolBar_->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
-    // Create actions and set icons
-    QAction *newAction = topToolBar->addAction("New");
-    newAction->setIcon(QIcon(":/icons/folder.png"));
-    newAction->setText("New\nSection");
-    newAction->setToolTip("Create a new section");
+    /* ========================= Section Page ========================= */
+    QToolButton *newButton = new QToolButton();
+    newButton->setIcon(QIcon(":/icons/folder.png"));
+    newButton->setText("New Section");
+    newButton->setToolTip("Create a new section");
 
-    QAction *openAction = topToolBar->addAction("Open");
-    openAction->setIcon(QIcon(":/icons/open.png"));
-    openAction->setText("Open\nSection");
+    QToolButton *openButton = new QToolButton();
+    openButton->setIcon(QIcon(":/icons/open.png"));
+    openButton->setText("Open Section");
 
-    QAction *saveAction = topToolBar->addAction("Save");
-    saveAction->setIcon(QIcon(":/icons/save-file.png"));
-    saveAction->setText("Save\nSection");
+    QToolButton *saveButton = new QToolButton();
+    saveButton->setIcon(QIcon(":/icons/save-file.png"));
+    saveButton->setText("Save Section");
 
-    // Add actions to the toolbar
-    topToolBar->addAction(newAction);
-    topToolBar->addAction(openAction);
-    topToolBar->addAction(saveAction);
+    // Group the buttons using setToolBarGroup
+    QList<QToolButton*> sec_btnList = { newButton, openButton, saveButton };
+    setToolBarGroup(sec_btnList, "CALIBRATION SECTION");
     
-    topToolBar->addSeparator();
+    topToolBar_->addSeparator();
 
-    // Add calibration data
+    /* ========================= Dataset Page ========================= */
     QMenu *addImgMenu = new QMenu(this);
-    QAction *addImage1Action = addImgMenu->addAction("Add Image 1");
-    QAction *addImage2Action = addImgMenu->addAction("Add Image 2");
+    QAction *addImage1Action = addImgMenu->addAction("Local Images");
+    QAction *addImage2Action = addImgMenu->addAction("Receive From Camera");
 
-    QAction *addImgAction = topToolBar->addAction("AddImgs");
-    addImgAction->setIcon(QIcon(":/icons/add-images.png"));
-    addImgAction->setText("Add\nImages");
-    addImgAction->setMenu(addImgMenu);
+    QToolButton *addImgButton = new QToolButton();
+    addImgButton->setIcon(QIcon(":/icons/add-images.png"));
+    addImgButton->setText("Add Images");
+    addImgButton->setMenu(addImgMenu);
 
-    QAction *addRobAction = topToolBar->addAction("AddRobData");
-    addRobAction->setIcon(QIcon(":/icons/add-robot.png"));
-    addRobAction->setText("Add\nRobot Data");
+    QMenu *addRobMenu = new QMenu(this);
+    QAction *addRob1Action = addRobMenu->addAction("Local Robot Data");
+    QAction *addRob2Action = addRobMenu->addAction("Receive From Robot");
 
-    topToolBar->addSeparator();
+    QToolButton *addRobButton = new QToolButton();
+    addRobButton->setIcon(QIcon(":/icons/add-robot.png"));
+    addRobButton->setText("Add Robot Data");
+    addRobButton->setMenu(addRobMenu);
+
+    // Group the buttons using setToolBarGroup
+    QList<QToolButton*> data_btnList = { addImgButton, addRobButton };
+    setToolBarGroup(data_btnList, "DATASET");
+
+    topToolBar_->addSeparator();
+
+    /* ========================= Calibrate Page ========================= */
+    QVBoxLayout* calibModelLayout = new QVBoxLayout(this);
+    calibModelLayout->setSpacing(10);
+    QLabel *calibModelLabel = new QLabel("Calibration Model:");
+    calibModelLayout->addWidget(calibModelLabel);
+    QRadioButton *eyeInHandRadioButton = new QRadioButton("Eye-In-Hand");
+    QRadioButton *eyeToHandRadioButton = new QRadioButton("Eye-To-Hand");
+
+    // Create a button group to ensure only one can be selected at a time
+    QButtonGroup *modelGroup = new QButtonGroup(this);
+    modelGroup->addButton(eyeInHandRadioButton);
+    modelGroup->addButton(eyeToHandRadioButton);
+
+    // Add the radio buttons to the layout
+    calibModelLayout->addWidget(eyeInHandRadioButton);
+    calibModelLayout->addWidget(eyeToHandRadioButton);
+    eyeInHandRadioButton->setChecked(true);         // Set a default selection
+
+    // Calibrate setting and run button
+    QMenu *calSettingMenu = new QMenu(this);
+    QAction *calSet1Action = calSettingMenu->addAction("Method");
+    QAction *calSet2Action = calSettingMenu->addAction("Algorithm");
+
+    QToolButton *settingButton = new QToolButton(this);
+    settingButton->setText("Options");
+    settingButton->setIcon(QIcon(":/icons/setting.png"));
+    settingButton->setToolTip("Calibration setting");
+    settingButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+
+    QToolButton *runButton = new QToolButton(this);
+    runButton->setText("Run");
+    runButton->setIcon(QIcon(":/icons/play.png"));
+    runButton->setToolTip("Calibration exec");
+    runButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+
+    // Add the QToolButton to a button group (if you have a function like setGroupBtn for grouping buttons)
+    QHBoxLayout* ctlWidgetLayout = new QHBoxLayout(this);
+    ctlWidgetLayout->addLayout(calibModelLayout);
+    ctlWidgetLayout->addWidget(settingButton);
+    ctlWidgetLayout->addWidget(runButton);
+    setToolBarGroup(ctlWidgetLayout, "CALIBRATE");
+
+    topToolBar_->addSeparator();
+
+    /* ========================= Result Page ========================= */
+    QToolButton *checkBtn = new QToolButton();
+    checkBtn->setIcon(QIcon(":/icons/check.png"));
+    checkBtn->setText("Check");
+    checkBtn->setToolTip("Check calibration resuslt");
+
+    QToolButton *exportBtn = new QToolButton();
+    exportBtn->setIcon(QIcon(":/icons/export.png"));
+    exportBtn->setText("Export");
+    exportBtn->setToolTip("Export calibration resuslt");
+
+    // Group the buttons to page
+    QList<QToolButton*> result_btnList = { checkBtn, exportBtn };
+    setToolBarGroup(result_btnList, "SOLVE RESULT");
+    topToolBar_->addSeparator();
+
 }
+
+void MainWindow::setToolBarGroup(QList<QToolButton*> buttonList, QString groupTitle)
+{
+    // Create a new QWidget container
+    QWidget *widget = new QWidget();
+
+    // Create a vertical layout to hold all the elements
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+
+    // Set the spacing for the main vertical layout
+    mainLayout->setSpacing(0);  // Remove spacing between widgets
+    mainLayout->setContentsMargins(10, 5, 10, 5);  // Set left and right margins (10px), top and bottom 5px
+
+    // Create a horizontal layout to place the QToolButtons
+    QHBoxLayout *hLayout = new QHBoxLayout();
+
+    // Set the spacing for the horizontal layout
+    hLayout->setSpacing(0);  // Remove spacing between buttons
+    hLayout->setContentsMargins(0, 5, 0, 5);  // No margins around the buttons
+
+    // Iterate through the button list and add each QToolButton to the horizontal layout
+    for (QToolButton *button : buttonList) {
+        // Set the tool button style to display text under the icon
+        button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+
+        // Add the button to the horizontal layout
+        hLayout->addWidget(button);
+    }
+
+    // Add the horizontal layout to the vertical layout
+    mainLayout->addLayout(hLayout);
+
+    // Create a label for the group title with bold font
+    QLabel *label = new QLabel(groupTitle);
+    QFont boldFont = label->font();  // Get the current font
+    boldFont.setPointSize(12);
+    boldFont.setBold(true);  // Make the font bold
+    label->setFont(boldFont);  // Apply the bold font to the label
+
+    // Remove internal margins of the label
+    label->setMargin(0);  // Remove internal margin of the label
+    label->setAlignment(Qt::AlignCenter);   // Horizontally center the text
+
+    // Add the label to the vertical layout
+    mainLayout->addWidget(label);
+
+    // Set the main layout to the QWidget
+    widget->setLayout(mainLayout);
+
+    // Add the widget to the toolbar or window
+    topToolBar_->addWidget(widget);
+}
+
+void MainWindow::setToolBarGroup(QHBoxLayout* ctlWidgetLayout, QString groupTitle)
+{
+    // Create a new QWidget container
+    QWidget *widget = new QWidget();
+
+    // Create a vertical layout to hold all the elements
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+
+    // Set the spacing for the main vertical layout
+    mainLayout->setSpacing(0);  // Remove spacing between widgets
+    mainLayout->setContentsMargins(10, 5, 10, 5);  // Set left and right margins (10px), top and bottom 5px
+
+    // Set the spacing for the horizontal layout
+    ctlWidgetLayout->setSpacing(0);  // Remove spacing between buttons
+    ctlWidgetLayout->setContentsMargins(0, 5, 0, 5);  // No margins around the buttons
+
+    // Add the horizontal layout to the vertical layout
+    mainLayout->addLayout(ctlWidgetLayout);
+
+    // Create a label for the group title with bold font
+    QLabel *label = new QLabel(groupTitle);
+    QFont boldFont = label->font();  // Get the current font
+    boldFont.setPointSize(12);
+    boldFont.setBold(true);  // Make the font bold
+    label->setFont(boldFont);  // Apply the bold font to the label
+
+    // Remove internal margins of the label
+    label->setMargin(0);  // Remove internal margin of the label
+    label->setAlignment(Qt::AlignCenter);   // Horizontally center the text
+
+    // Add the label to the vertical layout
+    mainLayout->addWidget(label);
+
+    // Set the main layout to the QWidget
+    widget->setLayout(mainLayout);
+
+    // Add the widget to the toolbar or window
+    topToolBar_->addWidget(widget);
+}
+
 
 // Placeholder slots for menu actions
 void MainWindow::newFile()

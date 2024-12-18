@@ -1,6 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "DockManager.h"
+#include "DockWidget.h"
+#include "DockAreaWidget.h"
+
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QToolBar>
@@ -10,10 +14,9 @@
 #include <QFile>
 #include <QTextStream>
 #include <QWidget>
-
-#include "DockManager.h"
-#include "DockWidget.h"
-#include "DockAreaWidget.h"
+#include <QToolButton>
+#include <QList>
+#include <QHBoxLayout>
 
 class MainWindow : public QMainWindow
 {
@@ -26,7 +29,8 @@ public:
 private:
     void createMenuBar();
     void createToolBar();
-    void resizeDockWidgets(const QList<ads::CDockWidget*>& dockWidgets);
+    void setToolBarGroup(QList<QToolButton*> buttonList, QString groupTitle);
+    void setToolBarGroup(QHBoxLayout* ctlWidgetLayout, QString groupTitle);
     
     void loadSettings();
     void saveSettings();
@@ -39,7 +43,7 @@ private slots:
 
 private:
     QTextEdit *textEdit;          // Central widget (text editor)
-    QToolBar *topToolBar;         // Top toolbar
+    QToolBar *topToolBar_;         // Top toolbar
 
     ads::CDockManager* dockManager_;
     QList<ads::CDockWidget*> dockWidgets_;
