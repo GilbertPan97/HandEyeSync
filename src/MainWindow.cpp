@@ -269,7 +269,7 @@ void MainWindow::setToolBarGroup(QList<QToolButton*> buttonList, QString groupTi
     QHBoxLayout *hLayout = new QHBoxLayout();
 
     // Set the spacing for the horizontal layout
-    hLayout->setSpacing(0);  // Remove spacing between buttons
+    hLayout->setSpacing(3);  // Remove spacing between buttons
     hLayout->setContentsMargins(0, 5, 0, 5);  // No margins around the buttons
 
     // Iterate through the button list and add each QToolButton to the horizontal layout
@@ -318,7 +318,7 @@ void MainWindow::setToolBarGroup(QHBoxLayout* ctlWidgetLayout, QString groupTitl
     mainLayout->setContentsMargins(10, 5, 10, 5);  // Set left and right margins (10px), top and bottom 5px
 
     // Set the spacing for the horizontal layout
-    ctlWidgetLayout->setSpacing(0);  // Remove spacing between buttons
+    ctlWidgetLayout->setSpacing(3);  // Remove spacing between buttons
     ctlWidgetLayout->setContentsMargins(0, 5, 0, 5);  // No margins around the buttons
 
     // Add the horizontal layout to the vertical layout
