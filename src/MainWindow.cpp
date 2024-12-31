@@ -32,7 +32,8 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *centralLayout = new QVBoxLayout(centralWidget);
 
     dockManager_ = new ads::CDockManager(this);
-    ads::CDockWidget* viewerWin = new ads::CDockWidget("Viewer", this);
+    DockWidgetViewer* viewerWin = new DockWidgetViewer(this);
+    // ads::CDockWidget* viewerWin = new ads::CDockWidget("Viewer", this);
     ads::CDockWidget* logWin = new ads::CDockWidget("Logger", this);
     ads::CDockWidget* browserWin = new ads::CDockWidget("Data Browser", this);
     ads::CDockWidget* propertyWin = new ads::CDockWidget("Property Browser", this);

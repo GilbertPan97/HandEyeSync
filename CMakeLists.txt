@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 # Set project name
 project(HandEyeSync)
@@ -13,8 +13,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # Find Qt5 libraries (automatically selects the correct version)
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 
+# Build and 3rd-party and examples
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/3rd-party)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/examples)
+
+# Build source code
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/dockWidget)
 
 # Add source files
 set(SRC_FILES
@@ -29,7 +33,7 @@ add_executable(${PROJECT_NAME} ${SRC_FILES} ${QRC_FILE})
 
 # Link the required Qt5 libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets)
-target_link_libraries(${PROJECT_NAME} PRIVATE QtAdvancedDocking)
+target_link_libraries(${PROJECT_NAME} PRIVATE DockWidgetLibs)
 
 # Enable automatic MOC, UIC, and RCC processing for Qt5
 set_target_properties(${PROJECT_NAME} PROPERTIES

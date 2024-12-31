@@ -4,6 +4,7 @@
 #include "DockManager.h"
 #include "DockWidget.h"
 #include "DockAreaWidget.h"
+#include "DockWidgetViewer.h"
 
 #include <QMainWindow>
 #include <QTextEdit>
