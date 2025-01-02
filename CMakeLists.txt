@@ -41,3 +41,21 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     AUTORCC ON          # Enable automatic RCC (Resource Compiler)
     AUTOUIC ON
 )
+
+if(WIN32)
+    # add window platform resource config macro definition
+    include(cmake/WinResource.cmake)
+    # Set the path to the ICO file for the application icon
+    set(ICON_FILE ${CMAKE_CURRENT_SOURCE_DIR}/icons/app-logo.ico)  
+
+    # Create Windows version resource
+    create_win32_resource_version(
+        TARGET ${PROJECT_NAME}
+        FILENAME ${PROJECT_NAME}
+        ICON ${ICON_FILE}
+        VERSION "1.0.0"           # Application version
+        DESCRIPTION "HandEyeSync is a hand-eye calibration software."
+        COMPANY_NAME "Shanghai Fanuc Robotics Co., Ltd." # Company name
+        COPYRIGHT "Copyright (c) 2024, Shanghai Fanuc Robotics Co. All rights reserved."
+    )
+endif()

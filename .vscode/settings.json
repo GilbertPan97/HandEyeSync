@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "qtextstream": "cpp",
+        "qwidget": "cpp",
+        "qtextedit": "cpp",
+        "qtimer": "cpp",
+        "future": "cpp",
+        "system_error": "cpp"
+    }
+}

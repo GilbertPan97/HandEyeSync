@@ -32,11 +32,10 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *centralLayout = new QVBoxLayout(centralWidget);
 
     dockManager_ = new ads::CDockManager(this);
-    DockWidgetViewer* viewerWin = new DockWidgetViewer(this);
-    // ads::CDockWidget* viewerWin = new ads::CDockWidget("Viewer", this);
-    ads::CDockWidget* logWin = new ads::CDockWidget("Logger", this);
-    ads::CDockWidget* browserWin = new ads::CDockWidget("Data Browser", this);
-    ads::CDockWidget* propertyWin = new ads::CDockWidget("Property Browser", this);
+    DockWidgetViewer* viewerWin = new DockWidgetViewer("Viewer", this);
+    DockWidgetLogger* logWin = new DockWidgetLogger("Logger", this);
+    DockWidgetBrowser* browserWin = new DockWidgetBrowser("Data Browser", this);
+    DockWidgetProperty* propertyWin = new DockWidgetProperty("Property Browser", this);
 
     dockManager_->addDockWidget(ads::TopDockWidgetArea, viewerWin);
     auto rightDockWidgetArea = dockManager_->addDockWidget(ads::RightDockWidgetArea, propertyWin);
@@ -45,8 +44,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     int width = this->width();
     int height = this->height();
-    dockManager_->setSplitterSizes(bottomDockWidgetArea, {static_cast<int>(height * 0.7), static_cast<int>(height * 0.3)});
+    dockManager_->setSplitterSizes(bottomDockWidgetArea, {static_cast<int>(height * 0.75), static_cast<int>(height * 0.25)});
     dockManager_->setSplitterSizes(leftDockWidgetArea, {static_cast<int>(width * 0.15), static_cast<int>(width * 0.85)});
+    dockManager_->setSplitterSizes(rightDockWidgetArea, {static_cast<int>(width * 0.85 * 0.7), static_cast<int>(width * 0.85 * 0.3)});
     centralLayout->addWidget(dockManager_);
 
     dockWidgets_ << viewerWin << logWin << browserWin;

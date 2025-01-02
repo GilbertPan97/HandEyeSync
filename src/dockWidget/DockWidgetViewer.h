@@ -1,25 +1,33 @@
-#ifndef DOCKWIDGETVIEWER_H
-#define DOCKWIDGETVIEWER_H
+#ifndef DOCK_WIDGET_VIEWER_H
+#define DOCK_WIDGET_VIEWER_H
 
-#include "DockManager.h"
 #include "DockWidget.h"
-#include "DockAreaWidget.h"
+#include "qcustomplot.h"
 
-#include <QWidget>
+#include <QString>
 
-// DockWidgetViewer is a subclass of ads::CDockWidget
+/**
+ * @class DockWidgetViewer
+ * @brief A customized dock widget inheriting from CDockWidget.
+ */
 class DockWidgetViewer : public ads::CDockWidget {
-    Q_OBJECT
+private:
+    QCustomPlot *customPlot_;
 
 public:
-    // Constructor that initializes the dock widget with a parent widget
-    explicit DockWidgetViewer(QWidget *parent = nullptr);
+    /**
+     * @brief Constructor for DockWidgetViewer.
+     * @param title The title of the dock widget.
+     * @param parent The parent widget (optional).
+     */
+    explicit DockWidgetViewer(const QString& title, QWidget* parent = nullptr);
 
-    // Destructor
-    ~DockWidgetViewer();
+    /**
+     * @brief A custom function for additional functionality.
+     */
+    void customFunction();
 
-private:
-    // You can add additional member variables or functions here
+    // Add more methods as needed for your specific use case
 };
 
-#endif // DOCKWIDGETVIEWER_H
+#endif // DOCK_WIDGET_VIEWER_H
