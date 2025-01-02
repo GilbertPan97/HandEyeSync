@@ -2,6 +2,10 @@ QMainWindow {
     background-color: #181818;
 }
 
+QDialog {
+    background-color: #353535;
+}
+
 QMainWindow::title {
     background-color: #353535;
     color: white;
@@ -11,7 +15,8 @@ QMainWindow::title {
 
 QTextEdit {
     background-color: #1E1E1E;
-    color: rgb(0, 0, 0);
+    color: rgb(200, 200, 200);
+    font-size: 14px;
     border: 1px solid #444444;
 }
 
@@ -99,6 +104,10 @@ QPushButton:pressed {
 QLabel {
     font-size: 12px;  /* Set the font size */
     color: rgb(200, 200, 200); 
+}
+
+QListWidget {
+    background-color: #353535;
 }
 
 /* ===================== MenuBar and Menu Style ===================== */

@@ -162,6 +162,8 @@ void MainWindow::createToolBar()
     QMenu *addImgMenu = new QMenu(this);
     QAction *addImage1Action = addImgMenu->addAction("Local Images");
     QAction *addImage2Action = addImgMenu->addAction("Receive From Camera");
+    connect(addImage1Action, &QAction::triggered, this, &MainWindow::onAddImg1ActionTriggered);
+    connect(addImage1Action, &QAction::triggered, this, &MainWindow::onAddImg2ActionTriggered);
 
     QToolButton *addImgButton = new QToolButton();
     addImgButton->setIcon(QIcon(":/icons/add-images.png"));
@@ -173,6 +175,9 @@ void MainWindow::createToolBar()
     QMenu *addRobMenu = new QMenu(this);
     QAction *addRob1Action = addRobMenu->addAction("Local Robot Data");
     QAction *addRob2Action = addRobMenu->addAction("Receive From Robot");
+    // Connect the QAction signals to the slot functions
+    connect(addRob1Action, &QAction::triggered, this, &MainWindow::onAddRob1ActionTriggered);
+    connect(addRob2Action, &QAction::triggered, this, &MainWindow::onAddRob2ActionTriggered);
 
     QToolButton *addRobButton = new QToolButton();
     addRobButton->setIcon(QIcon(":/icons/add-robot.png"));
@@ -344,6 +349,123 @@ void MainWindow::setToolBarGroup(QHBoxLayout* ctlWidgetLayout, QString groupTitl
 
     // Add the widget to the toolbar or window
     topToolBar_->addWidget(widget);
+}
+
+void MainWindow::onAddImg1ActionTriggered() {
+    // Create dialog
+    QDialog dialog(this);
+    dialog.setWindowTitle("Select Sensor Data");
+
+    // Create widgets
+    QLabel *sensorLabel = new QLabel("Sensor Type:", &dialog);
+    QComboBox *sensorComboBox = new QComboBox(&dialog);
+    sensorComboBox->addItems({"Image Camera", "Profile Scanner"});
+
+    QLabel *formatLabel = new QLabel("Data Format:", &dialog);
+    QComboBox *formatComboBox = new QComboBox(&dialog);
+
+    QLabel *pathLabel = new QLabel("Data Path:", &dialog);
+    QLineEdit *pathLineEdit = new QLineEdit(&dialog);
+    QPushButton *browseButton = new QPushButton("Browse", &dialog);
+
+    // Function to update formatComboBox based on selected sensor type
+    auto updateFormatComboBox = [&]() {
+        formatComboBox->clear();
+        QString sensorType = sensorComboBox->currentText();
+        if (sensorType == "Image Camera") {
+            formatComboBox->addItems({"JPEG", "PNG", "BMP"});
+        } else if (sensorType == "Profile Scanner") {
+            formatComboBox->addItems({"YML", "TXT", "JSON"});
+        }
+    };
+
+    // Initialize formatComboBox
+    updateFormatComboBox();
+
+    // Connect sensorComboBox to update formatComboBox dynamically
+    connect(sensorComboBox, &QComboBox::currentTextChanged, updateFormatComboBox);
+
+    // Connect browse button to open folder dialog
+    connect(browseButton, &QPushButton::clicked, [&]() {
+        QString folderPath = QFileDialog::getExistingDirectory(&dialog, 
+                                                               "Select Data Folder", 
+                                                               QDir::homePath());
+        if (!folderPath.isEmpty()) {
+            pathLineEdit->setText(folderPath);
+        }
+    });
+
+    // Create OK and Cancel buttons
+    QPushButton *okButton = new QPushButton("OK", &dialog);
+    QPushButton *cancelButton = new QPushButton("Cancel", &dialog);
+
+    // Connect buttons to dialog actions
+    connect(okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+    connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+
+    // Layout setup
+    QVBoxLayout *mainLayout = new QVBoxLayout(&dialog);
+
+    QHBoxLayout *sensorLayout = new QHBoxLayout();
+    sensorLayout->addWidget(sensorLabel);
+    sensorLayout->addWidget(sensorComboBox);
+
+    QHBoxLayout *formatLayout = new QHBoxLayout();
+    formatLayout->addWidget(formatLabel);
+    formatLayout->addWidget(formatComboBox);
+
+    QHBoxLayout *pathLayout = new QHBoxLayout();
+    pathLayout->addWidget(pathLabel);
+    pathLayout->addWidget(pathLineEdit);
+    pathLayout->addWidget(browseButton);
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(okButton);
+    buttonLayout->addWidget(cancelButton);
+
+    mainLayout->addLayout(sensorLayout);
+    mainLayout->addLayout(formatLayout);
+    mainLayout->addLayout(pathLayout);
+    mainLayout->addLayout(buttonLayout);
+
+    // Execute dialog and handle result
+    if (dialog.exec() == QDialog::Accepted) {
+        QString sensorType = sensorComboBox->currentText();
+        QString dataFormat = formatComboBox->currentText();
+        QString folderPath = pathLineEdit->text();
+
+        if (folderPath.isEmpty()) {
+            QMessageBox::warning(this, "Error", "Data path cannot be empty.");
+            return;
+        }
+
+        // Display the selected options
+        QString summary = QString("Sensor Type: %1\nData Format: %2\nData Folder: %3")
+                              .arg(sensorType)
+                              .arg(dataFormat)
+                              .arg(folderPath);
+        QMessageBox::information(this, "Selection Complete", summary);
+    }
+}
+
+void MainWindow::onAddImg2ActionTriggered() {
+    // Handle the logic for "Local Robot Data"
+    QMessageBox::information(this, "Action Triggered", "Loading Local Robot Data...");
+    // Add logic for loading local robot data here
+}
+
+// Slot function definitions
+void MainWindow::onAddRob1ActionTriggered() {
+    // Handle the logic for "Local Robot Data"
+    QMessageBox::information(this, "Action Triggered", "Loading Local Robot Data...");
+    // Add logic for loading local robot data here
+}
+
+void MainWindow::onAddRob2ActionTriggered() {
+    // Handle the logic for "Receive From Robot"
+    QMessageBox::information(this, "Action Triggered", "Receiving Data From Robot...");
+    // Add logic for receiving data from the robot here
 }
 
 

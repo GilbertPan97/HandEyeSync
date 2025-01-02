@@ -26,7 +26,7 @@ ads--CDockContainerWidget ads--CDockSplitter::handle {
  * CDockAreaWidget
  *****************************************************************************/
 ads--CDockAreaWidget {
-    background: palette(window);
+    background: #353535;
 }
 
 ads--CTitleBarButton {
@@ -61,7 +61,7 @@ ads--CTitleBarButton {
  * CDockWidgetTab and close button styling
  *****************************************************************************/
 ads--CDockWidgetTab {
-	background: palette(window);
+	background: #353535;
 	border-color: palette(light);
 	border-style: solid;
 	border-width: 0 0 1px 0;
@@ -108,7 +108,7 @@ ads--CDockWidgetTab[activeTab="true"] QLabel {
  * CDockWidget
  *****************************************************************************/
 ads--CDockWidget {
-	background: palette(light);
+	background: #353535;
 	border-color: palette(light);
 	border-style: solid;
 	border-width: 3px 0 0 0;

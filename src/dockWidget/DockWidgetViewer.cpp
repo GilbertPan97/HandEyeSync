@@ -4,6 +4,14 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     : ads::CDockWidget(title, parent) {
     customPlot_ = new QCustomPlot(this);
 
+    QFile file(":/styles/style_qcp.qss");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        QString styleSheet = in.readAll();
+        customPlot_->setStyleSheet(styleSheet);
+        file.close();
+    }
+
     customPlot_->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
                                  QCP::iSelectLegend | QCP::iSelectPlottables);
 

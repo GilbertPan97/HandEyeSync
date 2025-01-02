@@ -1,7 +1,7 @@
 #ifndef DOCK_WIDGET_LOGGER_H
 #define DOCK_WIDGET_LOGGER_H
 
-#include "DockWidget.h" // Include the correct header for CDockWidget
+#include "DockWidget.h"
 #include <QString>
 #include <QTextEdit>
 

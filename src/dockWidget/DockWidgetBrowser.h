@@ -1,15 +1,22 @@
 #ifndef DOCK_WIDGET_BROWSER_H
 #define DOCK_WIDGET_BROWSER_H
 
-#include "DockWidget.h" // Include the correct header for ads::CDockWidget
-#include <QString>
-#include <QLabel> // Used to display content
+#include "DockWidget.h"
+
+#include <QWidget>
+#include <QListWidget>
+#include <QLabel>
+#include <QPixmap>
+#include <QVector>
+#include <QPair>
 
 /**
  * @class DockWidgetBrowser
- * @brief A customized dock widget for displaying browser-like content, inheriting from ads::CDockWidget.
+ * @brief A customized dock widget for displaying a list of items with images and text, inheriting from ads::CDockWidget.
  */
 class DockWidgetBrowser : public ads::CDockWidget {
+    Q_OBJECT
+
 public:
     /**
      * @brief Constructor for DockWidgetBrowser.
@@ -19,18 +26,18 @@ public:
     explicit DockWidgetBrowser(const QString& title, QWidget* parent = nullptr);
 
     /**
-     * @brief Sets the content to be displayed in the browser widget.
-     * @param content The content to display (can be plain text or HTML).
+     * @brief Sets the content of the browser widget.
+     * @param contentItems A vector of pairs, where each pair contains text and a corresponding image.
      */
-    void setContent(const QString& content);
+    void setContent(const QVector<QPair<QString, QPixmap>>& contentItems);
 
     /**
-     * @brief Clears the browser content.
+     * @brief Clears all the content in the browser widget.
      */
     void clearContent();
 
 private:
-    QLabel* contentLabel; ///< A label to display the content
+    QListWidget* listWidget; ///< A list widget to hold and display items with images and text.
 };
 
 #endif // DOCK_WIDGET_BROWSER_H

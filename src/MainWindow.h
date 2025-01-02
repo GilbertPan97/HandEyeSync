@@ -44,6 +44,10 @@ private slots:
     void newFile();
     void openFile();
     void saveFile();
+    void onAddImg1ActionTriggered();
+    void onAddImg2ActionTriggered();
+    void onAddRob1ActionTriggered();
+    void onAddRob2ActionTriggered();
 
 private:
     QTextEdit *textEdit;          // Central widget (text editor)

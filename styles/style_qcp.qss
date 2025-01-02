@@ -1,0 +1,36 @@
+QCustomPlot {
+    background-color: #181818; /* 设置背景为暗色 */
+}
+
+/* 设置坐标轴 */
+QCustomPlot::axis {
+    color: white;  /* 坐标轴颜色 */
+}
+
+/* 设置坐标轴的刻度 */
+QCustomPlot::axisTick {
+    color: white;  /* 坐标轴刻度颜色 */
+}
+
+/* 设置网格线 */
+QCustomPlot::grid {
+    color: #444444; /* 网格线颜色 */
+}
+
+/* 设置图例 */
+QCustomPlot::legend {
+    background-color: rgba(0, 0, 0, 120);  /* 图例背景色 */
+    border: 1px solid #444444;               /* 图例边框 */
+    color: white;                            /* 图例文本颜色 */
+}
+
+/* 设置数据曲线 */
+QCustomPlot::graph {
+    line-color: #4E90F0;  /* 曲线颜色 */
+    scatter-size: 5px;    /* 数据点大小 */
+}
+
+/* 设置选中点 */
+QCustomPlot::graph::selected {
+    line-color: #FF6347;  /* 选中曲线的颜色 */
+}

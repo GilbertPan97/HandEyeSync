@@ -8,7 +8,6 @@ DockWidgetLogger::DockWidgetLogger(const QString& title, QWidget* parent)
     // Create a QTextEdit widget for displaying logs
     logTextEdit_ = new QTextEdit(this);
     logTextEdit_->setReadOnly(true);        // Make it read-only
-    logTextEdit_->setStyleSheet("QTextEdit { background-color: white; }");
 
     // Add the log text edit to the dock widget
     this->setWidget(logTextEdit_);
