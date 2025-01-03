@@ -15,6 +15,9 @@
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <QComboBox>
+#include <opencv2/opencv.hpp>
+
+#include <regex>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -32,15 +35,15 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *centralLayout = new QVBoxLayout(centralWidget);
 
     dockManager_ = new ads::CDockManager(this);
-    DockWidgetViewer* viewerWin = new DockWidgetViewer("Viewer", this);
-    DockWidgetLogger* logWin = new DockWidgetLogger("Logger", this);
-    DockWidgetBrowser* browserWin = new DockWidgetBrowser("Data Browser", this);
-    DockWidgetProperty* propertyWin = new DockWidgetProperty("Property Browser", this);
+    viewerWin_ = new DockWidgetViewer("Viewer", this);
+    logWin_ = new DockWidgetLogger("Logger", this);
+    browserWin_ = new DockWidgetBrowser("Data Browser", this);
+    propertyWin_ = new DockWidgetProperty("Property Browser", this);
 
-    dockManager_->addDockWidget(ads::TopDockWidgetArea, viewerWin);
-    auto rightDockWidgetArea = dockManager_->addDockWidget(ads::RightDockWidgetArea, propertyWin);
-    auto bottomDockWidgetArea = dockManager_->addDockWidget(ads::BottomDockWidgetArea, logWin);
-    auto leftDockWidgetArea = dockManager_->addDockWidget(ads::LeftDockWidgetArea, browserWin);
+    dockManager_->addDockWidget(ads::TopDockWidgetArea, viewerWin_);
+    auto rightDockWidgetArea = dockManager_->addDockWidget(ads::RightDockWidgetArea, propertyWin_);
+    auto bottomDockWidgetArea = dockManager_->addDockWidget(ads::BottomDockWidgetArea, logWin_);
+    auto leftDockWidgetArea = dockManager_->addDockWidget(ads::LeftDockWidgetArea, browserWin_);
 
     int width = this->width();
     int height = this->height();
@@ -49,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
     dockManager_->setSplitterSizes(rightDockWidgetArea, {static_cast<int>(width * 0.85 * 0.7), static_cast<int>(width * 0.85 * 0.3)});
     centralLayout->addWidget(dockManager_);
 
-    dockWidgets_ << viewerWin << logWin << browserWin;
+    dockWidgets_ << viewerWin_ << logWin_ << browserWin_;
 
     // Adjust layout margins to remove any gaps
     centralLayout->setContentsMargins(0, 0, 0, 0);  // No margins between widgets
@@ -163,7 +166,7 @@ void MainWindow::createToolBar()
     QAction *addImage1Action = addImgMenu->addAction("Local Images");
     QAction *addImage2Action = addImgMenu->addAction("Receive From Camera");
     connect(addImage1Action, &QAction::triggered, this, &MainWindow::onAddImg1ActionTriggered);
-    connect(addImage1Action, &QAction::triggered, this, &MainWindow::onAddImg2ActionTriggered);
+    connect(addImage2Action, &QAction::triggered, this, &MainWindow::onAddImg2ActionTriggered);
 
     QToolButton *addImgButton = new QToolButton();
     addImgButton->setIcon(QIcon(":/icons/add-images.png"));
@@ -435,9 +438,27 @@ void MainWindow::onAddImg1ActionTriggered() {
         QString dataFormat = formatComboBox->currentText();
         QString folderPath = pathLineEdit->text();
 
-        if (folderPath.isEmpty()) {
+        if (folderPath.isEmpty() || dataFormat.isEmpty()) {
             QMessageBox::warning(this, "Error", "Data path cannot be empty.");
             return;
+        } 
+        else {
+            try {
+                // Attempt to parse the profile files and get the points
+                pointsSetBuffer_ = parseProfileFiles(folderPath, dataFormat);
+
+                // Attempt to plot the points (the first set of points from the buffer)
+                viewerWin_->plotPoints(pointsSetBuffer_[0], false);
+
+                // If everything succeeds, log a success message
+                logWin_->log("Dataset Loaded Successfully.");
+            } catch (const std::exception& e) {
+                // If any exception is thrown, log the failure message
+                logWin_->log(QString("Load Dataset Failed: %1").arg(e.what()));
+            } catch (...) {
+                // Catch any other unexpected exceptions
+                logWin_->log("Load Dataset Failed: Unknown error occurred.");
+            }
         }
 
         // Display the selected options
@@ -451,11 +472,10 @@ void MainWindow::onAddImg1ActionTriggered() {
 
 void MainWindow::onAddImg2ActionTriggered() {
     // Handle the logic for "Local Robot Data"
-    QMessageBox::information(this, "Action Triggered", "Loading Local Robot Data...");
+    QMessageBox::information(this, "Action Triggered", "Receiving Data From Sensor...");
     // Add logic for loading local robot data here
 }
 
-// Slot function definitions
 void MainWindow::onAddRob1ActionTriggered() {
     // Handle the logic for "Local Robot Data"
     QMessageBox::information(this, "Action Triggered", "Loading Local Robot Data...");
@@ -527,5 +547,78 @@ void MainWindow::loadSettings()
     // if (!dockState.isEmpty()) {
     //     dockManager_->restoreState(dockState);
     // }
+}
+
+// Function to extract a numeric value from a string (filename)
+double MainWindow::extractNumericValueFromFilename(const QString& filename) {
+    // Regular expression to match numbers in the filename
+    std::regex re(R"(\d+(\.\d+)?)");
+    std::smatch match;
+    
+    // Convert QString to std::string for regex matching
+    std::string filenameStr = filename.toStdString();
+    
+    // Search for the first numeric match
+    if (std::regex_search(filenameStr, match, re)) {
+        // Return the numeric value as a double
+        return std::stod(match.str(0));
+    }
+    // Return 0 if no number is found
+    return 0.0;
+}
+
+// Function to parse YML files from a given folder path and extract points (X, Z)
+std::vector<std::vector<std::pair<double, double>>> MainWindow::parseProfileFiles(const QString& folderPath, const QString& type) {
+    std::vector<std::vector<std::pair<double, double>>> pointsList;
+    std::vector<std::pair<double, double>> points;
+
+    // Convert folderPath to std::string for file handling
+    std::string folderPathStr = folderPath.toStdString();
+
+    // Use Qt's QDir to get the list of files in the directory
+    QDir dir(QString::fromStdString(folderPathStr));
+    dir.setFilter(QDir::Files);
+
+    dir.setNameFilters(QStringList() << "*." + type.toLower());     // Only include files matching the type (e.g., *.yml)
+
+    // Sort the fileInfoList by numeric value extracted from the filenames
+    QFileInfoList fileInfoList = dir.entryInfoList();
+    std::sort(fileInfoList.begin(), fileInfoList.end(), [=](const QFileInfo &a, const QFileInfo &b) {
+        // Extract numeric values from the filenames and compare them
+        double numA = extractNumericValueFromFilename(a.fileName());
+        double numB = extractNumericValueFromFilename(b.fileName());
+        return numA < numB;
+    });
+    
+    // Loop through each file in the sorted list
+    for (const QFileInfo& fileInfo : fileInfoList) {
+        // TODO: Add other format file parse
+        // Open the YAML file using OpenCV's cv::FileStorage
+        cv::FileStorage fs(fileInfo.absoluteFilePath().toStdString(), cv::FileStorage::READ);
+        if (!fs.isOpened()) {
+            std::cerr << "Failed to open file: " << fileInfo.absoluteFilePath().toStdString() << std::endl;
+            continue;
+        }
+
+        // Access the 'scan_line' node in the YAML file
+        cv::FileNode scanLineNode = fs["scan_line"];
+        if (scanLineNode.empty()) {
+            std::cerr << "No 'scan_line' node found in file: " << fileInfo.absoluteFilePath().toStdString() << std::endl;
+            continue;
+        }
+
+        // Loop through the 'scan_line' array and extract X and Z coordinates (Y is always 0, so it's ignored)
+        for (int i = 0; i < scanLineNode.size(); i += 3) {
+            double x = (double)scanLineNode[i];      // X coordinate
+            double z = (double)scanLineNode[i + 2];  // Z coordinate (Y is always 0, so we skip it)
+            points.push_back({x, z});  // Add point to the vector
+        }
+        pointsList.push_back(points);
+        points.clear();
+
+        fs.release();  // Close the file storage
+    }
+
+    return pointsList;
 }
 

@@ -4,6 +4,7 @@
 #include "DockWidget.h" // Include the correct header for ads::CDockWidget
 #include <QTreeWidget> // Used for displaying properties
 #include <QString>
+#include <QHeaderView>
 
 /**
  * @class DockWidgetProperty

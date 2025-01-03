@@ -14,7 +14,7 @@ QMainWindow::title {
 }
 
 QTextEdit {
-    background-color: #1E1E1E;
+    background-color: #444444;
     color: rgb(200, 200, 200);
     font-size: 14px;
     border: 1px solid #444444;

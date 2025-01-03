@@ -10,12 +10,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-# Find Qt5 libraries (automatically selects the correct version)
-find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
-
 # Build and 3rd-party and examples
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/3rd-party)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/examples)
+
+# Find Qt5 libraries (automatically selects the correct version)
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.4")
+find_package(OpenCV REQUIRED)
+find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 
 # Build source code
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/dockWidget)
@@ -32,7 +34,7 @@ set(QRC_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources.qrc")
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${QRC_FILE})
 
 # Link the required Qt5 libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets)
+target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets ${OpenCV_LIBS})
 target_link_libraries(${PROJECT_NAME} PRIVATE DockWidgetLibs)
 
 # Enable automatic MOC, UIC, and RCC processing for Qt5

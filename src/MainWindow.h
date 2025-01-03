@@ -39,6 +39,9 @@ private:
     void loadSettings();
     void saveSettings();
 
+    double extractNumericValueFromFilename(const QString& filename);
+    std::vector<std::vector<std::pair<double, double>>> parseProfileFiles(const QString& folderPath, const QString& type);
+
 private slots:
     // Placeholder slots for menu actions
     void newFile();
@@ -50,11 +53,15 @@ private slots:
     void onAddRob2ActionTriggered();
 
 private:
-    QTextEdit *textEdit;          // Central widget (text editor)
     QToolBar *topToolBar_;         // Top toolbar
 
     ads::CDockManager* dockManager_;
     QList<ads::CDockWidget*> dockWidgets_;
+    DockWidgetViewer* viewerWin_;
+    DockWidgetLogger* logWin_;
+    DockWidgetBrowser* browserWin_;
+    DockWidgetProperty* propertyWin_;
+    std::vector<std::vector<std::pair<double, double>>> pointsSetBuffer_;
 };
 
 #endif // MAINWINDOW_H

@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>styles/style.qss</file>
-        <file>styles/style_qcp.qss</file>
 
         <file>icons/new-file.png</file>
         <file>icons/open.png</file>
