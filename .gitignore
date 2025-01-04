@@ -5,3 +5,7 @@ build
 
 # platform cache file (mac os)
 .DS_Store
+
+.codegpt
+
+.vscode

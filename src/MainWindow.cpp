@@ -450,6 +450,8 @@ void MainWindow::onAddImg1ActionTriggered() {
                 // Attempt to plot the points (the first set of points from the buffer)
                 viewerWin_->plotPoints(pointsSetBuffer_[0], false);
 
+                browserWin_->setContentFromPoints(pointsSetBuffer_);
+
                 // If everything succeeds, log a success message
                 logWin_->log("Dataset Loaded Successfully.");
             } catch (const std::exception& e) {

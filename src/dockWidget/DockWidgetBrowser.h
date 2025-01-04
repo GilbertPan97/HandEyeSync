@@ -10,6 +10,8 @@
 #include <QVector>
 #include <QPair>
 
+#include <opencv2/opencv.hpp>
+
 /**
  * @class DockWidgetBrowser
  * @brief A customized dock widget for displaying a list of items with images and text, inheriting from ads::CDockWidget.
@@ -35,6 +37,8 @@ public:
      * @brief Clears all the content in the browser widget.
      */
     void clearContent();
+
+    void setContentFromPoints(const std::vector<std::vector<std::pair<double, double>>>& pointsSetBuffer);
 
 private:
     QListWidget* listWidget; ///< A list widget to hold and display items with images and text.
