@@ -15,6 +15,13 @@ DockWidgetBrowser::DockWidgetBrowser(const QString& title, QWidget* parent)
 
     // Set the list widget as the dock's main widget
     this->setWidget(listWidget);
+
+    // Connect the itemClicked signal to emit the custom signal directly
+    connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        int index = listWidget->row(item);  // Get the index of the clicked item
+        QString text = item->text();       // Get the text of the clicked item
+        emit itemSelected(index, text);    // Emit the custom signal
+    });
 }
 
 void DockWidgetBrowser::setContent(const QVector<QPair<QString, QPixmap>>& contentItems) {
@@ -26,11 +33,11 @@ void DockWidgetBrowser::setContent(const QVector<QPair<QString, QPixmap>>& conte
 
         QLabel* imageLabel = new QLabel(itemWidget);
 
-        // Resize the QPixmap to 100x100 before setting it to the QLabel
-        QPixmap scaledPixmap = item.second.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        // Resize the QPixmap to 80*80 before setting it to the QLabel
+        QPixmap scaledPixmap = item.second.scaled(60, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
         imageLabel->setPixmap(scaledPixmap); // Set the scaled image to QLabel
-        imageLabel->setFixedSize(100, 100);  // Optionally ensure QLabel size is fixed to 100x100
+        imageLabel->setFixedSize(60, 60);  // Optionally ensure QLabel size is fixed to 80*80
         imageLabel->setStyleSheet("border: 3px solid #B29F25;");
 
         layout->addWidget(imageLabel);
@@ -44,6 +51,10 @@ void DockWidgetBrowser::setContent(const QVector<QPair<QString, QPixmap>>& conte
         listWidget->addItem(listItem);
         listWidget->setItemWidget(listItem, itemWidget);
     }
+}
+
+void DockWidgetBrowser::clearContent() {
+    listWidget->clear();
 }
 
 void DockWidgetBrowser::setContentFromPoints(const std::vector<std::vector<std::pair<double, double>>>& pointsSetBuffer) {
@@ -110,6 +121,3 @@ void DockWidgetBrowser::setContentFromPoints(const std::vector<std::vector<std::
     setContent(contentItems);
 }
 
-void DockWidgetBrowser::clearContent() {
-    listWidget->clear();
-}

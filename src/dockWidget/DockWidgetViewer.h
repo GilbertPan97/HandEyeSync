@@ -43,7 +43,27 @@ public:
      */
     void plotPoints(const std::vector<std::pair<double, double>>& points, bool connectPoints);
 
-    // Add more methods as needed for your specific use case
+    /**
+     * @brief Handles resize events for the DockWidgetViewer.
+     * 
+     * This function is called automatically when the dock widget is resized. It ensures
+     * that the QCustomPlot maintains a consistent aspect ratio (e.g., 1:1) during resizing. 
+     * The function also re-renders the plot to reflect any changes.
+     * 
+     * @param event A pointer to the QResizeEvent object that contains information about the resize event.
+     */
+    void resizeEvent(QResizeEvent *event);
+
+    /**
+     * @brief Adjusts the QCustomPlot to maintain a fixed aspect ratio during resizing.
+     * 
+     * This function ensures that the x and y axes of the plot maintain a consistent aspect ratio 
+     * (e.g., 1:1) by dynamically adjusting their ranges based on the plot area dimensions. 
+     * It is typically called within the `resizeEvent` function to adapt to window size changes.
+     * 
+     * @param customPlot A pointer to the QCustomPlot object that needs to maintain the aspect ratio.
+     */
+    void keepDisplayAspectRatio(QCustomPlot *customPlot);
 };
 
 #endif // DOCK_WIDGET_VIEWER_H

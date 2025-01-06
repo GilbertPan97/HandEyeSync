@@ -452,6 +452,13 @@ void MainWindow::onAddImg1ActionTriggered() {
 
                 browserWin_->setContentFromPoints(pointsSetBuffer_);
 
+                // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
+                // that logs the selected dataset item's index and pose data to the log window.
+                connect(browserWin_,&DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
+                    viewerWin_->plotPoints(pointsSetBuffer_[index], false);
+                    logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index).arg(text));
+                });
+
                 // If everything succeeds, log a success message
                 logWin_->log("Dataset Loaded Successfully.");
             } catch (const std::exception& e) {

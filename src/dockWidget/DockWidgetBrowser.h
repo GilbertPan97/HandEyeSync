@@ -42,6 +42,17 @@ public:
 
 private:
     QListWidget* listWidget; ///< A list widget to hold and display items with images and text.
+
+signals:
+    /**
+     * @brief Emitted when an item in the listWidget is selected.
+     * 
+     * The signal provides the index of the selected item and its associated text.
+     * 
+     * @param index The index of the selected item in the list.
+     * @param text The text content of the selected item.
+     */
+    void itemSelected(int index, const QString& text);
 };
 
 #endif // DOCK_WIDGET_BROWSER_H

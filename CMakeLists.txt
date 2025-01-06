@@ -16,6 +16,7 @@ subdirs(${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
 # Find Qt5 libraries (automatically selects the correct version)
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.4/")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.4/x64/vc16/lib/")
 find_package(OpenCV REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 

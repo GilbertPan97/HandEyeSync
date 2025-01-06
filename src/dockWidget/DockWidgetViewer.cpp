@@ -96,7 +96,56 @@ void DockWidgetViewer::plotPoints(const std::vector<std::pair<double, double>>& 
     // Automatically fit the axes to the data range
     customPlot_->xAxis->rescale();
     customPlot_->yAxis->rescale();
+    customPlot_->rescaleAxes(true);
 
     // Replot to update the view with the new data
+    keepDisplayAspectRatio(customPlot_);
+    // customPlot_->replot();
+}
+
+void DockWidgetViewer::resizeEvent(QResizeEvent *event) {
+    // Call the base class's resizeEvent to handle any parent class behavior
+    // (This ensures that any default actions, such as resizing the dock widget, are executed)
+    ads::CDockWidget::resizeEvent(event);
+
+    // Check if customPlot_ is valid (make sure it has been initialized properly)
+    if (customPlot_) {
+        // Adjust the plot's aspect ratio to maintain a 1:1 ratio (if required)
+        keepDisplayAspectRatio(customPlot_);
+    }
+
+    // Replot the graph to update the plot after resizing
     customPlot_->replot();
 }
+
+// This function dynamically adjusts the axis ranges to maintain a 1:1 aspect ratio
+void DockWidgetViewer::keepDisplayAspectRatio(QCustomPlot *customPlot) {
+    QCPAxisRect *axisRect = customPlot->axisRect();
+
+    // Get the width and height of the plot area
+    double width = axisRect->width();
+    double height = axisRect->height();
+
+    // Get the current axis ranges
+    QCPRange xRange = customPlot->xAxis->range();
+    QCPRange yRange = customPlot->yAxis->range();
+
+    // Calculate the center points of the axes
+    double xCenter = xRange.center();
+    double yCenter = yRange.center();
+
+    // Adjust the axis ranges to match the aspect ratio
+    if (xRange.size() / width < yRange.size() / height) {
+        // If the width is greater than the height, adjust the x-axis range
+        double newXRangeSize = yRange.size() * (width / height);
+        customPlot->xAxis->setRange(xCenter - newXRangeSize / 2.0, xCenter + newXRangeSize / 2.0);
+    } else {
+        // If the height is greater than the width, adjust the y-axis range
+        double newYRangeSize = xRange.size() * (height / width);
+        customPlot->yAxis->setRange(yCenter - newYRangeSize / 2.0, yCenter + newYRangeSize / 2.0);
+    }
+
+    // Replot the graph
+    customPlot->replot();
+}
+
