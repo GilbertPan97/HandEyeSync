@@ -27,31 +27,49 @@ DockWidgetBrowser::DockWidgetBrowser(const QString& title, QWidget* parent)
 void DockWidgetBrowser::setContent(const QVector<QPair<QString, QPixmap>>& contentItems) {
     listWidget->clear();
 
-    for (const auto& item : contentItems) {
+    for (int i = 0; i < contentItems.size(); ++i) {
+        const auto& item = contentItems[i];
+
         QWidget* itemWidget = new QWidget();
         QHBoxLayout* layout = new QHBoxLayout(itemWidget);
 
+        // Add a label with the index (order number) on the left
+        QLabel* indexLabel = new QLabel(QString::number(i + 1), itemWidget);
+        indexLabel->setAlignment(Qt::AlignCenter);
+
+        // Set the background color to yellow (#B29F25) and fix the height to 60
+        QFont font = indexLabel->font();
+        font.setBold(true);
+        indexLabel->setFont(font);
+        indexLabel->setStyleSheet("background-color: #B29F25");
+        indexLabel->setFixedSize(20, 60);
+
+        layout->addWidget(indexLabel);
+
+        // Add the image label
         QLabel* imageLabel = new QLabel(itemWidget);
-
-        // Resize the QPixmap to 80*80 before setting it to the QLabel
-        QPixmap scaledPixmap = item.second.scaled(60, 60, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-        imageLabel->setPixmap(scaledPixmap); // Set the scaled image to QLabel
-        imageLabel->setFixedSize(60, 60);  // Optionally ensure QLabel size is fixed to 80*80
+        imageLabel->setFixedSize(60, 60);  // Ensure fixed size for image
+        imageLabel->setScaledContents(true);  // Allow the image to scale within the fixed size
+        imageLabel->setPixmap(item.second);
+        imageLabel->setAlignment(Qt::AlignCenter);
         imageLabel->setStyleSheet("border: 3px solid #B29F25;");
-
         layout->addWidget(imageLabel);
 
+        // Add the text label
         QLabel* textLabel = new QLabel(item.first, itemWidget);
         textLabel->setWordWrap(true);
+        textLabel->setFont(font);
         layout->addWidget(textLabel);
 
+        // Create the list item and set the widget
         QListWidgetItem* listItem = new QListWidgetItem(listWidget);
-        listItem->setSizeHint(itemWidget->sizeHint()); // Ensure the item can resize to fit the content
+        listItem->setSizeHint(itemWidget->sizeHint());  // Ensure the item can resize to fit the content
         listWidget->addItem(listItem);
         listWidget->setItemWidget(listItem, itemWidget);
     }
 }
+
+
 
 void DockWidgetBrowser::clearContent() {
     listWidget->clear();

@@ -22,6 +22,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 
 # Build source code
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/dockWidget)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/fanucParser)
 
 # Add source files
 set(SRC_FILES

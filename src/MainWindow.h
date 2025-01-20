@@ -22,6 +22,10 @@
 #include <QList>
 #include <QHBoxLayout>
 
+// Alias for a point that includes x, y, z, w, p, r
+using FanucRobPose = std::tuple<double, double, double, double, double, double>;
+using ProfilePoints = std::vector<std::pair<double, double>>;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -61,7 +65,8 @@ private:
     DockWidgetLogger* logWin_;
     DockWidgetBrowser* browserWin_;
     DockWidgetProperty* propertyWin_;
-    std::vector<std::vector<std::pair<double, double>>> pointsSetBuffer_;
+    std::vector<ProfilePoints> pointsSetBuffer_;
+    std::vector<FanucRobPose> robDataBuffer_;
 };
 
 #endif // MAINWINDOW_H

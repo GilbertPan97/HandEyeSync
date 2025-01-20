@@ -456,7 +456,8 @@ void MainWindow::onAddImg1ActionTriggered() {
                 // that logs the selected dataset item's index and pose data to the log window.
                 connect(browserWin_,&DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
                     viewerWin_->plotPoints(pointsSetBuffer_[index], false);
-                    logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index).arg(text));
+                    // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
+                    logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
                 });
 
                 // If everything succeeds, log a success message
