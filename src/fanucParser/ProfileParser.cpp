@@ -23,6 +23,7 @@ double ProfileParser::extractNumericValueFromFilename(const std::string& filenam
     return 0.0;
 }
 
+// TODO: add progress callback function
 std::vector<std::vector<std::pair<double, double>>> ProfileParser::parseProfileFiles(const std::string& folderPath, const std::string& type) {
     std::vector<std::vector<std::pair<double, double>>> pointsList;
 

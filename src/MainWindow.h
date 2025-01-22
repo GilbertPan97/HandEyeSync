@@ -28,6 +28,11 @@
 using FanucRobPose = std::vector<double>;
 using ProfilePoints = std::vector<std::pair<double, double>>;
 
+enum class SensorType {
+    ProfileScanner,
+    ImageCamera
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -44,6 +49,8 @@ private:
     
     void loadSettings();
     void saveSettings();
+
+    QString sensorTypeToString(SensorType sensorType);
 
 private slots:
     // Placeholder slots for menu actions
@@ -66,6 +73,7 @@ private:
     DockWidgetProperty* propertyWin_;
     std::vector<ProfilePoints> pointsSetBuffer_;
     std::vector<FanucRobPose> robDataBuffer_;
+    SensorType sensorType_;
 };
 
 #endif // MAINWINDOW_H

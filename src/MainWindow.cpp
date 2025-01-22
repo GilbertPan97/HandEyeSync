@@ -162,6 +162,33 @@ void MainWindow::createToolBar()
     onlineCollectLayout->addWidget(onlineCollectBtn);
     onlineCollectLayout->addLayout(collectLayout);
 
+    // ~~~ Widget 1: Sensor type.
+    QMenu *addSensorMenu = new QMenu(this);
+    QAction *profileScannerAction = addSensorMenu->addAction("Profile Scanner");
+    QAction *imageCameraAction = addSensorMenu->addAction("Image Camera");
+    profileScannerAction->setCheckable(true);           // Set both actions as checkable
+    imageCameraAction->setCheckable(true);
+    QActionGroup *actionGroup = new QActionGroup(this);
+    actionGroup->setExclusive(true);
+    actionGroup->addAction(profileScannerAction);
+    actionGroup->addAction(imageCameraAction);
+
+    // Set Profile Scanner as the default selected action (checked)
+    profileScannerAction->setChecked(true);
+    sensorType_ = SensorType::ProfileScanner;
+
+    // Connect the actions to slots to handle the toggling behavior
+    connect(profileScannerAction, &QAction::toggled, this, [=](bool checked) {if (checked) sensorType_ = SensorType::ProfileScanner;});
+    connect(imageCameraAction, &QAction::toggled, this, [=](bool checked) {if (checked) sensorType_ = SensorType::ImageCamera;});
+
+    QToolButton *sensorSelButton = new QToolButton();
+    sensorSelButton->setIcon(QIcon(":/icons/sensor.png"));
+    sensorSelButton->setText("Select sensor");
+    sensorSelButton->setMenu(addSensorMenu);
+    sensorSelButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    sensorSelButton->setPopupMode(QToolButton::MenuButtonPopup);
+
+    // ~~~ Widget 2: Load Image Button.
     QMenu *addImgMenu = new QMenu(this);
     QAction *addImage1Action = addImgMenu->addAction("Local Images");
     QAction *addImage2Action = addImgMenu->addAction("Receive From Camera");
@@ -170,7 +197,7 @@ void MainWindow::createToolBar()
 
     QToolButton *addImgButton = new QToolButton();
     addImgButton->setIcon(QIcon(":/icons/add-images.png"));
-    addImgButton->setText("Add Images");
+    addImgButton->setText("Load Images");
     addImgButton->setMenu(addImgMenu);
     addImgButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     addImgButton->setPopupMode(QToolButton::MenuButtonPopup);
@@ -178,26 +205,26 @@ void MainWindow::createToolBar()
     QMenu *addRobMenu = new QMenu(this);
     QAction *addRob1Action = addRobMenu->addAction("Local Robot Data");
     QAction *addRob2Action = addRobMenu->addAction("Receive From Robot");
-    // Connect the QAction signals to the slot functions
     connect(addRob1Action, &QAction::triggered, this, &MainWindow::onAddRob1ActionTriggered);
     connect(addRob2Action, &QAction::triggered, this, &MainWindow::onAddRob2ActionTriggered);
 
+    // ~~~ Widget 3: Load Robot Data Button.
     QToolButton *addRobButton = new QToolButton();
     addRobButton->setIcon(QIcon(":/icons/add-robot.png"));
-    addRobButton->setText("Add Robot Data");
+    addRobButton->setText("Load Robot Data");
     addRobButton->setMenu(addRobMenu);
     addRobButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     addRobButton->setPopupMode(QToolButton::MenuButtonPopup);
 
     QHBoxLayout *datasetLayout = new QHBoxLayout(this);
     datasetLayout->addLayout(onlineCollectLayout);
+    datasetLayout->addWidget(sensorSelButton);
     datasetLayout->addWidget(addImgButton);
     datasetLayout->addWidget(addRobButton);
 
     // Group the buttons using setToolBarGroup
-    QList<QToolButton*> data_btnList = { addImgButton, addRobButton };
+    QList<QToolButton*> data_btnList = { sensorSelButton, addImgButton, addRobButton };
     setToolBarGroup(datasetLayout, "DATASET");
-
     topToolBar_->addSeparator();
 
     /* ========================= Calibrate Page ========================= */
@@ -358,11 +385,11 @@ void MainWindow::onAddImg1ActionTriggered() {
     // Create dialog
     QDialog dialog(this);
     dialog.setWindowTitle("Select Sensor Data");
+    QString sensorTypeStr = sensorTypeToString(sensorType_);
 
     // Create widgets
     QLabel *sensorLabel = new QLabel("Sensor Type:", &dialog);
-    QComboBox *sensorComboBox = new QComboBox(&dialog);
-    sensorComboBox->addItems({"Image Camera", "Profile Scanner"});
+    QLabel *sensorTypeLabel = new QLabel(sensorTypeStr, &dialog);
 
     QLabel *formatLabel = new QLabel("Data Format:", &dialog);
     QComboBox *formatComboBox = new QComboBox(&dialog);
@@ -374,19 +401,15 @@ void MainWindow::onAddImg1ActionTriggered() {
     // Function to update formatComboBox based on selected sensor type
     auto updateFormatComboBox = [&]() {
         formatComboBox->clear();
-        QString sensorType = sensorComboBox->currentText();
-        if (sensorType == "Image Camera") {
+        if (sensorType_ == SensorType::ImageCamera) {
             formatComboBox->addItems({"JPEG", "PNG", "BMP"});
-        } else if (sensorType == "Profile Scanner") {
+        } else if (sensorType_ == SensorType::ProfileScanner) {
             formatComboBox->addItems({"YML", "TXT", "JSON"});
         }
     };
 
     // Initialize formatComboBox
     updateFormatComboBox();
-
-    // Connect sensorComboBox to update formatComboBox dynamically
-    connect(sensorComboBox, &QComboBox::currentTextChanged, updateFormatComboBox);
 
     // Connect browse button to open folder dialog
     connect(browseButton, &QPushButton::clicked, [&]() {
@@ -411,7 +434,7 @@ void MainWindow::onAddImg1ActionTriggered() {
 
     QHBoxLayout *sensorLayout = new QHBoxLayout();
     sensorLayout->addWidget(sensorLabel);
-    sensorLayout->addWidget(sensorComboBox);
+    sensorLayout->addWidget(sensorTypeLabel);
 
     QHBoxLayout *formatLayout = new QHBoxLayout();
     formatLayout->addWidget(formatLabel);
@@ -434,7 +457,6 @@ void MainWindow::onAddImg1ActionTriggered() {
 
     // Execute dialog and handle result
     if (dialog.exec() == QDialog::Accepted) {
-        QString sensorType = sensorComboBox->currentText();
         QString dataFormat = formatComboBox->currentText();
         QString folderPath = pathLineEdit->text();
 
@@ -476,7 +498,7 @@ void MainWindow::onAddImg1ActionTriggered() {
 
         // Display the selected options
         QString summary = QString("Sensor Type: %1\nData Format: %2\nData Folder: %3")
-                              .arg(sensorType)
+                              .arg(sensorTypeStr)
                               .arg(dataFormat)
                               .arg(folderPath);
         QMessageBox::information(this, "Selection Complete", summary);
@@ -595,3 +617,14 @@ void MainWindow::loadSettings()
     // }
 }
 
+// Function to convert SensorType to string
+QString MainWindow::sensorTypeToString(SensorType sensorType) {
+    switch (sensorType) {
+        case SensorType::ProfileScanner:
+            return "Profile Scanner";
+        case SensorType::ImageCamera:
+            return "Image Camera";
+        default:
+            return "Unknown Sensor Type";  // Default case
+    }
+}
