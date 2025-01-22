@@ -37,7 +37,7 @@ add_executable(${PROJECT_NAME} ${SRC_FILES} ${QRC_FILE})
 
 # Link the required Qt5 libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets ${OpenCV_LIBS})
-target_link_libraries(${PROJECT_NAME} PRIVATE DockWidgetLibs)
+target_link_libraries(${PROJECT_NAME} PRIVATE DockWidgetLibs FanucParserLibs)
 
 # Enable automatic MOC, UIC, and RCC processing for Qt5
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -59,7 +59,7 @@ if(WIN32)
         ICON ${ICON_FILE}
         VERSION "1.0.0"           # Application version
         DESCRIPTION "HandEyeSync is a hand-eye calibration software."
-        COMPANY_NAME "Shanghai Fanuc Robotics Co., Ltd." # Company name
+        COMPANY_NAME "Shanghai Fanuc Robotics Co., Ltd."        # Company name
         COPYRIGHT "Copyright (c) 2024, Shanghai Fanuc Robotics Co. All rights reserved."
     )
 endif()

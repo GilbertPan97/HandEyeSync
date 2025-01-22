@@ -40,8 +40,11 @@ public:
 
     void setContentFromPoints(const std::vector<std::vector<std::pair<double, double>>>& pointsSetBuffer);
 
+    void setContentFromRobot(const std::vector<std::vector<double>>& robDataBuffer);
+
 private:
-    QListWidget* listWidget; ///< A list widget to hold and display items with images and text.
+    QListWidget* listWidget_;       ///< A list widget to hold and display items with images and text.
+    QVector<QPair<QString, QPixmap>> contentItems_;
 
 signals:
     /**

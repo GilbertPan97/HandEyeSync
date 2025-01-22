@@ -8,6 +8,8 @@
 #include "DockWidgetLogger.h"
 #include "DockWidgetBrowser.h"
 #include "DockWidgetProperty.h"
+#include "ProfileParser.h"
+#include "FanucParser.h"
 
 #include <QMainWindow>
 #include <QTextEdit>
@@ -23,7 +25,7 @@
 #include <QHBoxLayout>
 
 // Alias for a point that includes x, y, z, w, p, r
-using FanucRobPose = std::tuple<double, double, double, double, double, double>;
+using FanucRobPose = std::vector<double>;
 using ProfilePoints = std::vector<std::pair<double, double>>;
 
 class MainWindow : public QMainWindow
@@ -42,9 +44,6 @@ private:
     
     void loadSettings();
     void saveSettings();
-
-    double extractNumericValueFromFilename(const QString& filename);
-    std::vector<std::vector<std::pair<double, double>>> parseProfileFiles(const QString& folderPath, const QString& type);
 
 private slots:
     // Placeholder slots for menu actions

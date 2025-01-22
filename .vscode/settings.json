@@ -84,6 +84,7 @@
         "typeindex": "cpp",
         "unordered_set": "cpp",
         "regex": "cpp",
-        "xstddef": "cpp"
+        "xstddef": "cpp",
+        "filesystem": "cpp"
     }
 }

@@ -444,8 +444,9 @@ void MainWindow::onAddImg1ActionTriggered() {
         } 
         else {
             try {
+                ProfileParser profileParser;
                 // Attempt to parse the profile files and get the points
-                pointsSetBuffer_ = parseProfileFiles(folderPath, dataFormat);
+                pointsSetBuffer_ = profileParser.parseProfileFiles(folderPath.toStdString(), dataFormat.toStdString());
 
                 // Attempt to plot the points (the first set of points from the buffer)
                 viewerWin_->plotPoints(pointsSetBuffer_[0], false);
@@ -454,7 +455,7 @@ void MainWindow::onAddImg1ActionTriggered() {
 
                 // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
                 // that logs the selected dataset item's index and pose data to the log window.
-                connect(browserWin_,&DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
+                connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
                     viewerWin_->plotPoints(pointsSetBuffer_[index], false);
                     // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
                     logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
@@ -464,10 +465,12 @@ void MainWindow::onAddImg1ActionTriggered() {
                 logWin_->log("Dataset Loaded Successfully.");
             } catch (const std::exception& e) {
                 // If any exception is thrown, log the failure message
-                logWin_->log(QString("Load Dataset Failed: %1").arg(e.what()));
+                QMessageBox::warning(this, "Error", "Profile data parsing fail.");
+                logWin_->log(QString("Load Profile Dataset Failed: %1").arg(e.what()));
             } catch (...) {
                 // Catch any other unexpected exceptions
-                logWin_->log("Load Dataset Failed: Unknown error occurred.");
+                QMessageBox::warning(this, "Error", "Profile data parsing fail.");
+                logWin_->log("Load Profile Dataset Failed: Unknown error occurred.");
             }
         }
 
@@ -487,9 +490,42 @@ void MainWindow::onAddImg2ActionTriggered() {
 }
 
 void MainWindow::onAddRob1ActionTriggered() {
-    // Handle the logic for "Local Robot Data"
-    QMessageBox::information(this, "Action Triggered", "Loading Local Robot Data...");
-    // Add logic for loading local robot data here
+    // 0. Check sensor data buffer first.
+    if (pointsSetBuffer_.empty()) {
+        QMessageBox::warning(this, "Warning", "Please Load Sensor Data Before Robot Data Input.");
+        return;
+    }
+
+    // 1. Open a file dialog to select the file
+    QString filePath = QFileDialog::getOpenFileName(this, "Open Robot File", "", "Ls Files (*.ls);;All Files (*.*)");
+
+    // If the user cancels the file selection, return
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    // 2. Extract the file type based on the extension, e.g., .txt or .ls
+    QString fileExtension = QFileInfo(filePath).suffix().toLower();
+
+    // 3. Create an instance of FanucParser
+    FanucParser parser;
+
+    try {
+        // 4. Parse the file using the FanucParser
+        robDataBuffer_ = parser.parseRobFile(filePath.toStdString(), fileExtension.toStdString());
+
+        // 5. Handle the parsed data (e.g., displaying or processing it)
+        browserWin_->setContentFromRobot(robDataBuffer_);
+
+    } catch (const std::exception& e) {
+        // 6. Handle exceptions (e.g., file read or parsing errors)
+        QMessageBox::warning(this, "Error", "Robot data parsing fail.");
+        logWin_->log(QString("Load Robot Dataset Failed: %1").arg(e.what()));
+    }  catch (...) {
+        // Catch any other unexpected exceptions
+        QMessageBox::warning(this, "Error", "Robot data parsing fail.");
+        logWin_->log("Load Robot Dataset Failed: Unknown error occurred.");
+    }
 }
 
 void MainWindow::onAddRob2ActionTriggered() {
@@ -557,78 +593,5 @@ void MainWindow::loadSettings()
     // if (!dockState.isEmpty()) {
     //     dockManager_->restoreState(dockState);
     // }
-}
-
-// Function to extract a numeric value from a string (filename)
-double MainWindow::extractNumericValueFromFilename(const QString& filename) {
-    // Regular expression to match numbers in the filename
-    std::regex re(R"(\d+(\.\d+)?)");
-    std::smatch match;
-    
-    // Convert QString to std::string for regex matching
-    std::string filenameStr = filename.toStdString();
-    
-    // Search for the first numeric match
-    if (std::regex_search(filenameStr, match, re)) {
-        // Return the numeric value as a double
-        return std::stod(match.str(0));
-    }
-    // Return 0 if no number is found
-    return 0.0;
-}
-
-// Function to parse YML files from a given folder path and extract points (X, Z)
-std::vector<std::vector<std::pair<double, double>>> MainWindow::parseProfileFiles(const QString& folderPath, const QString& type) {
-    std::vector<std::vector<std::pair<double, double>>> pointsList;
-    std::vector<std::pair<double, double>> points;
-
-    // Convert folderPath to std::string for file handling
-    std::string folderPathStr = folderPath.toStdString();
-
-    // Use Qt's QDir to get the list of files in the directory
-    QDir dir(QString::fromStdString(folderPathStr));
-    dir.setFilter(QDir::Files);
-
-    dir.setNameFilters(QStringList() << "*." + type.toLower());     // Only include files matching the type (e.g., *.yml)
-
-    // Sort the fileInfoList by numeric value extracted from the filenames
-    QFileInfoList fileInfoList = dir.entryInfoList();
-    std::sort(fileInfoList.begin(), fileInfoList.end(), [=](const QFileInfo &a, const QFileInfo &b) {
-        // Extract numeric values from the filenames and compare them
-        double numA = extractNumericValueFromFilename(a.fileName());
-        double numB = extractNumericValueFromFilename(b.fileName());
-        return numA < numB;
-    });
-    
-    // Loop through each file in the sorted list
-    for (const QFileInfo& fileInfo : fileInfoList) {
-        // TODO: Add other format file parse
-        // Open the YAML file using OpenCV's cv::FileStorage
-        cv::FileStorage fs(fileInfo.absoluteFilePath().toStdString(), cv::FileStorage::READ);
-        if (!fs.isOpened()) {
-            std::cerr << "Failed to open file: " << fileInfo.absoluteFilePath().toStdString() << std::endl;
-            continue;
-        }
-
-        // Access the 'scan_line' node in the YAML file
-        cv::FileNode scanLineNode = fs["scan_line"];
-        if (scanLineNode.empty()) {
-            std::cerr << "No 'scan_line' node found in file: " << fileInfo.absoluteFilePath().toStdString() << std::endl;
-            continue;
-        }
-
-        // Loop through the 'scan_line' array and extract X and Z coordinates (Y is always 0, so it's ignored)
-        for (int i = 0; i < scanLineNode.size(); i += 3) {
-            double x = (double)scanLineNode[i];      // X coordinate
-            double z = (double)scanLineNode[i + 2];  // Z coordinate (Y is always 0, so we skip it)
-            points.push_back({x, z});  // Add point to the vector
-        }
-        pointsList.push_back(points);
-        points.clear();
-
-        fs.release();  // Close the file storage
-    }
-
-    return pointsList;
 }
 

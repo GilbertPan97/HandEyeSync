@@ -4,28 +4,28 @@
 #include <QHBoxLayout>
 
 DockWidgetBrowser::DockWidgetBrowser(const QString& title, QWidget* parent)
-    : ads::CDockWidget(title, parent), listWidget(nullptr) {
+    : ads::CDockWidget(title, parent), listWidget_(nullptr) {
     // Initialize the list widget with a vertical scrollbar
-    listWidget = new QListWidget(this);
+    listWidget_ = new QListWidget(this);
 
     // Ensure the list widget has a vertical scrollbar
-    listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-    listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Disable horizontal scrollbar
-    listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);   // Vertical scrollbar appears as needed
+    listWidget_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    listWidget_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Disable horizontal scrollbar
+    listWidget_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);   // Vertical scrollbar appears as needed
 
     // Set the list widget as the dock's main widget
-    this->setWidget(listWidget);
+    this->setWidget(listWidget_);
 
     // Connect the itemClicked signal to emit the custom signal directly
-    connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
-        int index = listWidget->row(item);  // Get the index of the clicked item
-        QString text = item->text();       // Get the text of the clicked item
+    connect(listWidget_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        int index = listWidget_->row(item);  // Get the index of the clicked item
+        QString text = contentItems_[index].first;       // Get the text of the clicked item
         emit itemSelected(index, text);    // Emit the custom signal
     });
 }
 
 void DockWidgetBrowser::setContent(const QVector<QPair<QString, QPixmap>>& contentItems) {
-    listWidget->clear();
+    listWidget_->clear();
 
     for (int i = 0; i < contentItems.size(); ++i) {
         const auto& item = contentItems[i];
@@ -62,22 +62,20 @@ void DockWidgetBrowser::setContent(const QVector<QPair<QString, QPixmap>>& conte
         layout->addWidget(textLabel);
 
         // Create the list item and set the widget
-        QListWidgetItem* listItem = new QListWidgetItem(listWidget);
+        QListWidgetItem* listItem = new QListWidgetItem(listWidget_);
         listItem->setSizeHint(itemWidget->sizeHint());  // Ensure the item can resize to fit the content
-        listWidget->addItem(listItem);
-        listWidget->setItemWidget(listItem, itemWidget);
+        listWidget_->addItem(listItem);
+        listWidget_->setItemWidget(listItem, itemWidget);
     }
 }
 
 
 
 void DockWidgetBrowser::clearContent() {
-    listWidget->clear();
+    listWidget_->clear();
 }
 
 void DockWidgetBrowser::setContentFromPoints(const std::vector<std::vector<std::pair<double, double>>>& pointsSetBuffer) {
-    // Create a vector to hold content items (image and label)
-    QVector<QPair<QString, QPixmap>> contentItems;
 
     // Iterate through each set of points
     for (const auto& pointsSet : pointsSetBuffer) {
@@ -132,10 +130,47 @@ void DockWidgetBrowser::setContentFromPoints(const std::vector<std::vector<std::
         QPixmap pixmap = QPixmap::fromImage(qimg);
 
         // Add the generated image and label ("NoPoseData") to the content list
-        contentItems.push_back(qMakePair(QString("NoPoseData"), pixmap));
+        contentItems_.push_back(qMakePair(QString("NoPoseData"), pixmap));
     }
 
     // Call the original setContent method to display the images in the widget
-    setContent(contentItems);
+    setContent(contentItems_);
+}
+
+void DockWidgetBrowser::setContentFromRobot(const std::vector<std::vector<double>>& robDataBuffer) {
+
+    // Check if contentItems_ size matches robDataBuffer size
+    if (contentItems_.size() != robDataBuffer.size()) {
+        qDebug() << "Size mismatch: contentItems_ size does not match robDataBuffer size!";
+        return;  // Early return if sizes don't match
+    }
+
+    // Iterate through robDataBuffer and update the strings in contentItems_
+    for (size_t i = 0; i < robDataBuffer.size(); ++i) {
+        // Convert robDataSet to a string
+        QString robDataStr;
+        
+        if (robDataBuffer[i].size() == 6) {
+            // Define the labels
+            const QString labels[] = { "x", "y", "z", "w", "p", "r" };
+
+            // Iterate through the 6 values and add corresponding labels
+            for (size_t j = 0; j < robDataBuffer[i].size(); ++j) {
+                robDataStr += labels[j] + ": " + QString::number(robDataBuffer[i][j], 'f', 2) + " ";  // Add label and formatted value
+            }
+        } else {
+            // If not 6 values, just add them as a regular string (without labels)
+            robDataStr = "Wrong Data:\n";
+            for (const auto& value : robDataBuffer[i]) {
+                robDataStr += QString::number(value, 'f', 2) + " ";  // Format each value to 2 decimal places
+            }
+        }
+
+        // Update the label (string) in contentItems_ to the formatted string
+        contentItems_[i].first = robDataStr;  // Replace the "NoPoseData" with the formatted string
+    }
+
+    // Call setContent to update the UI
+    setContent(contentItems_);
 }
 
