@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Create menu and toolbar by calling the functions
     createMenuBar();
     createToolBar();
+    createProgressWidget();
 
     // Set the window title
     setWindowTitle("HandEyeSync");
@@ -289,6 +290,30 @@ void MainWindow::createToolBar()
 
 }
 
+// Function to create the progress widget
+void MainWindow::createProgressWidget()
+{
+    progressWidget_ = new QDialog(this);
+    progressWidget_->setWindowTitle("Progress");
+    progressWidget_->setFixedSize(300, 100);
+
+    progressWidget_->setStyleSheet("background-color: #353535;");
+
+    // Create layout and widgets
+    QVBoxLayout *layout = new QVBoxLayout(progressWidget_);
+    QLabel *label = new QLabel("Execution Progress:", progressWidget_);
+    progressBar_ = new QProgressBar(progressWidget_);
+    progressBar_->setRange(0, 100);
+    progressBar_->setValue(0);
+
+    // Add widgets to the layout
+    layout->addWidget(label);
+    layout->addWidget(progressBar_);
+
+    progressWidget_->setLayout(layout);
+    progressWidget_->hide();
+}
+
 void MainWindow::setToolBarGroup(QList<QToolButton*> buttonList, QString groupTitle)
 {
     // Create a new QWidget container
@@ -381,6 +406,33 @@ void MainWindow::setToolBarGroup(QHBoxLayout* ctlWidgetLayout, QString groupTitl
     topToolBar_->addWidget(widget);
 }
 
+void MainWindow::setWidgetProgress(int prog) {
+    if (!progressWidget_) {
+        qWarning() << "Progress widget is not initialized!";
+        return;
+    }
+
+    // Find the QProgressBar within the widget
+    if (!progressBar_) {
+        qWarning() << "ProgressBar not found within the progress widget!";
+        return;
+    }
+
+    if (prog < 100) {
+        // Update progress bar and ensure the widget is visible
+        progressBar_->setValue(prog);
+        if (!progressWidget_->isVisible()) {
+            progressWidget_->show();
+        }
+    } else {
+        // If progress is 100, reset and close the widget
+        progressBar_->setValue(0);       // Reset progress bar to 0
+        progressWidget_->hide();
+    }
+    QCoreApplication::processEvents();
+}
+
+
 void MainWindow::onAddImg1ActionTriggered() {
     // Create dialog
     QDialog dialog(this);
@@ -464,36 +516,36 @@ void MainWindow::onAddImg1ActionTriggered() {
             QMessageBox::warning(this, "Error", "Data path cannot be empty.");
             return;
         } 
-        else {
-            try {
-                ProfileParser profileParser;
-                // Attempt to parse the profile files and get the points
-                pointsSetBuffer_ = profileParser.parseProfileFiles(folderPath.toStdString(), dataFormat.toStdString());
 
-                // Attempt to plot the points (the first set of points from the buffer)
-                viewerWin_->plotPoints(pointsSetBuffer_[0], false);
+        pointsSetBuffer_.clear();
+        try {
+            ProfileParser profileParser;
+            // Attempt to parse the profile files and get the points
+            std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };
+            pointsSetBuffer_ = profileParser.parseProfileFiles(folderPath.toStdString(), dataFormat.toStdString(), progCallback);
 
-                browserWin_->setContentFromPoints(pointsSetBuffer_);
+            // Attempt to plot the points (the first set of points from the buffer)
+            viewerWin_->plotPoints(pointsSetBuffer_[0], false);
+            browserWin_->setContentFromPoints(pointsSetBuffer_);        // Clear all and reload
 
-                // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
-                // that logs the selected dataset item's index and pose data to the log window.
-                connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
-                    viewerWin_->plotPoints(pointsSetBuffer_[index], false);
-                    // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
-                    logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
-                });
+            // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
+            // that logs the selected dataset item's index and pose data to the log window.
+            connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
+                viewerWin_->plotPoints(pointsSetBuffer_[index], false);
+                // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
+                logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
+            });
 
-                // If everything succeeds, log a success message
-                logWin_->log("Dataset Loaded Successfully.");
-            } catch (const std::exception& e) {
-                // If any exception is thrown, log the failure message
-                QMessageBox::warning(this, "Error", "Profile data parsing fail.");
-                logWin_->log(QString("Load Profile Dataset Failed: %1").arg(e.what()));
-            } catch (...) {
-                // Catch any other unexpected exceptions
-                QMessageBox::warning(this, "Error", "Profile data parsing fail.");
-                logWin_->log("Load Profile Dataset Failed: Unknown error occurred.");
-            }
+            // If everything succeeds, log a success message
+            logWin_->log("Dataset Loaded Successfully.");
+        } catch (const std::exception& e) {
+            // If any exception is thrown, log the failure message
+            QMessageBox::warning(this, "Error", "Profile data parsing fail.");
+            logWin_->log(QString("Load Profile Dataset Failed: %1").arg(e.what()));
+        } catch (...) {
+            // Catch any other unexpected exceptions
+            QMessageBox::warning(this, "Error", "Profile data parsing fail.");
+            logWin_->log("Load Profile Dataset Failed: Unknown error occurred.");
         }
 
         // Display the selected options
@@ -514,7 +566,7 @@ void MainWindow::onAddImg2ActionTriggered() {
 void MainWindow::onAddRob1ActionTriggered() {
     // 0. Check sensor data buffer first.
     if (pointsSetBuffer_.empty()) {
-        QMessageBox::warning(this, "Warning", "Please Load Sensor Data Before Robot Data Input.");
+        QMessageBox::warning(this, "Warning", "Please load sensor data before robot data input.");
         return;
     }
 
@@ -531,7 +583,7 @@ void MainWindow::onAddRob1ActionTriggered() {
 
     // 3. Create an instance of FanucParser
     FanucParser parser;
-
+    robDataBuffer_.clear();
     try {
         // 4. Parse the file using the FanucParser
         robDataBuffer_ = parser.parseRobFile(filePath.toStdString(), fileExtension.toStdString());

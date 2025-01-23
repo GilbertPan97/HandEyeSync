@@ -2,9 +2,11 @@
 #ifndef PROFILEPARSER_H
 #define PROFILEPARSER_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <utility>
+#include <functional>
 
 class ProfileParser {
 public:
@@ -18,7 +20,10 @@ public:
     // @param folderPath: Path to the folder containing profile files
     // @param type: File type (e.g., "yml")
     // @return: Parsed data as a vector of vectors of pairs of doubles
-    std::vector<std::vector<std::pair<double, double>>> parseProfileFiles(const std::string& folderPath, const std::string& type);
+    std::vector<std::vector<std::pair<double, double>>> parseProfileFiles(
+        const std::string& folderPath, 
+        const std::string& type,
+        const std::function<void(int)>& progressCallback = nullptr);
 
 private:
     // Helper functions can be added here if necessary

@@ -44,8 +44,10 @@ public:
 private:
     void createMenuBar();
     void createToolBar();
+    void createProgressWidget();
     void setToolBarGroup(QList<QToolButton*> buttonList, QString groupTitle);
     void setToolBarGroup(QHBoxLayout* ctlWidgetLayout, QString groupTitle);
+    void setWidgetProgress(int prog);
     
     void loadSettings();
     void saveSettings();
@@ -64,6 +66,8 @@ private slots:
 
 private:
     QToolBar *topToolBar_;         // Top toolbar
+    QDialog *progressWidget_;
+    QProgressBar *progressBar_;
 
     ads::CDockManager* dockManager_;
     QList<ads::CDockWidget*> dockWidgets_;

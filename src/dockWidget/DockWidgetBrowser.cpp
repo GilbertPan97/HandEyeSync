@@ -76,7 +76,9 @@ void DockWidgetBrowser::clearContent() {
 }
 
 void DockWidgetBrowser::setContentFromPoints(const std::vector<std::vector<std::pair<double, double>>>& pointsSetBuffer) {
-
+    // Clear all old contentItems before reset content
+    contentItems_.clear();
+    
     // Iterate through each set of points
     for (const auto& pointsSet : pointsSetBuffer) {
         // Calculate the bounding box (min/max) of the points set
@@ -141,8 +143,7 @@ void DockWidgetBrowser::setContentFromRobot(const std::vector<std::vector<double
 
     // Check if contentItems_ size matches robDataBuffer size
     if (contentItems_.size() != robDataBuffer.size()) {
-        qDebug() << "Size mismatch: contentItems_ size does not match robDataBuffer size!";
-        return;  // Early return if sizes don't match
+        throw std::runtime_error("ListWidget contentItems_ size does not match robDataBuffer size!");
     }
 
     // Iterate through robDataBuffer and update the strings in contentItems_

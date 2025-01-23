@@ -24,7 +24,11 @@ double ProfileParser::extractNumericValueFromFilename(const std::string& filenam
 }
 
 // TODO: add progress callback function
-std::vector<std::vector<std::pair<double, double>>> ProfileParser::parseProfileFiles(const std::string& folderPath, const std::string& type) {
+std::vector<std::vector<std::pair<double, double>>> ProfileParser::parseProfileFiles(
+    const std::string& folderPath, 
+    const std::string& type,
+    const std::function<void(int)>& progressCallback
+) {
     std::vector<std::vector<std::pair<double, double>>> pointsList;
 
     // Normalize the file extension to lowercase
@@ -61,7 +65,15 @@ std::vector<std::vector<std::pair<double, double>>> ProfileParser::parseProfileF
     });
 
     // Process each file
-    for (const auto& filePath : filePaths) {
+    for (size_t i = 0; i < filePaths.size(); ++i) {
+        const auto& filePath = filePaths[i];
+
+        // Notify progress if progressCallback is provided
+        if (progressCallback) {
+            int progress = static_cast<int>((static_cast<double>(i + 1) / filePaths.size()) * 100);
+            progressCallback(progress);
+        }
+
         cv::FileStorage fs(filePath.string(), cv::FileStorage::READ);
         if (!fs.isOpened()) {
             std::cerr << "Failed to open file: " << filePath.string() << std::endl;
