@@ -63,6 +63,7 @@ private slots:
     void onAddImg2ActionTriggered();
     void onAddRob1ActionTriggered();
     void onAddRob2ActionTriggered();
+    void onRunButtonReleased();
 
 private:
     QToolBar *topToolBar_;         // Top toolbar

@@ -1,12 +1,6 @@
-/**
-@file : calibrator.h
-@package : calibrator library
-@brief CPP common example functionality.
-@copyright (c) 2023, Shanghai Fanuc Ltd.
-@version 16.03.2023, SFR: initial version
-*/
 #ifndef CALIBRATOR_H
 #define CALIBRATOR_H
+
 #include "common.h"
 #include "algorithm.h"
 
@@ -16,7 +10,7 @@
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
 
-namespace LineScanner
+namespace ProfileScanner
 {
     class HandEyeCalib {
     private:

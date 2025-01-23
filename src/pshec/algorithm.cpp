@@ -1,10 +1,3 @@
-/**
-@file : algorithm.cpp
-@package : algorithm library
-@brief CPP common example functionality.
-@copyright (c) 2023, Shanghai Fanuc Ltd.
-@version 16.03.2023, SFR: initial version
-*/
 #include "algorithm.h"
 #include "utils.h"
 
@@ -16,7 +9,7 @@
 #include <Eigen/QR>
 #include <unsupported/Eigen/KroneckerProduct>
 
-namespace LineScanner
+namespace ProfileScanner
 {
 
     algorithm::algorithm(Constructor type, SolveMethod method_){
@@ -227,9 +220,4 @@ namespace LineScanner
         return r_orth_mat;
     }
 
-} // namespace LineScanner
-
-// namespace Camera
-// {
-
-// } // namespace Camera
+} // namespace ProfileScanner

@@ -1,10 +1,3 @@
-/**
-@file : calibrator.cpp
-@package : calibrator library
-@brief CPP common example functionality.
-@copyright (c) 2023, Shanghai Fanuc Ltd.
-@version 16.03.2023, SFR: initial version
-*/
 #include "calibrator.h"
 #include "common.h"
 #include "utils.h"
@@ -21,7 +14,7 @@
 // Utils is visible for all Calibrator space
 using namespace CalibUtils; 
 
-namespace LineScanner
+namespace ProfileScanner
 {
     HandEyeCalib::HandEyeCalib(){
 
@@ -289,9 +282,4 @@ namespace LineScanner
     }
 
     
-} // namespace LineScanner
-
-namespace Camera
-{
-
-} // namespace Camera
+} // namespace ProfileScanner

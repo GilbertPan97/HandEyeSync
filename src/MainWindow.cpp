@@ -262,6 +262,7 @@ void MainWindow::createToolBar()
     runButton->setIcon(QIcon(":/icons/play.png"));
     runButton->setToolTip("Calibration exec");
     runButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    connect(runButton, &QPushButton::released, this, &MainWindow::onRunButtonReleased);
 
     // Add the QToolButton to a button group (if you have a function like setGroupBtn for grouping buttons)
     QHBoxLayout* ctlWidgetLayout = new QHBoxLayout(this);
@@ -608,6 +609,9 @@ void MainWindow::onAddRob2ActionTriggered() {
     // Add logic for receiving data from the robot here
 }
 
+void MainWindow::onRunButtonReleased() {
+    // TODO: Calibration Exec
+}
 
 // Placeholder slots for menu actions
 void MainWindow::newFile()

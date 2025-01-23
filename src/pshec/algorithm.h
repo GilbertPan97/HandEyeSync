@@ -1,10 +1,3 @@
-/**
-@file : algorithm.h
-@package : algorithm library
-@brief CPP common example functionality.
-@copyright (c) 2023, Shanghai Fanuc Ltd.
-@version 16.03.2023, SFR: initial version
-*/
 #ifndef ALGORITHM_H
 #define ALGORITHM_H
 
@@ -13,7 +6,7 @@
 
 #include <Eigen/Core>
 
-namespace LineScanner
+namespace ProfileScanner
 {
     enum Constructor {          // Ways to construct linear equations
         PNT_CONSTANT = 0,       // constant point in world (robot base) frame 
@@ -80,11 +73,6 @@ namespace LineScanner
 
     };
 
-} // namespace LineScanner
-
-// namespace Camera
-// {
-
-// } // namespace Camera
+} // namespace ProfileScanner
 
 #endif
