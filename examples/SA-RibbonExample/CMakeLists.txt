@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+﻿cmake_minimum_required(VERSION 3.10)
 project(Example VERSION "1.0.0.0") 
 set(SARIBBON_EXPAMPLE_NAME SA-RibbonExample)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

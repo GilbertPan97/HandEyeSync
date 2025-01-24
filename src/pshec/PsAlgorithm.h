@@ -1,5 +1,5 @@
-#ifndef ALGORITHM_H
-#define ALGORITHM_H
+#ifndef PSALGORITHM_H
+#define PSALGORITHM_H
 
 #include <iostream>
 #include <vector>
@@ -54,10 +54,10 @@ namespace ProfileScanner
                                 Eigen::Matrix3f & R_solution,
                                 Eigen::Vector3f & t_solution);
         
-        bool Separate_Calib(std::vector<Eigen::Matrix4f> htm_end2base_r,
-                            std::vector<Eigen::Vector3f> p_cam_r, 
-                            std::vector<Eigen::Matrix4f> htm_end2base_t,
-                            std::vector<Eigen::Vector3f> p_cam_t,
+        bool Separate_Calib(std::vector<Eigen::Matrix4f> htm_end2base0,
+                            std::vector<Eigen::Vector3f> p_cam0, 
+                            std::vector<Eigen::Matrix4f> htm_end2base1,
+                            std::vector<Eigen::Vector3f> p_cam1,
                             Eigen::Matrix3f & R_solution,
                             Eigen::Vector3f & t_solution);
 
@@ -70,6 +70,8 @@ namespace ProfileScanner
         void construct_linear_equation_kron(Eigen::MatrixXf & F, Eigen::VectorXf & q);
 
         Eigen::Matrix3f rota_schmidt_orth(Eigen::Matrix3f r_mat);
+
+        Eigen::Matrix3f svd_orth(Eigen::Matrix3f r_mat);
 
     };
 

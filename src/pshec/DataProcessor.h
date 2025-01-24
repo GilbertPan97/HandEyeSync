@@ -66,10 +66,6 @@ private:
     std::vector<cv::Point3f> to3D(std::vector<cv::Point2f> points_2d);
 
     std::vector<cv::Point2f> to2D(std::vector<cv::Point3f> point_3d);
-
-    void viewer_3D(std::vector<cv::Point3f> pnt_cloud);
-
-    void viewer_3D(std::vector<cv::Point3f> pnt_cloud, std::vector<cv::Point3f> mark_pnts);
 };
 
 #endif

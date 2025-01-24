@@ -2,7 +2,6 @@
 #include "utils.h"
 
 #include <Eigen/Dense>
-#include <opencv2/viz.hpp>
 
 DataProc::DataProc(){
     
@@ -431,28 +430,4 @@ std::vector<cv::Point2f> DataProc::to2D(std::vector<cv::Point3f> point_3d){
         points_2d.push_back({pnt3d.x, pnt3d.z});
 
     return points_2d;
-}
-
-void DataProc::viewer_3D(std::vector<cv::Point3f> pnt_cloud){
-    // visulize polyline point
-    cv::viz::Viz3d viz("Point Cloud");
-    cv::viz::WCoordinateSystem worldCsys(10.0);
-    cv::viz::WCloud cloudWidget(pnt_cloud, cv::viz::Color::green());
-    viz.showWidget("CoordinateSystem", worldCsys);
-    viz.showWidget("Cloud", cloudWidget);
-    viz.spin();
-}
-
-void DataProc::viewer_3D(std::vector<cv::Point3f> pnt_cloud, std::vector<cv::Point3f> mark_pnts){
-    // View point cloud
-    cv::viz::Viz3d viz("Point Cloud");
-    cv::viz::WCoordinateSystem worldCsys(10.0);
-    cv::viz::WCloud cloudWidget(pnt_cloud, cv::viz::Color::green());
-    cv::viz::WCloud markPntsWidget(mark_pnts, cv::viz::Color::red());
-    markPntsWidget.setRenderingProperty(cv::viz::POINT_SIZE, 5.0);
-
-    viz.showWidget("Cloud", cloudWidget);
-    viz.showWidget("MarkPnts", markPntsWidget);
-    viz.showWidget("CoordinateSystem", worldCsys);
-    viz.spin();
 }

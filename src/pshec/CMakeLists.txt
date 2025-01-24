@@ -1,14 +1,14 @@
 set(SRC_FILES
     DataProcessor.cpp
-    algorithm.cpp
-    calibrator.cpp
+    PsAlgorithm.cpp
+    PsCalibrator.cpp
     utils.cpp
 )
 
 set(HEADER_FILES
     DataProcessor.h
-    algorithm.h
-    calibrator.h
+    PsAlgorithm.h
+    PsCalibrator.h
     utils.h
     common.h
 )
@@ -16,7 +16,6 @@ set(HEADER_FILES
 source_group("Header Files" FILES ${HEADER_FILES})
 source_group("Source Files" FILES ${SRC_FILES})
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_library(ProfScanCalibrator ${HEADER_FILES} ${SRC_FILES})
 
 # find opencv package: used for ProfScanCalibrator
@@ -25,7 +24,7 @@ target_link_libraries(ProfScanCalibrator PUBLIC ${OpenCV_LIBS})
 
 # find Eigen package: used for ProfScanCalibrator
 find_package(Eigen3 REQUIRED)
-target_include_directories(ProfScanCalibrator PUBLIC ${EIGEN3_INCLUDE_DIRS})
+target_include_directories(ProfScanCalibrator PUBLIC ${EIGEN3_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_compile_options(ProfScanCalibrator PRIVATE /bigobj)
 

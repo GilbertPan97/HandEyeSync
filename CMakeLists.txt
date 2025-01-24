@@ -18,9 +18,11 @@ subdirs(${CMAKE_CURRENT_SOURCE_DIR}/examples)
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.4/")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.4/x64/vc16/lib/")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/eigen-3.4.0")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/json-3.11.3")
 find_package(OpenCV REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 find_package(Eigen3 REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 # Build source code
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/dockWidget)
@@ -39,8 +41,8 @@ set(QRC_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources.qrc")
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${QRC_FILE})
 
 # Link the required Qt5 libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets ${OpenCV_LIBS} Eigen3::Eigen)
-target_link_libraries(${PROJECT_NAME} PRIVATE DockWidgetLibs FanucParserLibs)
+target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets ${OpenCV_LIBS} Eigen3::Eigen nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PRIVATE DockWidgetLibs FanucParserLibs ProfScanCalibrator)
 
 # Enable automatic MOC, UIC, and RCC processing for Qt5
 set_target_properties(${PROJECT_NAME} PROPERTIES

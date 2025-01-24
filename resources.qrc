@@ -19,5 +19,7 @@
 
         <file>icons/check.png</file>
         <file>icons/export.png</file>
+
+        <file>images/icon.png</file>
     </qresource>
 </RCC>

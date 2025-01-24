@@ -1,5 +1,5 @@
 # Set the minimum required CMake version
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 # Check if the BUILD_EXAMPLES variable is defined
 if(NOT DEFINED BUILD_EXAMPLES)

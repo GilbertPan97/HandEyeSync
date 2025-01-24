@@ -10,6 +10,9 @@
 #include "DockWidgetProperty.h"
 #include "ProfileParser.h"
 #include "FanucParser.h"
+#include "PsCalibrator.h"
+#include "PsAlgorithm.h"
+#include "DataProcessor.h"
 
 #include <QMainWindow>
 #include <QTextEdit>
@@ -23,6 +26,7 @@
 #include <QToolButton>
 #include <QList>
 #include <QHBoxLayout>
+#include <nlohmann/json.hpp>
 
 // Alias for a point that includes x, y, z, w, p, r
 using FanucRobPose = std::vector<double>;
@@ -54,6 +58,9 @@ private:
 
     QString sensorTypeToString(SensorType sensorType);
 
+    std::vector<std::vector<cv::Point3f>> convertPointsSetBuffer(const std::vector<ProfilePoints>& pointsSetBuffer);
+    std::vector<Eigen::Vector<float, 6>> convertRobDataBuffer(const std::vector<FanucRobPose>& robDataBuffer);
+
 private slots:
     // Placeholder slots for menu actions
     void newFile();
@@ -63,6 +70,7 @@ private slots:
     void onAddImg2ActionTriggered();
     void onAddRob1ActionTriggered();
     void onAddRob2ActionTriggered();
+    void onSettingButtonReleased();
     void onRunButtonReleased();
 
 private:
@@ -70,15 +78,22 @@ private:
     QDialog *progressWidget_;
     QProgressBar *progressBar_;
 
+    // DockWidgets
     ads::CDockManager* dockManager_;
     QList<ads::CDockWidget*> dockWidgets_;
     DockWidgetViewer* viewerWin_;
     DockWidgetLogger* logWin_;
     DockWidgetBrowser* browserWin_;
     DockWidgetProperty* propertyWin_;
+
+    // Calibration dataset
     std::vector<ProfilePoints> pointsSetBuffer_;
     std::vector<FanucRobPose> robDataBuffer_;
+    std::vector<cv::Point3f> feature_pnts;          // Feature points in camera frame
+
+    // Calibration configuration
     SensorType sensorType_;
+    nlohmann::json calibMap_;
 };
 
 #endif // MAINWINDOW_H

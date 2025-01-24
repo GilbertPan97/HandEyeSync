@@ -229,22 +229,37 @@ void MainWindow::createToolBar()
     topToolBar_->addSeparator();
 
     /* ========================= Calibrate Page ========================= */
-    QVBoxLayout* calibModelLayout = new QVBoxLayout(this);
-    calibModelLayout->setSpacing(10);
-    QLabel *calibModelLabel = new QLabel("Calibration Model:");
-    calibModelLayout->addWidget(calibModelLabel);
+    QVBoxLayout* calibTypeLayout = new QVBoxLayout(this);
+    calibTypeLayout->setSpacing(10);
+    QLabel *calibTypeLabel = new QLabel("Calibration Type:");
+    calibTypeLayout->addWidget(calibTypeLabel);
     QRadioButton *eyeInHandRadioButton = new QRadioButton("Eye-In-Hand");
     QRadioButton *eyeToHandRadioButton = new QRadioButton("Eye-To-Hand");
 
     // Create a button group to ensure only one can be selected at a time
-    QButtonGroup *modelGroup = new QButtonGroup(this);
-    modelGroup->addButton(eyeInHandRadioButton);
-    modelGroup->addButton(eyeToHandRadioButton);
+    QButtonGroup *calibTypeGroup = new QButtonGroup(this);
+    calibTypeGroup->addButton(eyeInHandRadioButton);
+    calibTypeGroup->addButton(eyeToHandRadioButton);
 
     // Add the radio buttons to the layout
-    calibModelLayout->addWidget(eyeInHandRadioButton);
-    calibModelLayout->addWidget(eyeToHandRadioButton);
+    calibTypeLayout->addWidget(eyeInHandRadioButton);
+    calibTypeLayout->addWidget(eyeToHandRadioButton);
     eyeInHandRadioButton->setChecked(true);         // Set a default selection
+    calibMap_["CalibrType"] = "Eye-In-Hand";
+
+    // Connect a single lambda function to handle both buttons
+    connect(eyeInHandRadioButton, &QRadioButton::toggled, [this](bool checked) {
+        if (checked) {
+            calibMap_["CalibrType"] = "Eye-In-Hand";
+            logWin_->log("Calibration Type set to: Eye-In-Hand");
+        }
+    });
+    connect(eyeToHandRadioButton, &QRadioButton::toggled, [this](bool checked) {
+        if (checked) {
+            calibMap_["CalibrType"] = "Eye-To-Hand";
+            logWin_->log("Calibration Type set to: Eye-To-Hand");
+        }
+    });
 
     // Calibrate setting and run button
     QMenu *calSettingMenu = new QMenu(this);
@@ -252,10 +267,11 @@ void MainWindow::createToolBar()
     QAction *calSet2Action = calSettingMenu->addAction("Algorithm");
 
     QToolButton *settingButton = new QToolButton(this);
-    settingButton->setText("Options");
+    settingButton->setText("Configuration");
     settingButton->setIcon(QIcon(":/icons/setting.png"));
     settingButton->setToolTip("Calibration setting");
     settingButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    connect(settingButton, &QPushButton::released, this, &MainWindow::onSettingButtonReleased);
 
     QToolButton *runButton = new QToolButton(this);
     runButton->setText("Run");
@@ -266,7 +282,7 @@ void MainWindow::createToolBar()
 
     // Add the QToolButton to a button group (if you have a function like setGroupBtn for grouping buttons)
     QHBoxLayout* ctlWidgetLayout = new QHBoxLayout(this);
-    ctlWidgetLayout->addLayout(calibModelLayout);
+    ctlWidgetLayout->addLayout(calibTypeLayout);
     ctlWidgetLayout->addWidget(settingButton);
     ctlWidgetLayout->addWidget(runButton);
     setToolBarGroup(ctlWidgetLayout, "CALIBRATE");
@@ -388,10 +404,10 @@ void MainWindow::setToolBarGroup(QHBoxLayout* ctlWidgetLayout, QString groupTitl
 
     // Create a label for the group title with bold font
     QLabel *label = new QLabel(groupTitle);
-    QFont boldFont = label->font();  // Get the current font
+    QFont boldFont = label->font();     // Get the current font
     boldFont.setPointSize(12);
-    boldFont.setBold(true);  // Make the font bold
-    label->setFont(boldFont);  // Apply the bold font to the label
+    boldFont.setBold(true);             // Make the font bold
+    label->setFont(boldFont);           // Apply the bold font to the label
 
     // Remove internal margins of the label
     label->setMargin(0);  // Remove internal margin of the label
@@ -572,7 +588,7 @@ void MainWindow::onAddRob1ActionTriggered() {
     }
 
     // 1. Open a file dialog to select the file
-    QString filePath = QFileDialog::getOpenFileName(this, "Open Robot File", "", "Ls Files (*.ls);;All Files (*.*)");
+    QString filePath = QFileDialog::getOpenFileName(this, "Open Robot File", "", "Ls Files (*.ls);;Txt Files (*.txt);;All Files (*.*)");
 
     // If the user cancels the file selection, return
     if (filePath.isEmpty()) {
@@ -609,8 +625,174 @@ void MainWindow::onAddRob2ActionTriggered() {
     // Add logic for receiving data from the robot here
 }
 
+void MainWindow::onSettingButtonReleased() {
+    // Create the dialog window
+    QDialog *settingsDialog = new QDialog(this);
+    settingsDialog->setWindowTitle("Settings");
+
+    // Create a layout for the dialog
+    QHBoxLayout *mainLayout = new QHBoxLayout(settingsDialog);
+
+    // Create a layout for the image (on the top)
+    QVBoxLayout *imageLayout = new QVBoxLayout();
+    QLabel *imageLabel = new QLabel();
+
+    // Load the image and scale it to fit within the fixed square size
+    QPixmap imagePixmap("");    //:/images/icon.png
+    imageLabel->setPixmap(imagePixmap.scaled(300, 300, Qt::KeepAspectRatio));  // Scale image to fit
+
+    // Set the fixed size for the imageLabel to make it a square
+    imageLabel->setFixedSize(300, 300); // Ensure imageLabel is always 300x300px
+
+    // Set label style: gray background for the image area
+    imageLabel->setStyleSheet(
+        "background-color:rgb(200, 200, 200);"
+        "color: #444444;"
+        "border: 2px solid #666666;"
+    );
+
+    // Center the image inside the label
+    imageLabel->setAlignment(Qt::AlignCenter);
+
+    // Add the image label to the image layout
+    imageLayout->addWidget(imageLabel);
+
+    // Create a layout for the property table (on the right)
+    QVBoxLayout *propertiesLayout = new QVBoxLayout();
+
+    // Calibration Model label and ComboBox
+    QLabel *calibModelLabel = new QLabel("Calibration Model:");
+    calibModelLabel->setStyleSheet("font-weight: bold;  font-size: 10pt;");
+    QComboBox *calibModelComboBox = new QComboBox();
+    calibModelComboBox->addItem("Sphere");
+    calibModelComboBox->addItem("Edge");
+
+    // Create a horizontal layout to place the label and combo box next to each other
+    QHBoxLayout *calibModelLayout = new QHBoxLayout();
+    calibModelLayout->addWidget(calibModelLabel);
+    calibModelLayout->addWidget(calibModelComboBox);
+
+    // Feature Point Direction label and ComboBox
+    QLabel *featureDirectionLabel = new QLabel("Feature Point Direction:");
+    featureDirectionLabel->setStyleSheet("font-weight: bold; font-size: 10pt;");
+    QComboBox *featureDirectionComboBox = new QComboBox();
+    featureDirectionComboBox->addItem("+Y");
+    featureDirectionComboBox->addItem("-Y");
+
+    // Create a horizontal layout to place the label and combo box next to each other
+    QHBoxLayout *featureDirectionLayout = new QHBoxLayout();
+    featureDirectionLayout->addWidget(featureDirectionLabel);
+    featureDirectionLayout->addWidget(featureDirectionComboBox);
+
+    // Add the horizontal layout to the properties layout
+    propertiesLayout->addLayout(calibModelLayout);
+    propertiesLayout->addLayout(featureDirectionLayout);
+    propertiesLayout->setSpacing(10);
+
+    // Add the image layout and properties layout to the main layout
+    mainLayout->addLayout(imageLayout);
+    mainLayout->addLayout(propertiesLayout);
+
+    // Set the dialog's layout
+    settingsDialog->setLayout(mainLayout);
+
+    // Set initial values based on calibMap_
+    if (calibMap_.contains("CalibrationModel")) {
+        QString calibModel = QString::fromStdString(calibMap_["CalibrationModel"]);
+        if (calibModel == "Sphere") {
+            calibModelComboBox->setCurrentIndex(0);
+        } else if (calibModel == "Edge") {
+            calibModelComboBox->setCurrentIndex(1);
+        }
+    } 
+    else {
+        calibMap_["CalibrationModel"] = "Sphere";
+        calibModelComboBox->setCurrentIndex(0);
+    }
+
+    if (calibMap_.contains("FeaturePointDirection")) {
+        QString featureDirection = QString::fromStdString(calibMap_["FeaturePointDirection"]);
+        if (featureDirection == "+Y") {
+            featureDirectionComboBox->setCurrentIndex(0);
+        } else if (featureDirection == "-Y") {
+            featureDirectionComboBox->setCurrentIndex(1);
+        }
+    }
+    else {
+        calibMap_["FeaturePointDirection"] = "+Y";
+        featureDirectionComboBox->setCurrentIndex(0);
+    }
+
+    // Connect the calibModelComboBox signal to update calibMap_["CalibrationModel"]
+    connect(calibModelComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            [=](int index) {
+                // Update calibMap_["CalibrationModel"] based on the selected item
+                if (index == 0) {
+                    calibMap_["CalibrationModel"] = "Sphere";
+
+                } else if (index == 1) {
+                    calibMap_["CalibrationModel"] = "Edge";
+                }
+                // Optionally, print the updated value for debugging
+                logWin_->log("Calibration Model set to: " + QString::fromStdString(calibMap_["CalibrationModel"]));
+            });
+
+    // Connect the featureDirectionComboBox signal to update calibMap_["FeaturePointDirection"]
+    connect(featureDirectionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            [=](int index) {
+                // Update calibMap_["FeaturePointDirection"] based on the selected item
+                if (index == 0) {
+                    calibMap_["FeaturePointDirection"] = "+Y";
+                } else if (index == 1) {
+                    calibMap_["FeaturePointDirection"] = "-Y";
+                }
+                // Optionally, print the updated value for debugging
+                logWin_->log("Feature Point Direction set to: " + QString::fromStdString(calibMap_["FeaturePointDirection"]));
+            });
+
+    // Set the minimum size for the dialog (adjust as needed)
+    settingsDialog->setMinimumSize(600, 300); // Adjust minimum size according to content
+
+    // Show the dialog
+    settingsDialog->exec();
+}
+
+
+
 void MainWindow::onRunButtonReleased() {
-    // TODO: Calibration Exec
+    // Check calibration dataset
+    if (pointsSetBuffer_.empty() || robDataBuffer_.empty()) {
+        QMessageBox::warning(this, "Error", "Calibration data has not been uploaded.");
+        logWin_->log("No calibration data detected.");
+        return;
+    }
+    if (pointsSetBuffer_.size() != robDataBuffer_.size()) {
+        QMessageBox::warning(this, "Error", "The size of calibration data does not match.");
+        logWin_->log("Mismatch detected in calibration data sizes.");
+        return;
+    }
+
+    // Process calibration dataset
+    auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
+    auto xyzwpr_data = convertRobDataBuffer(robDataBuffer_);
+	DataProc proc(profile_lines, CalibObj::SPHERE);
+	float rad_sphere = 80 / 2.0;
+	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
+
+    // Execute calibration
+	ProfileScanner::HandEyeCalib hec;
+    CalibType type = calibMap_["CalibType"] == "Eye-In-Hand" ? CalibType::EYE_IN_HAND : CalibType::EYE_TO_HAND;
+    hec.SetCalibType(type);
+	hec.SetRobPose(xyzwpr_data);
+	hec.SetObjData(ctr_pnts, CalibObj::SPHERE);
+	hec.run(ProfileScanner::SolveMethod::ITERATION);
+    float calib_error = hec.CalcCalibError();
+
+    // Log the results
+    std::ostringstream logStream;
+    logStream << "Calibration Error: " << calib_error;
+    logWin_->log(QString::fromStdString(logStream.str()));
+
 }
 
 // Placeholder slots for menu actions
@@ -683,4 +865,42 @@ QString MainWindow::sensorTypeToString(SensorType sensorType) {
         default:
             return "Unknown Sensor Type";  // Default case
     }
+}
+
+// Convert pointsSetBuffer_ to std::vector<std::vector<cv::Point3f>>
+std::vector<std::vector<cv::Point3f>> MainWindow::convertPointsSetBuffer(const std::vector<ProfilePoints>& pointsSetBuffer) {
+    std::vector<std::vector<cv::Point3f>> result;
+
+    for (const auto& profile : pointsSetBuffer) {
+        std::vector<cv::Point3f> profilePoints;
+        for (const auto& point : profile) {
+            profilePoints.emplace_back(cv::Point3f(static_cast<float>(point.first),
+                                                   0.0f,
+                                                   static_cast<float>(point.second)));
+        }
+        result.emplace_back(std::move(profilePoints));
+    }
+
+    return result;
+}
+
+
+// Convert robDataBuffer_ to std::vector<Eigen::Vector<float, 6>>
+std::vector<Eigen::Vector<float, 6>> MainWindow::convertRobDataBuffer(const std::vector<FanucRobPose>& robDataBuffer) {
+    std::vector<Eigen::Vector<float, 6>> result;
+
+    for (const auto& pose : robDataBuffer) {
+        if (pose.size() != 6) {
+            throw std::runtime_error("Invalid FanucRobPose size. Expected 6 elements.");
+        }
+
+        Eigen::Vector<float, 6> vector;
+        for (size_t i = 0; i < 6; ++i) {
+            vector[i] = static_cast<float>(pose[i]);
+        }
+
+        result.emplace_back(vector);
+    }
+
+    return result;
 }

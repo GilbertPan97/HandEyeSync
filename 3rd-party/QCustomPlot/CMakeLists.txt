@@ -1,5 +1,5 @@
 # Specify the minimum CMake version
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 # Find the required Qt5 packages
 find_package(Qt5 COMPONENTS Widgets PrintSupport REQUIRED)
@@ -18,9 +18,6 @@ target_include_directories(QCustomPlot PUBLIC
 # Link the Qt5 Widgets library to QCustomPlot
 target_link_libraries(QCustomPlot Qt5::Widgets Qt5::PrintSupport)
 
-# Configure output directories
-option(QCUSTOMPLOT_OUTPUT_DIR "Output directory for QCustomPlot compiled binaries" "${CMAKE_SOURCE_DIR}/output")
-
 # If no custom output directory is provided, use the default
 if(QCUSTOMPLOT_OUTPUT_DIR STREQUAL "OFF")
     set(QCUSTOMPLOT_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/output")
@@ -31,9 +28,6 @@ message(STATUS "QCustomPlot will be built to: ${QCUSTOMPLOT_OUTPUT_DIR}")
 
 # Set the output directories for the compiled binaries
 set_target_properties(QCustomPlot PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${QCUSTOMPLOT_OUTPUT_DIR}/lib
-    LIBRARY_OUTPUT_DIRECTORY ${QCUSTOMPLOT_OUTPUT_DIR}/lib
-    RUNTIME_OUTPUT_DIRECTORY ${QCUSTOMPLOT_OUTPUT_DIR}/bin
     AUTOMOC ON          # Enable automatic MOC (Meta-Object Compiler)
     AUTORCC ON          # Enable automatic RCC (Resource Compiler)
     AUTOUIC ON

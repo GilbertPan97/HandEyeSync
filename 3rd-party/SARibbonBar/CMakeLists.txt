@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+﻿cmake_minimum_required(VERSION 3.10)
 set(LIB_NAME SARibbonBar)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

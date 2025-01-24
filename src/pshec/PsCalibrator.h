@@ -1,8 +1,8 @@
-#ifndef CALIBRATOR_H
-#define CALIBRATOR_H
+#ifndef PSCALIBRATOR_H
+#define PSCALIBRATOR_H
 
 #include "common.h"
-#include "algorithm.h"
+#include "PsAlgorithm.h"
 
 #include <iostream>
 #include <vector>
@@ -22,7 +22,7 @@ namespace ProfileScanner
         std::vector<Eigen::Matrix4f> mtr_end2base_;
         
         std::vector<cv::Point3f> ctr_pnts_;         // sphere center points (camera frame)
-        std::vector<cv::Point3f> edge_pnts_;        // block edge points (camera frame) 
+        std::vector<cv::Point3f> edge_pnts_;           // block edge points (camera frame) 
         std::vector<std::vector<cv::Point3f>> tri_edges_cam_;       // triangle two edge points (camera frame)
         std::vector<std::vector<cv::Point3f>> tri_edges_rob_;       // triangle two edge points (robot base frame)
 
@@ -41,6 +41,8 @@ namespace ProfileScanner
 
         ~HandEyeCalib();
 
+        void SetCalibType(CalibType type);
+
         bool SetRobPose(const std::vector<Eigen::Vector<float, 6>> rob_pose);
 
         bool SetRobPose(const std::vector<Eigen::Vector<float, 6>> rob_pose,
@@ -54,22 +56,23 @@ namespace ProfileScanner
 
         bool run(SolveMethod method);
         
+        /* linerFit is test function for triangle board calibration */ 
         bool linerFit(Eigen::VectorXf x);
-        
         bool linerFit();
 
         Eigen::Matrix4f GetCalcResult();
 
-        Eigen::Vector<float, 6> GetCalcResultXYZWPR();
+        float CalcCalibError(std::vector<cv::Point3f> featurePnts_camera,
+                                std::vector<Eigen::Matrix4f> robPoses);
 
-        Eigen::Vector<float, 7> GetCalcResultXYZQUA();
-
-        bool CalcCalibError(std::vector<float>& dist_ctr_pnts, float& calib_error);
+        float CalcCalibError();
 
     private:
         void drawClusters(cv::Mat& img, 
                             std::vector<cv::Point2f>& centers, 
                             std::vector<std::vector<cv::Point2f>>& points);
+
+        float CalcPntStandDeviation(std::vector<Eigen::Vector3f> pntSet3d);
     };
 }
 
