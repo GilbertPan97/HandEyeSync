@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="libfanucsm"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\usr\;CMake Files\..\..\..\..\usr\share\;CMake Files\..\..\..\..\usr\share\eigen3\;CMake Files\..\..\..\..\usr\share\eigen3\cmake\;CMake Files\..\..\..\..\usr\lib64\;CMake Files\..\..\..\..\usr\lib64\cmake\;CMake Files\..\..\..\..\usr\lib64\cmake\spdlog\;CMake Files\..\..\..\..\usr\lib64\cmake\fmt\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="test_raw_controller">
+				<Option output="/home/sun/CLionProjects/libfanucsm/cmake-build-debug/test_raw_controller" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DHAVE_LITTLE_ENDIAN"/>
+					<Add option="-DSPDLOG_SHARED_LIB"/>
+					<Add option="-DSPDLOG_COMPILED_LIB"/>
+					<Add option="-DSPDLOG_FMT_EXTERNAL"/>
+					<Add option="-DFMT_LOCALE"/>
+					<Add option="-DFMT_SHARED"/>
+					<Add directory="/usr/include/eigen3"/>
+					<Add directory="/home/sun/CLionProjects/libfanucsm/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 test_raw_controller"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="test_raw_controller/fast">
+				<Option output="/home/sun/CLionProjects/libfanucsm/cmake-build-debug/test_raw_controller" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DHAVE_LITTLE_ENDIAN"/>
+					<Add option="-DSPDLOG_SHARED_LIB"/>
+					<Add option="-DSPDLOG_COMPILED_LIB"/>
+					<Add option="-DSPDLOG_FMT_EXTERNAL"/>
+					<Add option="-DFMT_LOCALE"/>
+					<Add option="-DFMT_SHARED"/>
+					<Add directory="/usr/include/eigen3"/>
+					<Add directory="/home/sun/CLionProjects/libfanucsm/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 test_raw_controller/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="test_socket">
+				<Option output="/home/sun/CLionProjects/libfanucsm/cmake-build-debug/test_socket" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/eigen3"/>
+					<Add directory="/home/sun/CLionProjects/libfanucsm/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 test_socket"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="test_socket/fast">
+				<Option output="/home/sun/CLionProjects/libfanucsm/cmake-build-debug/test_socket" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/eigen3"/>
+					<Add directory="/home/sun/CLionProjects/libfanucsm/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 test_socket/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="test_thread">
+				<Option output="/home/sun/CLionProjects/libfanucsm/cmake-build-debug/test_thread" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DHAVE_LITTLE_ENDIAN"/>
+					<Add option="-DSPDLOG_SHARED_LIB"/>
+					<Add option="-DSPDLOG_COMPILED_LIB"/>
+					<Add option="-DSPDLOG_FMT_EXTERNAL"/>
+					<Add option="-DFMT_LOCALE"/>
+					<Add option="-DFMT_SHARED"/>
+					<Add directory="/usr/include/eigen3"/>
+					<Add directory="/home/sun/CLionProjects/libfanucsm/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 test_thread"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="test_thread/fast">
+				<Option output="/home/sun/CLionProjects/libfanucsm/cmake-build-debug/test_thread" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DHAVE_LITTLE_ENDIAN"/>
+					<Add option="-DSPDLOG_SHARED_LIB"/>
+					<Add option="-DSPDLOG_COMPILED_LIB"/>
+					<Add option="-DSPDLOG_FMT_EXTERNAL"/>
+					<Add option="-DFMT_LOCALE"/>
+					<Add option="-DFMT_SHARED"/>
+					<Add directory="/usr/include/eigen3"/>
+					<Add directory="/home/sun/CLionProjects/libfanucsm/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 test_thread/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="main">
+				<Option output="/home/sun/CLionProjects/libfanucsm/cmake-build-debug/main" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/eigen3"/>
+					<Add directory="/home/sun/CLionProjects/libfanucsm/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 main"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="main/fast">
+				<Option output="/home/sun/CLionProjects/libfanucsm/cmake-build-debug/main" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/sun/CLionProjects/libfanucsm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/eigen3"/>
+					<Add directory="/home/sun/CLionProjects/libfanucsm/src"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 main/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/sun/CLionProjects/libfanucsm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/main.cpp">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/myendian.cpp">
+			<Option target="test_raw_controller"/>
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/myendian.h">
+			<Option target="test_raw_controller"/>
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/mysocket.cpp">
+			<Option target="test_raw_controller"/>
+			<Option target="test_socket"/>
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/mysocket.h">
+			<Option target="test_raw_controller"/>
+			<Option target="test_socket"/>
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/raw_controller.cpp">
+			<Option target="test_raw_controller"/>
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/raw_controller.h">
+			<Option target="test_raw_controller"/>
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/stream_motion_controller.cpp">
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/stream_motion_controller.h">
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/trajectory.cpp">
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/src/trajectory.h">
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/test_raw_controller.cpp">
+			<Option target="test_raw_controller"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/test_socket.cpp">
+			<Option target="test_socket"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/test_thread.cpp">
+			<Option target="test_thread"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/share/eigen3/cmake/Eigen3Config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\share\eigen3\cmake\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/share/eigen3/cmake/Eigen3ConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\share\eigen3\cmake\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/share/eigen3/cmake/Eigen3Targets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\share\eigen3\cmake\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/lib64/cmake/spdlog/spdlogConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib64\cmake\spdlog\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/lib64/cmake/spdlog/spdlogConfigTargets-none.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib64\cmake\spdlog\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/lib64/cmake/spdlog/spdlogConfigTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib64\cmake\spdlog\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/lib64/cmake/spdlog/spdlogConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib64\cmake\spdlog\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/lib64/cmake/fmt/fmt-config-version.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib64\cmake\fmt\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/lib64/cmake/fmt/fmt-config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib64\cmake\fmt\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/lib64/cmake/fmt/fmt-targets-none.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib64\cmake\fmt\"/>
+		</Unit>
+		<Unit filename="/home/sun/CLionProjects/libfanucsm/../../../../usr/lib64/cmake/fmt/fmt-targets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\lib64\cmake\fmt\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

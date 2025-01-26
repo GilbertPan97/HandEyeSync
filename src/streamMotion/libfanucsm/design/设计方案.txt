@@ -1,0 +1,51 @@
+stream motion driver 设计方案
+需求：
+1. 能够稳定的通过UDP与机器人进行通讯
+2. 开始使用stream motion后PC端可以以8ms的速度提供机器人下一个位置点
+方案：
+1. 问题不大
+2. 由于路径规划器需要已知机器人当前状态才能进行计算，也就是说要在8ms内计算完轨迹，当路点较多时无法在8ms之内完成
+所以应当采用另外一个线程来完成机器人通讯的维护，设计如下：
+
+主线程：
+    FANUC::StreamMotionController
+    轨迹规划
+    start() -- 连接机器人开启stream motion, 开启线程1
+    stop()  -- 关闭 stream motion
+    getCurrentCartesianPosition()
+    getCurrentJointPosition()
+    getIO()
+    setIO()
+    getMode() -- 设置Joint Motion 或者 Cartesian Motion？？
+    getStatus() -- 当前机器人状态
+        SM_RUNNING 1 正常，0 pause /abort/ last date
+        CMD_RECV
+        SYSRDY
+        IN_MOTION
+    moveJoint()
+    moveJoint(list of Joints)
+    moveCartesian()
+    moveCartesian(list of Poses)
+    moveHome()
+
+线程1：
+    FANUC::RAWController
+    open() 开启udp
+    close() 关闭udp
+    start() 开启stream motion，下发指令
+    stop_req()  关闭stream motion，下发指令， 停止控制，停止state报文
+    run() 主循环，状态机
+    维护机器人通讯的状态机：
+    1. 开启udp
+    2. loop utill 开启stream motion
+    3. if Joint状态，进入发送Joint 插补数据， 直到发完
+    4. if Cartesian状态，进入发送Cartesian 插补数据，
+    5. if idle 状态， 进入收入再发，
+    6. if read_io 状态， 一个发收， 只能在 idle 状态下
+    7. if set_io 状态， 一个发收， 只能在idle状态下
+
+问题：
+    1. 加锁，多线程问题需要交互，仅仅通过简单的内存互相读取，没有通过加锁处理
+        需要学习多线程编程的加锁
+
+    2. 笛卡尔空间插补，位姿不连续的问题，应不该在wpr空间直接插补（存在二义性问题）

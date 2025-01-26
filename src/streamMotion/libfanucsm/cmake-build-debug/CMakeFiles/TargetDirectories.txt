@@ -1,0 +1,6 @@
+/home/sun/CLionProjects/libfanucsm/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/sun/CLionProjects/libfanucsm/cmake-build-debug/CMakeFiles/test_raw_controller.dir
+/home/sun/CLionProjects/libfanucsm/cmake-build-debug/CMakeFiles/test_socket.dir
+/home/sun/CLionProjects/libfanucsm/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/sun/CLionProjects/libfanucsm/cmake-build-debug/CMakeFiles/test_thread.dir
+/home/sun/CLionProjects/libfanucsm/cmake-build-debug/CMakeFiles/main.dir

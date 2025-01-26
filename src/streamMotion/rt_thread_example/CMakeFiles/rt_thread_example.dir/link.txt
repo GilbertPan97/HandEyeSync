@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/rt_thread_example.dir/src/rt_thread_example.cpp.o CMakeFiles/rt_thread_example.dir/src/stream_motion/stream_motion.cpp.o -o rt_thread_example  -lpthread -lrt 
