@@ -547,6 +547,7 @@ void MainWindow::onAddImg1ActionTriggered() {
 
             // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
             // that logs the selected dataset item's index and pose data to the log window.
+            // TODO: Cache pointsSetBuffer_[index] data to curPlotrData_
             connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
                 viewerWin_->plotPoints(pointsSetBuffer_[index], false);
                 // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
@@ -757,8 +758,6 @@ void MainWindow::onSettingButtonReleased() {
     settingsDialog->exec();
 }
 
-
-
 void MainWindow::onRunButtonReleased() {
     // Check calibration dataset
     if (pointsSetBuffer_.empty() || robDataBuffer_.empty()) {
@@ -784,7 +783,7 @@ void MainWindow::onRunButtonReleased() {
     CalibType type = calibMap_["CalibType"] == "Eye-In-Hand" ? CalibType::EYE_IN_HAND : CalibType::EYE_TO_HAND;
     hec.SetCalibType(type);
 	hec.SetRobPose(xyzwpr_data);
-	hec.SetObjData(ctr_pnts, CalibObj::SPHERE);
+	hec.SetProfileData(ctr_pnts, CalibObj::SPHERE);
 	hec.run(ProfileScanner::SolveMethod::ITERATION);
     float calib_error = hec.CalcCalibError();
 

@@ -67,7 +67,7 @@ namespace ProfileScanner
         return true;
     }
 
-    bool HandEyeCalib::SetObjData(std::vector<cv::Point3f> pnts_data, CalibObj obj){
+    bool HandEyeCalib::SetProfileData(std::vector<cv::Point3f> pnts_data, CalibObj obj){
         // check the volume of the dataset
         if (nbr_data_ != pnts_data.size()){
             std::cout << "WARNING: Number of lines not match nbr_data_. \n";
@@ -80,28 +80,11 @@ namespace ProfileScanner
             ctr_pnts_ = pnts_data;
         else if(obj == CalibObj::BLOCK)
             edge_pnts_ = pnts_data;
-        else{
+        else {
             std::cout << "ERROR: calibration objection is false.\n";
             return false;
         }
         
-        return true;
-    }
-
-    bool HandEyeCalib::SetObjData(std::vector<std::vector<cv::Point3f>> tri_edges_cam, 
-                                  std::vector<std::vector<cv::Point3f>> tri_edges_rob, 
-                                  CalibObj obj){
-        // check calib object type
-        if (obj != CalibObj::TRIANGLE_BOARD){
-            std::cout << "ERROR: Calibration object set false.\n";
-            return false;
-        }
-
-        calib_obj_ = obj;
-
-        tri_edges_cam_ = tri_edges_cam;
-        tri_edges_rob_ = tri_edges_rob;
-
         return true;
     }
 
@@ -139,10 +122,11 @@ namespace ProfileScanner
                 Eigen::Vector3f p_cam_i = {edge_pnts_[i].x, 
                                            edge_pnts_[i].y, 
                                            edge_pnts_[i].z};
-                if(i < mtr_end2base_.size() / 2){
+                if (i < mtr_end2base_.size() / 2) {
                     htm_end2base_r.emplace_back(mtr_end2base_i);
                     p_cam_r.emplace_back(p_cam_i);
-                }else{
+                }
+                else {
                     htm_end2base_t.emplace_back(mtr_end2base_i);
                     p_cam_t.emplace_back(p_cam_i);
                 }
@@ -159,85 +143,6 @@ namespace ProfileScanner
                     << mtr_cam2rob_ << std::endl;
         std::cout << "INFO: Calibration result in XYZWPR format: \n"
                     << vec_cam2rob_.transpose() << std::endl;
-
-        return true;
-    }
-
-    bool HandEyeCalib::linerFit(Eigen::VectorXf x){
-        Eigen::MatrixXf F(2 * 3 * nbr_data_, 12);
-        Eigen::VectorXf q(2 * 3 * nbr_data_);
-        
-        for (size_t i = 0; i < tri_edges_rob_.size(); i++)
-        {
-            for (size_t j = 0; j < mtr_end2base_.size(); j++)
-            {
-                Eigen::Vector3f p_cam(tri_edges_cam_[i][j].x,
-                                        tri_edges_cam_[i][j].y,
-                                        tri_edges_cam_[i][j].z);
-
-                Eigen::Vector3f p_rob(tri_edges_rob_[i][j].x,
-                                        tri_edges_rob_[i][j].y,
-                                        tri_edges_rob_[i][j].z);
-
-                Eigen::Matrix3f Ra = mtr_end2base_[j].block<3, 3>(0, 0);
-                Eigen::Vector3f ta = mtr_end2base_[j].block<3, 1>(0, 3);
-                auto kro = Eigen::kroneckerProduct(p_cam.transpose(), Ra);     // 3 * 9 matrix
-                
-                // std::cout << "Kro is: \n" << kro << std::endl;
-                F.block<3, 12>(3 * j + 3 * i * mtr_end2base_.size(), 0) << kro, Ra;
-                q.block<3, 1>(3 * j + 3 * i * mtr_end2base_.size(), 0) << p_rob - ta;
-            }
-        }
-
-        // linear fit to solve equation
-        Eigen::MatrixXf F_pinv = F.completeOrthogonalDecomposition().pseudoInverse();
-        auto solutions = F_pinv * q;    // solutions = [vec(Rx); tx], size: 12, 1
-        std::cout << "INFO: Regression solution is:\n " << solutions.transpose() << std::endl;
-
-        Eigen::Vector3f R_col1 = solutions.block<3, 1>(0, 0);
-        Eigen::Vector3f R_col3 = solutions.block<3, 1>(6, 0);
-        R_col1.normalize();
-        R_col3.normalize();
-
-        Eigen::VectorXf sol(12);
-        Eigen::Vector3f R_col2 = R_col1.cross(R_col3);
-        std::cout << "INFO: true col2 is: " << R_col2.transpose() << std::endl;
-        sol << R_col1, R_col2, R_col3, solutions.block<3, 1>(9, 0);
-        std::cout << "INFO: Regression solution is:\n " << sol.transpose() << std::endl;
-
-        // calculate regression error
-        Eigen::VectorXf vec_err = q - F * x;
-        float error = vec_err.norm()/nbr_data_;
-        std::cout << "INFO: Regression error is: \n" << vec_err.transpose() << std::endl;
-
-        return true;
-    }
-
-    bool HandEyeCalib::linerFit(){
-        
-        Eigen::MatrixXf A(3, tri_edges_rob_.size() * mtr_end2base_.size());
-        Eigen::MatrixXf B(3, tri_edges_rob_.size() * mtr_end2base_.size());
-
-        for (size_t i = 0; i < tri_edges_rob_.size(); i++)
-        {
-            for (size_t j = 0; j < mtr_end2base_.size(); j++)
-            {
-                Eigen::Vector3f hp_cam(tri_edges_cam_[i][j].x,
-                                        tri_edges_cam_[i][j].z,
-                                        1);
-
-                Eigen::Vector4f hp_rob(tri_edges_rob_[i][j].x,
-                                        tri_edges_rob_[i][j].y,
-                                        tri_edges_rob_[i][j].z,
-                                        1);
-
-                Eigen::Vector3f p_flange = (mtr_end2base_[j].inverse() * hp_rob).head(3);
-                B.block<3, 1>(0, i * mtr_end2base_.size() + j) = p_flange;
-                A.block<3, 1>(0, i * mtr_end2base_.size() + j) = hp_cam;
-            }
-        }
-
-        Eigen::Matrix3f X = B * (A.transpose() * A).inverse() * A.transpose();
 
         return true;
     }

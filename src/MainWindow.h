@@ -89,7 +89,7 @@ private:
     // Calibration dataset
     std::vector<ProfilePoints> pointsSetBuffer_;
     std::vector<FanucRobPose> robDataBuffer_;
-    std::vector<cv::Point3f> feature_pnts;          // Feature points in camera frame
+    std::vector<cv::Point3f> feature_pnts;          // Feature points in camera frame (sphere center or edge corner)
 
     // Calibration configuration
     SensorType sensorType_;

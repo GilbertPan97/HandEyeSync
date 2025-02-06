@@ -2,9 +2,13 @@
 #define DOCK_WIDGET_PROPERTY_H
 
 #include "DockWidget.h" // Include the correct header for ads::CDockWidget
-#include <QTreeWidget> // Used for displaying properties
+
+#include <QTreeWidget>   // Used for displaying properties
 #include <QString>
-#include <QHeaderView>
+#include <QComboBox>
+#include <QCheckBox>
+#include <QLineEdit>
+#include <QStringList>
 
 /**
  * @class DockWidgetProperty
@@ -20,11 +24,31 @@ public:
     explicit DockWidgetProperty(const QString& title, QWidget* parent = nullptr);
 
     /**
-     * @brief Adds a property to the widget.
+     * @brief Initializes the property table with predefined properties.
+     */
+    void initPropertyTable();
+
+    /**
+     * @brief Adds a property with a simple text value.
      * @param name The name of the property.
      * @param value The value of the property.
      */
     void addProperty(const QString& name, const QString& value);
+
+    /**
+     * @brief Adds a property with a combo box for selection.
+     * @param name The name of the property.
+     * @param options A list of options for the combo box.
+     * @param currentOption The current selected option.
+     */
+    void addProperty(const QString& name, const QStringList& options, const QString& currentOption);
+
+    /**
+     * @brief Adds a property with a check box for boolean values.
+     * @param name The name of the property.
+     * @param checked The initial checked state of the checkbox.
+     */
+    void addProperty(const QString& name, bool checked);
 
     /**
      * @brief Clears all properties from the widget.
