@@ -547,7 +547,6 @@ void MainWindow::onAddImg1ActionTriggered() {
 
             // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
             // that logs the selected dataset item's index and pose data to the log window.
-            // TODO: Cache pointsSetBuffer_[index] data to curPlotrData_
             connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
                 viewerWin_->plotPoints(pointsSetBuffer_[index], false);
                 // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
@@ -756,6 +755,13 @@ void MainWindow::onSettingButtonReleased() {
 
     // Show the dialog
     settingsDialog->exec();
+
+    // TODO: Dateset Process not finished
+    auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
+	DataProc proc(profile_lines, CalibObj::SPHERE);
+	float rad_sphere = 80 / 2.0;
+	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
+    writeFeaturePointsToProfileSheets(ctr_pnts, featuresSheet_);
 }
 
 void MainWindow::onRunButtonReleased() {
@@ -772,18 +778,14 @@ void MainWindow::onRunButtonReleased() {
     }
 
     // Process calibration dataset
-    auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
     auto xyzwpr_data = convertRobDataBuffer(robDataBuffer_);
-	DataProc proc(profile_lines, CalibObj::SPHERE);
-	float rad_sphere = 80 / 2.0;
-	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
 
     // Execute calibration
 	ProfileScanner::HandEyeCalib hec;
     CalibType type = calibMap_["CalibType"] == "Eye-In-Hand" ? CalibType::EYE_IN_HAND : CalibType::EYE_TO_HAND;
     hec.SetCalibType(type);
 	hec.SetRobPose(xyzwpr_data);
-	hec.SetProfileData(ctr_pnts, CalibObj::SPHERE);
+	hec.SetProfileData(extractFeaturePointsFromProfileSheet(featuresSheet_), CalibObj::SPHERE);
 	hec.run(ProfileScanner::SolveMethod::ITERATION);
     float calib_error = hec.CalcCalibError();
 
@@ -902,4 +904,46 @@ std::vector<Eigen::Vector<float, 6>> MainWindow::convertRobDataBuffer(const std:
     }
 
     return result;
+}
+
+std::vector<cv::Point3f> MainWindow::extractFeaturePointsFromProfileSheet(const std::vector<ProfileSheet>& profileSheets) {
+    std::vector<cv::Point3f> featurePoints;
+
+    // Loop through the profileSheets vector and extract feature points
+    for (const auto& profile : profileSheets) {
+        featurePoints.push_back(profile.featurePoint);  // Extract the feature point and add to the result vector
+    }
+
+    return featurePoints;  // Return the vector containing all extracted feature points
+}
+
+// Function to write cv::Point3f data into ProfileSheet objects
+void MainWindow::writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::vector<ProfileSheet>& profileSheets) {
+    // Check if the profileSheets is empty
+    if (profileSheets.empty()) {
+        // If it's empty, push new ProfileSheet objects for each point in 'points'
+        for (size_t i = 0; i < points.size(); ++i) {
+            ProfileSheet profile;
+            profile.profileIndex = static_cast<int>(i);  // Set profile index
+            profile.pointCount = 1;                      // Set point count to 1 for each feature point
+            profile.featurePoint = points[i];            // Set the feature point
+            profile.enableFilter = false;                // Set the filter status (can be adjusted based on your logic)
+            profile.filterType = "";                     // Set the filter type (can be adjusted based on your logic)
+
+            // Add the created ProfileSheet to the profileSheets vector
+            profileSheets.push_back(profile);
+        }
+    } else {
+        // If profileSheets already has elements, update them (assuming sizes match)
+        if (profileSheets.size() == points.size()) {
+            for (size_t i = 0; i < points.size(); ++i) {
+                profileSheets[i].featurePoint = points[i];  // Directly update the feature point
+                // You can also update other fields if needed, such as enabling the filter
+            }
+        } else {
+            // Handle the case where the sizes don't match (you could choose to clear and rewrite, or handle the mismatch)
+            qDebug() << "Error: The number of points does not match the size of profileSheets.";
+            // Optionally, you can clear profileSheets or perform other actions here if desired.
+        }
+    }
 }
