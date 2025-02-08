@@ -37,17 +37,6 @@ enum class SensorType {
     ImageCamera
 };
 
-struct ProfileSheet {
-    int profileIndex;              // Profile Index
-    int pointCount;                // Number of points in profile
-    cv::Point3f featurePoint;      // Feature point in camera frame (for example, center of sphere or edge corner)
-    bool enableFilter;             // Whether filter is enabled for this profile
-    std::string filterType;        // Filter type (e.g., "Gaussian", "Median", etc.)
-
-    ProfileSheet(int index = -1, int count = 0, const cv::Point3f& feature = cv::Point3f(0, 0, 0), bool enable = false, const std::string& filter = "")
-        : profileIndex(index), pointCount(count), featurePoint(feature), enableFilter(enable), filterType(filter) {}
-};
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -71,6 +60,7 @@ private:
 
     std::vector<std::vector<cv::Point3f>> convertPointsSetBuffer(const std::vector<ProfilePoints>& pointsSetBuffer);
     std::vector<Eigen::Vector<float, 6>> convertRobDataBuffer(const std::vector<FanucRobPose>& robDataBuffer);
+    std::vector<ProfileSheet> parseProfilePointsToProfileSheets(const std::vector<ProfilePoints>& pointsSetBuffer);
     std::vector<cv::Point3f> extractFeaturePointsFromProfileSheet(const std::vector<ProfileSheet>& profileSheets);
     void writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::vector<ProfileSheet>& profileSheets);
 
@@ -79,10 +69,8 @@ private slots:
     void newFile();
     void openFile();
     void saveFile();
-    void onAddImg1ActionTriggered();
-    void onAddImg2ActionTriggered();
-    void onAddRob1ActionTriggered();
-    void onAddRob2ActionTriggered();
+    void onAddImgActionTriggered();
+    void onAddRobActionTriggered();
     void onSettingButtonReleased();
     void onRunButtonReleased();
 
@@ -103,7 +91,6 @@ private:
     std::vector<ProfilePoints> pointsSetBuffer_;
     std::vector<FanucRobPose> robDataBuffer_;
     std::vector<ProfileSheet> featuresSheet_;
-    std::vector<cv::Point3f> feature_pnts;          // Feature points in camera frame (sphere center or edge corner)
 
     // Calibration configuration
     SensorType sensorType_;

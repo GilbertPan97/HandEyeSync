@@ -190,32 +190,18 @@ void MainWindow::createToolBar()
     sensorSelButton->setPopupMode(QToolButton::MenuButtonPopup);
 
     // ~~~ Widget 2: Load Image Button.
-    QMenu *addImgMenu = new QMenu(this);
-    QAction *addImage1Action = addImgMenu->addAction("Local Images");
-    QAction *addImage2Action = addImgMenu->addAction("Receive From Camera");
-    connect(addImage1Action, &QAction::triggered, this, &MainWindow::onAddImg1ActionTriggered);
-    connect(addImage2Action, &QAction::triggered, this, &MainWindow::onAddImg2ActionTriggered);
-
     QToolButton *addImgButton = new QToolButton();
     addImgButton->setIcon(QIcon(":/icons/add-images.png"));
     addImgButton->setText("Load Images");
-    addImgButton->setMenu(addImgMenu);
     addImgButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    addImgButton->setPopupMode(QToolButton::MenuButtonPopup);
-
-    QMenu *addRobMenu = new QMenu(this);
-    QAction *addRob1Action = addRobMenu->addAction("Local Robot Data");
-    QAction *addRob2Action = addRobMenu->addAction("Receive From Robot");
-    connect(addRob1Action, &QAction::triggered, this, &MainWindow::onAddRob1ActionTriggered);
-    connect(addRob2Action, &QAction::triggered, this, &MainWindow::onAddRob2ActionTriggered);
+    connect(addImgButton, &QToolButton::released, this, &MainWindow::onAddImgActionTriggered);
 
     // ~~~ Widget 3: Load Robot Data Button.
     QToolButton *addRobButton = new QToolButton();
     addRobButton->setIcon(QIcon(":/icons/add-robot.png"));
     addRobButton->setText("Load Robot Data");
-    addRobButton->setMenu(addRobMenu);
     addRobButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-    addRobButton->setPopupMode(QToolButton::MenuButtonPopup);
+    connect(addRobButton, &QToolButton::released, this, &MainWindow::onAddRobActionTriggered);
 
     QHBoxLayout *datasetLayout = new QHBoxLayout(this);
     datasetLayout->addLayout(onlineCollectLayout);
@@ -450,7 +436,7 @@ void MainWindow::setWidgetProgress(int prog) {
 }
 
 
-void MainWindow::onAddImg1ActionTriggered() {
+void MainWindow::onAddImgActionTriggered() {
     // Create dialog
     QDialog dialog(this);
     dialog.setWindowTitle("Select Sensor Data");
@@ -538,17 +524,23 @@ void MainWindow::onAddImg1ActionTriggered() {
         try {
             ProfileParser profileParser;
             // Attempt to parse the profile files and get the points
+            // TODO: Place progCallback function out of mainwindow
             std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };
             pointsSetBuffer_ = profileParser.parseProfileFiles(folderPath.toStdString(), dataFormat.toStdString(), progCallback);
+            featuresSheet_ = parseProfilePointsToProfileSheets(pointsSetBuffer_);
+
+            // Set browserWin_ profile preview
+            browserWin_->setContentFromPoints(pointsSetBuffer_);        
 
             // Attempt to plot the points (the first set of points from the buffer)
             viewerWin_->plotPoints(pointsSetBuffer_[0], false);
-            browserWin_->setContentFromPoints(pointsSetBuffer_);        // Clear all and reload
+            propertyWin_->writeProfileSheetToProperties(featuresSheet_[0]);
 
             // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
             // that logs the selected dataset item's index and pose data to the log window.
             connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
                 viewerWin_->plotPoints(pointsSetBuffer_[index], false);
+                propertyWin_->writeProfileSheetToProperties(featuresSheet_[index]);
                 // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
                 logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
             });
@@ -574,13 +566,7 @@ void MainWindow::onAddImg1ActionTriggered() {
     }
 }
 
-void MainWindow::onAddImg2ActionTriggered() {
-    // Handle the logic for "Local Robot Data"
-    QMessageBox::information(this, "Action Triggered", "Receiving Data From Sensor...");
-    // Add logic for loading local robot data here
-}
-
-void MainWindow::onAddRob1ActionTriggered() {
+void MainWindow::onAddRobActionTriggered() {
     // 0. Check sensor data buffer first.
     if (pointsSetBuffer_.empty()) {
         QMessageBox::warning(this, "Warning", "Please load sensor data before robot data input.");
@@ -617,12 +603,6 @@ void MainWindow::onAddRob1ActionTriggered() {
         QMessageBox::warning(this, "Error", "Robot data parsing fail.");
         logWin_->log("Load Robot Dataset Failed: Unknown error occurred.");
     }
-}
-
-void MainWindow::onAddRob2ActionTriggered() {
-    // Handle the logic for "Receive From Robot"
-    QMessageBox::information(this, "Action Triggered", "Receiving Data From Robot...");
-    // Add logic for receiving data from the robot here
 }
 
 void MainWindow::onSettingButtonReleased() {
@@ -757,11 +737,17 @@ void MainWindow::onSettingButtonReleased() {
     settingsDialog->exec();
 
     // TODO: Dateset Process not finished
-    auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
-	DataProc proc(profile_lines, CalibObj::SPHERE);
-	float rad_sphere = 80 / 2.0;
-	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
-    writeFeaturePointsToProfileSheets(ctr_pnts, featuresSheet_);
+    if (!pointsSetBuffer_.empty()) {
+        auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
+        DataProc proc(profile_lines, CalibObj::SPHERE);
+        float rad_sphere = 80 / 2.0;
+        std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
+        writeFeaturePointsToProfileSheets(ctr_pnts, featuresSheet_);
+    }
+    else {
+        QMessageBox::warning(this, "Error", "Profiles dataset has not been uploaded.");
+        logWin_->log("No profiles data detected.");
+    }
 }
 
 void MainWindow::onRunButtonReleased() {
@@ -904,6 +890,29 @@ std::vector<Eigen::Vector<float, 6>> MainWindow::convertRobDataBuffer(const std:
     }
 
     return result;
+}
+
+// Function to ProfilePoints to ProfileSheet
+std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(const std::vector<ProfilePoints>& pointsSetBuffer) {
+    std::vector<ProfileSheet> featuresSheet;
+
+    // Iterate through the pointsSetBuffer to create ProfileSheet objects
+    for (size_t i = 0; i < pointsSetBuffer.size(); ++i) {
+        const ProfilePoints& points = pointsSetBuffer[i];
+
+        // Create a ProfileSheet for each ProfilePoints
+        ProfileSheet profileSheet;
+        profileSheet.profileIndex = static_cast<int>(i);           // Set the profile index
+        profileSheet.pointCount = static_cast<int>(points.size()); // Set the number of points in the profile
+        profileSheet.featurePoint = cv::Point3f(0, 0, 0);          // Leave featurePoint empty or set to a default value (0,0,0)
+        profileSheet.enableFilter = false;                           // Set the filter flag (can be adjusted)
+        profileSheet.filterType = "";                                // Set filter type (can be adjusted)
+
+        // Add the profileSheet to the featuresSheet vector
+        featuresSheet.push_back(profileSheet);
+    }
+
+    return featuresSheet;  // Return the vector of ProfileSheet objects
 }
 
 std::vector<cv::Point3f> MainWindow::extractFeaturePointsFromProfileSheet(const std::vector<ProfileSheet>& profileSheets) {

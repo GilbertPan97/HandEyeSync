@@ -23,37 +23,37 @@ QTextEdit {
 /* ===================== QLineEdit Style ===================== */
 
 QLineEdit {
-    background-color: #353535;  /* 设置背景颜色为暗色 */
-    color: rgb(255, 255, 255);  /* 设置文本颜色为白色 */
-    border: 2px solid rgb(200, 200, 200);  /* 设置边框颜色 */
-    border-radius: 4px;  /* 设置圆角 */
-    padding: 2px 8px;  /* 设置内边距 */
-    font-size: 12px;  /* 设置字体大小 */
+    background-color: #353535;  /* Set background color to dark */
+    color: rgb(255, 255, 255);  /* Set text color to white */
+    border: 2px solid rgb(200, 200, 200);  /* Set border color */
+    border-radius: 4px;  /* Set rounded corners */
+    padding: 2px 8px;  /* Set padding */
+    font-size: 12px;  /* Set font size */
 }
 
 /* ===================== QComboBox Style ===================== */
 QComboBox {
-    background-color: #353535;   /* 设置背景颜色为暗色 */
-    color: rgb(255, 255, 255);   /* 设置文本颜色为白色 */
-    border: 2px solid rgb(200, 200, 200);    /* 设置边框颜色 */
-    border-radius: 4px;          /* 设置圆角 */
-    padding: 2px;                /* 设置内边距 */
-    font-size: 12px;             /* 设置字体大小 */
+    background-color: #353535;   /* Set background color to dark */
+    color: rgb(255, 255, 255);   /* Set text color to white */
+    border: 2px solid rgb(200, 200, 200);    /* Set border color */
+    border-radius: 4px;          /* Set rounded corners */
+    padding: 2px;                /* Set padding */
+    font-size: 12px;             /* Set font size */
 }
 
 QComboBox QAbstractItemView {
-    background-color: #444444;   /* 下拉列表背景色 */
-    color: rgb(255, 255, 255);   /* 下拉列表文本颜色 */
-    border: 2px solid #444444;   /* 下拉列表边框 */
-    border-radius: 4px;          /* 下拉列表圆角 */
-    padding: 5px;                /* 设置内边距 */
+    background-color: #444444;   /* Set background color for the dropdown */
+    color: rgb(255, 255, 255);   /* Set text color for the dropdown items */
+    border: 2px solid #444444;   /* Set border for the dropdown */
+    border-radius: 4px;          /* Set rounded corners */
+    padding: 5px;                /* Set padding */
     spacing: 2px;
-    selection-background-color: #555555; /* 选中项的背景颜色 */
+    selection-background-color: #555555; /* Background color for selected item */
 }
 
 QComboBox QAbstractItemView::item {
-    padding: 8px 16px;  /* 增加每个项目的内边距，上下8px，左右16px */
-    margin-bottom: 2px; /* 增加项目之间的垂直间距 */
+    padding: 8px 16px;  /* Increase padding for each item, 8px top/bottom, 16px left/right */
+    margin-bottom: 2px; /* Add vertical space between items */
 }
 
 /* ===================== QToolBar Style ===================== */
@@ -66,61 +66,61 @@ QToolBar {
 }
 
 QToolBar QToolButton {
-    background-color: #444444;       /* 设置按钮背景色为暗色 */
-    color: rgb(200, 200, 200);       /* 设置图标和文本的颜色 */
-    icon-size: 32px;                 /* 设置图标的大小 */
-    padding: 5px;                    /* 设置按钮的内边距 */
-    text-align: center;              /* 设置文本居中 */
-    vertical-align: middle;          /* 设置文本垂直居中 */
-    spacing: 2px;                    /* 设置图标和文本之间的间距 */
+    background-color: #444444;       /* Set button background color to dark */
+    color: rgb(200, 200, 200);       /* Set icon and text color */
+    icon-size: 32px;                 /* Set icon size */
+    padding: 5px;                    /* Set button padding */
+    text-align: center;              /* Set text alignment to center */
+    vertical-align: middle;          /* Set vertical text alignment to middle */
+    spacing: 2px;                    /* Set spacing between icon and text */
 }
 
 QToolButton {
-    text-align: center;              /* 设置文本居中 */
-    padding-left: 5px;               /* 设置左边距 */
-    padding-right: 5px;              /* 设置右边距 */
-    padding-top: 0px;               /* 设置按钮顶部的内边距，增加上边距 */
-    padding-bottom: 0px;             /* 设置按钮底部的内边距 */
+    text-align: center;              /* Set text alignment to center */
+    padding-left: 5px;               /* Set left padding */
+    padding-right: 5px;              /* Set right padding */
+    padding-top: 0px;               /* Set top padding */
+    padding-bottom: 0px;             /* Set bottom padding */
 }
 
 QToolButton:hover {
-    background-color:rgb(200, 200, 200);       /* 鼠标悬停时的背景颜色 */
+    background-color:rgb(200, 200, 200);       /* Background color on hover */
     color: #444444;
 }
 
 QRadioButton {
-    font-size: 10px;  /* Set the font size */
+    font-size: 10px;  /* Set font size */
     color: rgb(200, 200, 200); 
 }
 
 QPushButton {
-    background-color: #444444;       /* 设置按钮背景色为暗色 */
-    color: rgb(200, 200, 200);       /* 设置文本颜色 */
-    border-top: 1px solid #555555;   /* 设置按钮顶部边框颜色 */
-    border-left: 1px solid #555555;  /* 设置按钮左边边框颜色 */
-    border-right: 2px solid #222222; /* 设置按钮右边边框颜色（深色） */
-    border-bottom: 2px solid #222222;/* 设置按钮下边边框颜色（深色） */
-    padding: 3px 10px;               /* 设置按钮内边距 */
-    font-size: 12px;                 /* 设置字体大小 */
+    background-color: #444444;       /* Set button background color to dark */
+    color: rgb(200, 200, 200);       /* Set text color */
+    border-top: 1px solid #555555;   /* Set top border color */
+    border-left: 1px solid #555555;  /* Set left border color */
+    border-right: 2px solid #222222; /* Set right border color (darker) */
+    border-bottom: 2px solid #222222;/* Set bottom border color (darker) */
+    padding: 3px 10px;               /* Set padding */
+    font-size: 12px;                 /* Set font size */
 }
 
 QPushButton:hover {
-    background-color:rgb(200, 200, 200);       /* 鼠标悬停时的背景颜色 */
-    color: #444444;       /* 悬停时文本颜色 */
-    border: 2px solid #666666;       /* 悬停时的边框颜色 */
+    background-color:rgb(200, 200, 200);       /* Background color on hover */
+    color: #444444;       /* Text color on hover */
+    border: 2px solid #666666;       /* Border color on hover */
 }
 
 QPushButton:pressed {
-    background-color: rgb(200, 200, 200);       /* 按钮按下时的背景色 */
-    color: #444444;        /* 按钮按下时文本颜色 */
-    border-top: 1px solid  #222222;       /* 保持顶部边框较浅 */
-    border-left: 1px solid  #222222;      /* 保持左边边框较浅 */
-    border-right: 2px solid  #555555;     /* 保持右边边框深色 */
-    border-bottom: 2px solid #555555;    /* 保持下边边框深色 */
+    background-color: rgb(200, 200, 200);       /* Background color when pressed */
+    color: #444444;        /* Text color when pressed */
+    border-top: 1px solid  #222222;       /* Keep top border light */
+    border-left: 1px solid  #222222;      /* Keep left border light */
+    border-right: 2px solid  #555555;     /* Keep right border dark */
+    border-bottom: 2px solid #555555;    /* Keep bottom border dark */
 }
 
 QLabel {
-    font-size: 12px;  /* Set the font size */
+    font-size: 12px;  /* Set font size */
     color: rgb(200, 200, 200); 
 }
 

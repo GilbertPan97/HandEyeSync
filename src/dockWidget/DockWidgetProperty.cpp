@@ -90,9 +90,12 @@ void DockWidgetProperty::addProperty(const QString& name, const QString& value) 
 
         // Create a QLineEdit to allow copying the value
         QLineEdit* lineEdit = new QLineEdit(value);
+        lineEdit->setReadOnly(true);  // Set the line edit to be read-only (non-editable)
+
         propertyTree->setItemWidget(item, 1, lineEdit);
     }
 }
+
 
 // Add a property with a combo box for selection
 void DockWidgetProperty::addProperty(const QString& name, const QStringList& options, const QString& currentOption) {
@@ -135,6 +138,31 @@ void DockWidgetProperty::addProperty(const QString& name, bool checked) {
         // Set the checkbox as the widget in the second column
         propertyTree->setItemWidget(item, 1, checkBox);
     }
+}
+
+void DockWidgetProperty::writeProfileSheetToProperties(const ProfileSheet& profile) {
+    // Clear existing properties before adding new ones
+    clearProperties();
+
+    // 1. Profile Index
+    addProperty("Profile Index", QString::number(profile.profileIndex + 1));
+
+    // 2. Point Count
+    addProperty("Point Count", QString::number(profile.pointCount));
+
+    // 3. Feature Point (X, Y, Z)
+    QString featurePoint = QString("X: %1, Y: %2, Z: %3")
+                               .arg(profile.featurePoint.x)
+                               .arg(profile.featurePoint.y)
+                               .arg(profile.featurePoint.z);
+    addProperty("Feature Point", featurePoint);
+
+    // 4. Filter Enable
+    addProperty("Filter Enable", profile.enableFilter);
+
+    // 5. Filter Type
+    QStringList filterOptions = {"No Filter", "Gaussian", "Median"};
+    addProperty("Filter Tools", filterOptions, QString::fromStdString(profile.filterType));
 }
 
 
