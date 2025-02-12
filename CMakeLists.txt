@@ -19,6 +19,9 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.4/x64/vc16/lib/")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/eigen-3.4.0")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/json-3.11.3")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/GO_SDK")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/SR7Link")
+
 find_package(OpenCV REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 find_package(Eigen3 REQUIRED)
@@ -28,6 +31,7 @@ find_package(nlohmann_json REQUIRED)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/dockWidget)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/fanucParser)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/psHEC)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LineScanners)
 
 # Add source files
 set(SRC_FILES
