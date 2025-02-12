@@ -8,7 +8,7 @@ kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, Gocator_Data* data) {
     unsigned int i, j, k, arrayIndex;
     GoDataMsg dataObj;
     GoDataSet dataset = kNULL;
-    ProfilePoint* profileBuffer = NULL;
+    GoProfilePoint* profileBuffer = NULL;
     kStatus status;
     k32u profilePointCount;
     GoStamp* stamp = kNULL;
@@ -28,7 +28,7 @@ kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, Gocator_Data* data) {
     }
 
     data->bufferSize = profilePointCount;
-    profileBuffer = malloc(profilePointCount * sizeof(ProfilePoint));
+    profileBuffer = malloc(profilePointCount * sizeof(GoProfilePoint));
     if (profileBuffer == kNULL) {
         return kERROR;          // Memory allocation failure
     }

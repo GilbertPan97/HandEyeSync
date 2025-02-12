@@ -9,7 +9,7 @@ int main() {
 
     // Scan for available cameras
     status = lineScanner.Scan(cameraList);
-    if (status != CameraStatus::Go_OK) {
+    if (status != CameraStatus::READY) {
         std::cerr << "Failed to scan for cameras." << std::endl;
         lineScanner.Shutdown();
         return EXIT_FAILURE;
@@ -22,14 +22,14 @@ int main() {
 
     // Initialize the line scanner (use a valid IP address if needed)
     status = lineScanner.Connect("192.168.1.11");
-    if (status != CameraStatus::Go_OK) {
+    if (status != CameraStatus::READY) {
         std::cerr << "Failed to initialize line scanner." << std::endl;
         return EXIT_FAILURE;
     }
 
     // Start the line scanner
     status = lineScanner.SetStatus(true);
-    if (status != CameraStatus::Go_OK) {
+    if (status != CameraStatus::READY) {
         std::cerr << "Failed to start line scanner." << std::endl;
         return EXIT_FAILURE;
     }

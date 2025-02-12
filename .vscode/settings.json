@@ -89,6 +89,8 @@
         "any": "cpp",
         "ranges": "cpp",
         "span": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "codecvt": "cpp",
+        "srcommon.h": "c"
     }
 }

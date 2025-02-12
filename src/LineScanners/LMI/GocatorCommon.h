@@ -19,14 +19,14 @@ extern "C" {
 #define NM_TO_MM(VALUE) (((k64f)(VALUE))/1000000.0)
 #define UM_TO_MM(VALUE) (((k64f)(VALUE))/1000.0)
 
-typedef struct ProfilePoint {
+typedef struct GoProfilePoint {
     double x;   // x-coordinate in engineering units (mm)
     double z;   // z-coordinate in engineering units (mm)
     unsigned char intensity;
-} ProfilePoint;
+} GoProfilePoint;
 
 typedef struct {
-    ProfilePoint* profileBuffer;    // buffer for profile points
+    GoProfilePoint* profileBuffer;    // buffer for profile points
     size_t pointCount;              // number of valid profile points
     size_t bufferSize;              // number of original buffer points
 } Gocator_Data;

@@ -27,7 +27,7 @@ CameraStatus LineScannerInterface::Scan(std::vector<CameraInfo>& cameraList) {
     kStatus status = Gocator_Discover(&cList); // Call to the external camera discovery function
 
     if (status != kOK) {
-        return CameraStatus::Go_ERROR;
+        return CameraStatus::READY;
     }
 
     // Populate the output vector with discovered cameras
@@ -35,7 +35,7 @@ CameraStatus LineScannerInterface::Scan(std::vector<CameraInfo>& cameraList) {
 
     Gocator_FreeList(&cList); // Free the allocated memory for the camera list
 
-    return CameraStatus::Go_OK;
+    return CameraStatus::READY;
 }
 
 CameraStatus LineScannerInterface::Connect(const std::string& cameraIp) {
@@ -43,9 +43,9 @@ CameraStatus LineScannerInterface::Connect(const std::string& cameraIp) {
     kStatus status = Gocator_Connect(&gocator, ip_s);
 
     if (status == kOK){
-        return CameraStatus::Go_OK;
+        return CameraStatus::READY;
     } else
-        return CameraStatus::Go_NOT_CONNECTED;
+        return CameraStatus::NOT_CONNECTED;
 }
 
 CameraStatus LineScannerInterface::GrabOnce() {
@@ -53,11 +53,11 @@ CameraStatus LineScannerInterface::GrabOnce() {
 
     if(Gocator_ReceiveProfileData(&gocator, &data) != kOK){
         clog("Error: ReceiveProfileData fail, skip single grab.");
-        return CameraStatus::Go_ERROR;
+        return CameraStatus::ERROR;
     };
 
     RemoveInvalidPoints();
-    return CameraStatus::Go_OK;
+    return CameraStatus::READY;
 }
 
 CameraStatus LineScannerInterface::SetStatus(bool open) {
@@ -70,7 +70,7 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
 
     if (status = kOK){
         clog("Info: Set status successfully (status: %s).\n", open ? "true" : "false");
-        return CameraStatus::Go_OK;
+        return CameraStatus::READY;
     } else {
 
     }
@@ -81,9 +81,9 @@ CameraStatus LineScannerInterface::Disconnect() {
     kStatus status = Gocator_DisConnect(&gocator);
 
     if (status == kOK){
-        return CameraStatus::Go_OK;
+        return CameraStatus::READY;
     } else
-        return CameraStatus::Go_ERROR;
+        return CameraStatus::ERROR;
 }
 
 CameraStatus LineScannerInterface::Disconnect(const std::string& cameraIp) {
@@ -91,9 +91,9 @@ CameraStatus LineScannerInterface::Disconnect(const std::string& cameraIp) {
     kStatus status = Gocator_DisConnect(&gocator, ip_s);
 
     if (status == kOK){
-        return CameraStatus::Go_NOT_CONNECTED;
+        return CameraStatus::NOT_CONNECTED;
     } else
-        return CameraStatus::Go_ERROR;
+        return CameraStatus::READY;
 }
 
 Gocator_Data LineScannerInterface::RetriveData() {

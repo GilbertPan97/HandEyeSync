@@ -2,9 +2,14 @@ set(TARGET_NAME Sszn_Driver)
 
 find_package(SR7Link REQUIRED)
 
-set(SRC_FILES CallOneTimes.cpp)
+set(SRC_FILES 
+    Discover.c
+    
+)
 
-set(HEADER_FILES CallOneTimes.h)
+set(HEADER_FILES 
+    SRCommon.h
+)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
