@@ -1,10 +1,27 @@
+#ifndef SR_COMMON_H
+#define SR_COMMON_H
+
+#include "clog.h"
 #include "SR7Link.h"
+
+#include <stdint.h> 
+#include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct SsznProfilePoint {
     double x;   // x-coordinate in engineering units (mm)
     double z;   // z-coordinate in engineering units (mm)
     unsigned char intensity;
 } SsznProfilePoint;
+
+typedef struct {
+    int DEVICE_ID;
+    SR7IF_ETHERNET_CONFIG SREthernetConFig;
+    SR7IF_Data DataObject;
+} Sszn_Handle;
 
 // Structure to hold camera information
 typedef struct {
@@ -18,3 +35,16 @@ typedef struct {
     size_t count;               // Number of discovered cameras
 } Sszn_List;
 
+/* ====================== Function declarations =========================== */
+bool Sszn_Initialize(Sszn_Handle* handle);
+
+bool Sszn_Discover(Sszn_List* cameraList);
+
+bool Sszn_Connect(Sszn_Handle* handle, const char* sensorIp, int deviceId);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

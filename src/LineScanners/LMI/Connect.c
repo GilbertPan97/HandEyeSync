@@ -33,7 +33,7 @@ kStatus Gocator_Connect(Gocator_Handle* handle, const char* sensorIp) {
     // retrieve setup handle
     if ((handle->setup = GoSensor_Setup(handle->sensor)) == kNULL) {
         clog("Error: GoSensor_Setup: Invalid Handle\n");
-    }   
+    }
 
     return kOK;
 }

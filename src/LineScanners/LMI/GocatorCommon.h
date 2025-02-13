@@ -50,7 +50,7 @@ typedef struct {
     size_t count;               // Number of discovered cameras
 } Gocator_List;
 
-// Function declarations
+/* ====================== Function declarations =========================== */ 
 kStatus Gocator_Initialize(Gocator_Handle* handle);
 
 kStatus Gocator_Connect(Gocator_Handle* handle, const char* sensorIp);

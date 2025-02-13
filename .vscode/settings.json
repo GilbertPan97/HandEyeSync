@@ -91,6 +91,8 @@
         "span": "cpp",
         "valarray": "cpp",
         "codecvt": "cpp",
-        "srcommon.h": "c"
+        "srcommon.h": "c",
+        "gocatorcommon.h": "c",
+        "clog.h": "c"
     }
 }

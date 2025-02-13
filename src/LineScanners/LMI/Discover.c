@@ -45,13 +45,18 @@ kStatus Gocator_Discover(Gocator_List* cameraList) {
                 camera.id = GoSensor_Id(sensor);
                 kIpAddress_Format(addressInfo.address, camera.ipAddress, sizeof(camera.ipAddress));
                 cameraList->cam_info[cameraList->count++] = camera;
-                clog("Discovers sensor %d with IP %s\n", GoSensor_Id(sensor), camera.ipAddress);
+                clog("Info: Discovers sensor %d with IP %s\n", GoSensor_Id(sensor), camera.ipAddress);
             } else {
                 clog("Error: Failed to get address for sensor ID: %d\n", GoSensor_Id(sensor));
             }
         }
     } else {
         clog("Warning: No devices found.");
+        // Clean up
+        GoDestroy(system);
+        GoDestroy(apiLib);
+        GoDestroy(api);
+        return kERROR_NOT_FOUND;
     }
 
     // Clean up
