@@ -92,8 +92,19 @@ void MainWindow::createMenuBar()
     QAction *exitAction = fileMenu->addAction("Exit");
 
     QMenu *deviceMenu = menuBar()->addMenu("Device");
-    QAction *connectAction = deviceMenu->addAction("Connect");
-    QAction *disconnectAction = deviceMenu->addAction("Disconnect");
+
+    // Add Sszn, LMI, and FanucRobot menu items
+    QAction *ssznAction = deviceMenu->addAction("Sszn");
+    ssznAction->setCheckable(true);  
+    QAction *lmiAction = deviceMenu->addAction("LMI");
+    lmiAction->setCheckable(true);
+
+    connect(ssznAction, &QAction::triggered, this, [this, ssznAction]() { showScanCameraDialog(ssznAction); });
+    connect(lmiAction, &QAction::triggered, this, [this, lmiAction]() { showScanCameraDialog(lmiAction); });
+    deviceMenu->addSeparator();
+
+    QAction *fanucRobotAction = deviceMenu->addAction("FanucRobot");
+    fanucRobotAction->setCheckable(true);
 
     QMenu *editMenu = menuBar()->addMenu("Edit");
     QAction *copyAction = editMenu->addAction("Copy");
@@ -148,6 +159,7 @@ void MainWindow::createToolBar()
     onlineCollectLayout->setSpacing(10);
     QPushButton *onlineCollectBtn = new QPushButton("Online Collect", this);
     onlineCollectBtn->setIcon(QIcon(":/icons/globe.png"));
+    onlineCollectBtn->setCheckable(true);
     
     QHBoxLayout *collectLayout = new QHBoxLayout(this);
     QLabel *indexLabel = new QLabel("Index", this);
@@ -156,9 +168,32 @@ void MainWindow::createToolBar()
     QPushButton *downloadButton = new QPushButton(this);
     downloadButton->setIcon(QIcon(":/icons/download.png"));
     downloadButton->setToolTip("Collect");
+    indexLabel->setEnabled(false);
+    comboBox->setEnabled(false);
+    downloadButton->setEnabled(false);
     collectLayout->addWidget(indexLabel, 0, Qt::AlignVCenter);
     collectLayout->addWidget(comboBox, 0, Qt::AlignVCenter);
     collectLayout->addWidget(downloadButton, 0, Qt::AlignVCenter);
+
+    // Widgets indexLabel, comboBox and downloadButton only editable when onlineCollectBtn toggled
+    connect(onlineCollectBtn, &QPushButton::toggled, [indexLabel, comboBox, downloadButton, onlineCollectBtn](bool checked) {
+        if (checked) {
+            // TODO: Check devices connect status
+            
+            // If the button is pressed (checked), enable the controls and remove gray appearance
+            indexLabel->setEnabled(true);
+            comboBox->setEnabled(true);
+            downloadButton->setEnabled(true);
+            onlineCollectBtn->setText("Collecting... ");
+        } 
+        else {
+            // If the button is released (unchecked), disable the controls and apply gray appearance
+            indexLabel->setEnabled(false);
+            comboBox->setEnabled(false);
+            downloadButton->setEnabled(false);
+            onlineCollectBtn->setText("Online Collect");  // Reset to the original text
+        }
+    });
 
     onlineCollectLayout->addWidget(onlineCollectBtn);
     onlineCollectLayout->addLayout(collectLayout);
@@ -780,6 +815,153 @@ void MainWindow::onRunButtonReleased() {
     logStream << "Calibration Error: " << calib_error;
     logWin_->log(QString::fromStdString(logStream.str()));
 
+}
+
+void MainWindow::showScanCameraDialog(QAction *actBtn) {
+    QDialog dialog(this); // Create a dialog
+    dialog.setWindowTitle("Scan Cameras");
+    dialog.setFixedSize(600, 200); // Set fixed size
+
+    QVBoxLayout *layout = new QVBoxLayout(&dialog); // Create a vertical layout for the dialog
+    layout->setContentsMargins(10, 10, 10, 10); // Set margins for the layout
+
+    QLabel *infoLabel = new QLabel("Select Camera:", &dialog); // Label for selecting a camera
+    layout->addWidget(infoLabel);
+
+    // Create a combo box for selecting camera IDs
+    QComboBox *cameraComboBox = new QComboBox(&dialog);
+    layout->addWidget(cameraComboBox); // Add combo box to layout
+    if (curCamInfo_.id !=-1){
+        cameraComboBox->addItem(QString("%1 - %2").arg(curCamInfo_.id)
+                    .arg(QString::fromStdString(curCamInfo_.ipAddress)));
+    }
+
+    QPushButton *scanButton = new QPushButton("Scan", &dialog); // Scan button
+    layout->addWidget(scanButton);
+
+    // Create a group box for camera status
+    QGroupBox *statusGroupBox = new QGroupBox("Camera Status", &dialog); // Create a group box
+    QVBoxLayout *statusLayout = new QVBoxLayout(statusGroupBox); // Create a vertical layout for the group box
+
+    // Create a label for displaying current camera brand
+    QLabel *brandLabel = new QLabel("Camera Brand: " + 
+        QString::fromStdString(curCamInfo_.brand), statusGroupBox); // Initial brand label
+    statusLayout->addWidget(brandLabel);        // Add brand label to group box layout
+
+    // Create a horizontal layout for status and camera ID
+    QString id_s = (curCamInfo_.id == -1) ? "N/A" : QString::number(curCamInfo_.id);
+    QString conn_s = (curCamInfo_.isConnected) ? "Connected" : "Not Connected";
+    QHBoxLayout *statusIdLayout = new QHBoxLayout();
+    QLabel *statusLabel = new QLabel("Status: " + conn_s, statusGroupBox); // Initial status
+    QLabel *cameraIdLabel = new QLabel("Camera ID: " + id_s, statusGroupBox); // Initial camera ID
+
+    statusIdLayout->addWidget(statusLabel); // Add status label to horizontal layout
+    statusIdLayout->addWidget(cameraIdLabel); // Add camera ID label to horizontal layout
+    statusLayout->addLayout(statusIdLayout); // Add horizontal layout to group box layout
+
+    layout->addWidget(statusGroupBox); // Add group box to main layout
+
+    // Create a horizontal layout for connect and disconnect buttons
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    QPushButton *connectButton = new QPushButton("Connect", &dialog); // Connect button
+    buttonLayout->addWidget(connectButton); // Add connect button to layout
+
+    QPushButton *disconnectButton = new QPushButton("Disconnect", &dialog); // Disconnect button
+    buttonLayout->addWidget(disconnectButton); // Add disconnect button to layout
+
+    layout->addLayout(buttonLayout); // Add horizontal layout to main layout
+
+    // Create a label for displaying camera information
+    QLabel *cameraInfoLabel = new QLabel(&dialog); // Define camera info label
+    layout->addWidget(cameraInfoLabel); // Add to layout
+
+    connect(scanButton, &QPushButton::clicked, [=]() {
+        std::vector<CameraInfo> sensorList; // Vector to hold camera info
+        // Scan the cameras and update the sensor list
+        CameraStatus status = sensorApi_.Scan(sensorList);
+        if (status == CameraStatus::DEV_READY) {
+            // Populate the combo box with camera info if scan is successful
+            cameraComboBox->clear(); // Clear previous entries
+            for (const auto& camera : sensorList) {
+                cameraComboBox->addItem(QString("%1 - %2").arg(camera.id)
+                    .arg(QString::fromStdString(camera.ipAddress)));
+            }
+
+            // Update curCamInfo with the first camera's information
+            if (!sensorList.empty()) {
+                curCamInfo_.ipAddress = sensorList[0].ipAddress; // Update IP address
+                curCamInfo_.id = sensorList[0].id;               // Update camera ID
+                // Optionally, you can set curCamInfo.brand if brand information is available
+                curCamInfo_.brand = sensorList[0].brand;         // Update camera brand if needed
+                cameraIdLabel->setText(QString("Camera ID: %1").arg(curCamInfo_.id)); // Update with the first camera ID
+            } else {
+                QMessageBox::warning(this, "Warning", "No device detected.");
+                return;
+            }
+
+            // Update status and camera ID labels
+            cameraIdLabel->setText(QString("Camera ID: %1").arg(sensorList[0].id)); // Update with the first camera ID
+            cameraInfoLabel->setText("Cameras scanned successfully."); // Update camera info label
+
+            // Connect the combo box selection change to update curCamInfo
+            connect(cameraComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), [this, sensorList](int index) {
+                if (index >= 0 && index < sensorList.size()) {
+                    // Update curCamInfo based on the selected camera
+                    curCamInfo_.ipAddress = sensorList[index].ipAddress; // Update IP address
+                    curCamInfo_.id = sensorList[index].id;               // Update camera ID
+                    curCamInfo_.brand = sensorList[index].brand;         // Update camera brand if needed
+                    // Optionally, update labels or other UI elements here
+                }
+            });
+        } else {
+            cameraInfoLabel->setText("Failed to scan cameras."); // Display error message
+        }
+    });
+
+    // Connect the buttons to slots
+    connect(connectButton, &QPushButton::clicked, [=]() {
+        // TODO: Check other branch camera connect status, and disconnect other camera first
+
+        // Check if the IP address is valid (not empty)
+        if (curCamInfo_.ipAddress.empty() || curCamInfo_.ipAddress == "0.0.0.0") {
+            actBtn->setChecked(false);
+            // Show warning message if IP address is not set
+            QMessageBox::warning(this, "Warning", "Please select a valid camera IP address before connecting.");
+            return; // Exit the function to prevent connecting
+        }
+
+        // Attempt to connect to the camera
+        CameraStatus status = sensorApi_.Connect(curCamInfo_.ipAddress);
+        if (status == CameraStatus::DEV_READY) {
+            // Update connection status and brand label if successful
+            curCamInfo_.isConnected = true;
+            QString logMsg = QString("Info: Connected to camera: %1").arg(QString::fromStdString(curCamInfo_.ipAddress));
+            logWin_->log(logMsg);
+            statusLabel->setText("Status: Connected"); // Update status label
+            actBtn->setChecked(true);                  // Set menu QAction status
+        } else {
+            // Show error message if connection fails
+            QMessageBox::critical(this, "Error", "Failed to connect to the camera.");
+        }
+    });
+
+    connect(disconnectButton, &QPushButton::clicked, [=]() {
+        // Attempt to disconnect to the camera
+        CameraStatus status = sensorApi_.Disconnect(curCamInfo_.ipAddress);
+        if (status == CameraStatus::DEV_NOT_CONNECTED) {
+            // Update connection status and brand label if disconnect successful
+            curCamInfo_.isConnected = false;
+            QString logMsg = QString("Info: Disconnected to camera: %1").arg(QString::fromStdString(curCamInfo_.ipAddress));
+            logWin_->log(logMsg);
+            statusLabel->setText("Status: Disconnected"); // Update status label
+            actBtn->setChecked(false);                  // Set menu QAction status
+        } else {
+            // Show error message if connection fails
+            QMessageBox::critical(this, "Error", "Failed to disconnect to the camera.");
+        }
+    });
+
+    dialog.exec(); // Show the dialog as a modal window
 }
 
 // Placeholder slots for menu actions

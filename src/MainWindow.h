@@ -13,6 +13,7 @@
 #include "PsCalibrator.h"
 #include "PsAlgorithm.h"
 #include "DataProcessor.h"
+#include "LineScannerInterface.h"
 
 #include <QMainWindow>
 #include <QTextEdit>
@@ -73,11 +74,15 @@ private slots:
     void onAddRobActionTriggered();
     void onSettingButtonReleased();
     void onRunButtonReleased();
+    void showScanCameraDialog(QAction *actBtn);
 
 private:
     QToolBar *topToolBar_;         // Top toolbar
     QDialog *progressWidget_;
     QProgressBar *progressBar_;
+
+    CameraInfo curCamInfo_;      // Store current selected sensor information
+    LineScannerInterface sensorApi_; // Make sensorApi a member variable
 
     // DockWidgets
     ads::CDockManager* dockManager_;

@@ -9,9 +9,9 @@
 
 // Define camera status enumeration
 enum class CameraStatus {
-    READY,         // Camera is ready and functioning properly
-    ERROR,         // Camera encountered an error
-    NOT_CONNECTED, // Camera is not connected
+    DEV_READY,         // Camera is ready and functioning properly
+    DEV_ERROR,         // Camera encountered an error
+    DEV_NOT_CONNECTED, // Camera is not connected
 };
 
 // Define camera branch enumeration
