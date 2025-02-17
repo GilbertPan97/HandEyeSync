@@ -3,10 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void RemoveInvalidPoints(ProfileData* data) {
+
+}
+
 // Receives profile data from the Sszn sensor.
-int Sszn_ReceiveProfileData(Sszn_Handle* handle, Sszn_Data* data) {
+int Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
     // Initial buffer to store one profile data
-    SsznProfilePoint* profileBuffer = NULL;
+    ProfilePoint* profileBuffer = NULL;
     int* pProfileData = NULL;
     unsigned char* grayData = NULL;
 
@@ -70,7 +74,7 @@ int Sszn_ReceiveProfileData(Sszn_Handle* handle, Sszn_Data* data) {
     }
 
     // Convert received data to XZ coordinates
-    profileBuffer = malloc(profilePointCount * sizeof(SsznProfilePoint));
+    profileBuffer = malloc(profilePointCount * sizeof(ProfilePoint));
     if (profileBuffer == NULL) {
         free(pProfileData);     // Free memory
         free(grayData);         // Free memory
@@ -80,8 +84,8 @@ int Sszn_ReceiveProfileData(Sszn_Handle* handle, Sszn_Data* data) {
 
     // Initialize data buffer and convert to ProfileXZ
     data->profileBuffer = profileBuffer;
-    data->pointCount = profilePointCount;
-    data->bufferSize = profilePointCount;
+    data->totalCount = profilePointCount;
+    data->validPoints = profilePointCount;
 
     for (size_t i = 0; i < profilePointCount; i++) {
         profileBuffer[i].x = i * xPixth;                    // X coordinate
@@ -98,6 +102,8 @@ int Sszn_ReceiveProfileData(Sszn_Handle* handle, Sszn_Data* data) {
     if (result != 0) {
         return EXIT_FAILURE;    // Failed to stop the measurement
     }
+
+    // FIXME: How to remove all invalid points and update data->validPoints.
 
     return EXIT_SUCCESS;        // Success
 }

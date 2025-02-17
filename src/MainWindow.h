@@ -77,12 +77,12 @@ private slots:
     void showScanCameraDialog(QAction *actBtn);
 
 private:
-    QToolBar *topToolBar_;         // Top toolbar
+    QToolBar *topToolBar_;              // Top toolbar
     QDialog *progressWidget_;
     QProgressBar *progressBar_;
 
-    CameraInfo curCamInfo_;      // Store current selected sensor information
-    LineScannerInterface sensorApi_; // Make sensorApi a member variable
+    CameraInfo curCamInfo_;             // Store current selected sensor information
+    LineScannerInterface sensorApi_;    // Make sensorApi a member variable
 
     // DockWidgets
     ads::CDockManager* dockManager_;

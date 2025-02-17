@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 // Function to discover cameras
-kStatus Gocator_Discover(Gocator_List* cameraList) {
+kStatus Gocator_Discover(Sensor_List* cameraList) {
     kStatus status;
     kAssembly api = kNULL;
     kAssembly apiLib = kNULL;
@@ -31,7 +31,7 @@ kStatus Gocator_Discover(Gocator_List* cameraList) {
 
     // Allocate memory for camera list
     size_t cameraCount = GoSystem_SensorCount(system);
-    cameraList->cam_info = (Gocator_Info*)malloc(cameraCount * sizeof(Gocator_Info));
+    cameraList->cam_info = (Sensor_Info*)malloc(cameraCount * sizeof(Sensor_Info));
     cameraList->count = 0;
 
     // Discover sensors
@@ -41,7 +41,7 @@ kStatus Gocator_Discover(Gocator_List* cameraList) {
             GoSensor sensor = GoSystem_SensorAt(system, i);
 
             if ((status = GoSensor_Address(sensor, &addressInfo)) == kOK) {
-                Gocator_Info camera;
+                Sensor_Info camera;
                 camera.id = GoSensor_Id(sensor);
                 kIpAddress_Format(addressInfo.address, camera.ipAddress, sizeof(camera.ipAddress));
                 cameraList->cam_info[cameraList->count++] = camera;
@@ -68,7 +68,7 @@ kStatus Gocator_Discover(Gocator_List* cameraList) {
 }
 
 // Function to free the camera list
-void Gocator_FreeList(Gocator_List* cameraList) {
+void Gocator_FreeList(Sensor_List* cameraList) {
     if (cameraList->cam_info) {
         free(cameraList->cam_info);
         cameraList->cam_info = NULL;

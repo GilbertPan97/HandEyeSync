@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 // Function to discover cameras and add them to the camera list
-bool Sszn_Discover(Sszn_List* cameraList) {
+bool Sszn_Discover(Sensor_List* cameraList) {
     int ReadNum = 0;            // Number of devices found
     int timeOut = 10000;        // Timeout in milliseconds, adjust as necessary
     
@@ -12,7 +12,7 @@ bool Sszn_Discover(Sszn_List* cameraList) {
     SR7IF_ETHERNET_CONFIG *pDevices = SR7IF_SearchOnline(&ReadNum, timeOut);
 
     // Allocate memory for camera
-    cameraList->cam_info = (Sszn_Info*)malloc(ReadNum * sizeof(Sszn_Info));
+    cameraList->cam_info = (Sensor_Info*)malloc(ReadNum * sizeof(Sensor_Info));
     cameraList->count = ReadNum;
     
     // Check if no devices were found
@@ -45,4 +45,12 @@ bool Sszn_Discover(Sszn_List* cameraList) {
     clog("Info: Found %d device(s).\n", ReadNum);
 
     return EXIT_SUCCESS;
+}
+
+// Function to free the camera list
+void Sszn_FreeList(Sensor_List* cameraList) {
+    if (cameraList->cam_info) {
+        free(cameraList->cam_info);
+        cameraList->cam_info = NULL;
+    }
 }

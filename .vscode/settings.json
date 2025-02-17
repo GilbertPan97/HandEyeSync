@@ -93,6 +93,7 @@
         "codecvt": "cpp",
         "srcommon.h": "c",
         "gocatorcommon.h": "c",
-        "clog.h": "c"
+        "clog.h": "c",
+        "sensorcommon.h": "c"
     }
 }

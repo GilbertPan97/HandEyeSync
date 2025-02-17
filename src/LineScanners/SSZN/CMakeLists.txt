@@ -19,8 +19,6 @@ set(HEADER_FILES
     SRCommon.h
 )
 
-# set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 # Build driver lib
 add_library(${TARGET_NAME} ${SRC_FILES})
 
@@ -29,7 +27,7 @@ message(STATUS "SR7Link libs is: ${SR7Link_LIBRARIES}")
 
 target_include_directories(${TARGET_NAME} PUBLIC
     ${SR7Link_INCLUDE_DIRS}
-    ${CMAKE_INCLUDE_CURRENT_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/../CLogger
 )
 

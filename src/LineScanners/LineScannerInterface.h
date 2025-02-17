@@ -2,6 +2,7 @@
 #define LINE_SCANNER_INTERFACE_H
 
 #include "GocatorCommon.h"
+#include "SRCommon.h"
 
 #include <string>
 #include <vector>
@@ -39,15 +40,29 @@ struct CameraInfo {
 // Define the Line Scanner Interface class
 class LineScannerInterface {
 private:
-    Gocator_Handle gocator;    // Handle for the specific camera
-    Gocator_Data data;         // Data from the camera scan
+    Gocator_Handle gocator_;    // Handle for the specific camera
+    Sszn_Handle sszn_;          // Handle for the specific camera
+    CameraBranch curBranch_;
+
+    ProfileData profile_;         // Data from the camera scan
 
 public:
     // Default constructor, initializes the camera handle and prepares the interface.
     LineScannerInterface();
+    LineScannerInterface(const std::string branch);
     
     // Destructor, cleans up resources and shuts down the camera.
     ~LineScannerInterface();
+
+    /**
+     * @brief Sets the branch of the camera based on a string input.
+     * 
+     * This function allows you to set the branch type of the camera using a string. 
+     * For example, passing "LMI" sets the branch to LMI, and passing "SSZN" sets it to SSZN.
+     * 
+     * @param branch A string representing the branch type to be set for the camera.
+     */
+    void SetBranch(const std::string& branch);
 
     /**
      * @brief Scans for available cameras and populates the camera list.
@@ -66,21 +81,6 @@ public:
     CameraStatus Connect(const std::string& cameraIp);
 
     /**
-     * @brief Captures one frame of data from the camera.
-     * 
-     * @return CameraStatus The status of the data capture process.
-     */
-    CameraStatus GrabOnce();
-
-    /**
-     * @brief Turns the camera laser on or off.
-     * 
-     * @param open Boolean flag to control the laser (true to open, false to close).
-     * @return CameraStatus The status of the operation.
-     */
-    CameraStatus SetStatus(bool open);
-
-    /**
      * @brief Disconnects the camera. This version uses the camera's IP address.
      * 
      * @return CameraStatus The status of the disconnection process.
@@ -96,11 +96,26 @@ public:
     CameraStatus Disconnect(const std::string& cameraIp);
 
     /**
+     * @brief Turns the camera laser on or off.
+     * 
+     * @param open Boolean flag to control the laser (true to open, false to close).
+     * @return CameraStatus The status of the operation.
+     */
+    CameraStatus SetStatus(bool open);
+
+    /**
+     * @brief Captures one frame of data from the camera.
+     * 
+     * @return CameraStatus The status of the data capture process.
+     */
+    CameraStatus GrabOnce();
+
+    /**
      * @brief Retrieves the data captured by the camera.
      * 
      * @return Gocator_Data The data obtained from the camera.
      */
-    Gocator_Data RetriveData();
+    ProfileData RetriveData();
 
     /**
      * @brief Shuts down the camera and releases any associated resources.
@@ -108,8 +123,8 @@ public:
     void Shutdown();
 
 private:
-    std::vector<CameraInfo> ConvertToCameraInfoList(const Gocator_List& sdkCameraList);
-    void RemoveInvalidPoints();
+    std::vector<CameraInfo> ConvertToCameraInfoList(const Sensor_List& sdkCameraList);
+    // void RemoveInvalidPoints();
 };
 
 #endif // LINE_SCANNER_INTERFACE_H

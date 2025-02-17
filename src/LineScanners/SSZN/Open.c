@@ -30,3 +30,24 @@ bool Sszn_Open(Sszn_Handle* handle, const char* sensorIp, int deviceId) {
 
     return EXIT_SUCCESS;
 }
+
+// Close the sensor using the provided device ID
+bool Sszn_Close(Sszn_Handle* handle) {
+    if (handle == NULL) {
+        return EXIT_FAILURE;  // Invalid handle
+    }
+
+    // Step 1: Close communication with the sensor
+    int status = SR7IF_CommClose(handle->DEVICE_ID);
+    if (status != 0) {
+        return EXIT_FAILURE;  // Failed to close the communication
+    }
+
+    // Step 2: Clear the device ID and Ethernet configuration for safety
+    handle->DEVICE_ID = -1;
+    memset(&handle->SREthernetConFig, 0, sizeof(SR7IF_ETHERNET_CONFIG));
+
+    clog("Disconnected from SSZN sensor with device ID: %d\n", handle->DEVICE_ID);
+
+    return EXIT_SUCCESS;
+}

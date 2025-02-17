@@ -818,14 +818,27 @@ void MainWindow::onRunButtonReleased() {
 }
 
 void MainWindow::showScanCameraDialog(QAction *actBtn) {
-    QDialog dialog(this); // Create a dialog
+    // TODO: Merge sszn and lmi action.
+    std::string actionBranchName = actBtn->objectName().toStdString();
+    if (actionBranchName != curCamInfo_.brand && curCamInfo_.isConnected) {
+        // Disconnect other branch camera before create current connect.
+        sensorApi_.Disconnect(curCamInfo_.ipAddress);
+
+        QString msg = QString("Detected that the %1 camera is already connected, \
+            it will be automatically disconnected when creating the current connection.")
+            .arg(QString::fromStdString(curCamInfo_.brand));
+        QMessageBox::warning(this, "Warning", msg);
+    }
+
+    // Create a dialog to set camera connect
+    QDialog dialog(this);
     dialog.setWindowTitle("Scan Cameras");
-    dialog.setFixedSize(600, 200); // Set fixed size
+    dialog.setFixedSize(600, 200);
 
-    QVBoxLayout *layout = new QVBoxLayout(&dialog); // Create a vertical layout for the dialog
-    layout->setContentsMargins(10, 10, 10, 10); // Set margins for the layout
+    QVBoxLayout *layout = new QVBoxLayout(&dialog); 
+    layout->setContentsMargins(10, 10, 10, 10); 
 
-    QLabel *infoLabel = new QLabel("Select Camera:", &dialog); // Label for selecting a camera
+    QLabel *infoLabel = new QLabel("Select Camera:", &dialog);
     layout->addWidget(infoLabel);
 
     // Create a combo box for selecting camera IDs
@@ -918,13 +931,11 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
         }
     });
 
-    // Connect the buttons to slots
+    // Connect the buttons to slot functions, including connect and disconnect.
+    actBtn->setChecked(false);      // Forbid default setChecked when action is triggered.
     connect(connectButton, &QPushButton::clicked, [=]() {
-        // TODO: Check other branch camera connect status, and disconnect other camera first
-
         // Check if the IP address is valid (not empty)
         if (curCamInfo_.ipAddress.empty() || curCamInfo_.ipAddress == "0.0.0.0") {
-            actBtn->setChecked(false);
             // Show warning message if IP address is not set
             QMessageBox::warning(this, "Warning", "Please select a valid camera IP address before connecting.");
             return; // Exit the function to prevent connecting
@@ -937,8 +948,8 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
             curCamInfo_.isConnected = true;
             QString logMsg = QString("Info: Connected to camera: %1").arg(QString::fromStdString(curCamInfo_.ipAddress));
             logWin_->log(logMsg);
-            statusLabel->setText("Status: Connected"); // Update status label
-            actBtn->setChecked(true);                  // Set menu QAction status
+            statusLabel->setText("Status: Connected");  // Update status label
+            actBtn->setChecked(true);                   // Set menu QAction status true if camera connected.
         } else {
             // Show error message if connection fails
             QMessageBox::critical(this, "Error", "Failed to connect to the camera.");

@@ -3,12 +3,54 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Remove invalid points from the profile
+void RemoveInvalidPoints(ProfileData* data) {
+    if (data == NULL || data->profileBuffer == NULL) {
+        return; // No valid data to process
+    }
+
+    // Temporary array to store valid points
+    ProfilePoint* validPoints = (ProfilePoint*)malloc(sizeof(ProfilePoint) * data->validPoints);
+    if (validPoints == NULL) {
+        return; // Memory allocation failed
+    }
+
+    size_t validCount = 0;
+
+    // Iterate through the profileBuffer and filter out invalid points
+    for (size_t i = 0; i < data->validPoints; ++i) {
+        if (data->profileBuffer[i].x != INVALID_RANGE_DOUBLE && 
+            data->profileBuffer[i].z != INVALID_RANGE_DOUBLE) {
+            validPoints[validCount++] = data->profileBuffer[i]; // Store valid point
+        }
+    }
+
+    // Update validPoints count
+    data->validPoints = validCount;
+
+    // Reallocate profileBuffer to store only valid points
+    if (data->validPoints > 0) {
+        // Reallocate memory for valid points
+        data->profileBuffer = (ProfilePoint*)realloc(data->profileBuffer, sizeof(ProfilePoint) * data->validPoints);
+        if (data->profileBuffer != NULL) {
+            memcpy(data->profileBuffer, validPoints, sizeof(ProfilePoint) * data->validPoints); // Copy valid points
+        }
+    } else {
+        // If no valid points, free memory and set profileBuffer to NULL
+        free(data->profileBuffer);
+        data->profileBuffer = NULL;
+    }
+
+    // Free the temporary validPoints buffer
+    free(validPoints);
+}
+
 // Receives profile data from the Gocator sensor.
-kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, Gocator_Data* data) {
+kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, ProfileData* data) {
     unsigned int i, j, k, arrayIndex;
     GoDataMsg dataObj;
     GoDataSet dataset = kNULL;
-    GoProfilePoint* profileBuffer = NULL;
+    ProfilePoint* profileBuffer = NULL;
     kStatus status;
     k32u profilePointCount;
     GoStamp* stamp = kNULL;
@@ -27,8 +69,8 @@ kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, Gocator_Data* data) {
         profilePointCount = GoSetup_FrontCameraWidth(handle->setup, GO_ROLE_MAIN);
     }
 
-    data->bufferSize = profilePointCount;
-    profileBuffer = malloc(profilePointCount * sizeof(GoProfilePoint));
+    data->totalCount = profilePointCount;
+    profileBuffer = malloc(profilePointCount * sizeof(ProfilePoint));
     if (profileBuffer == kNULL) {
         return kERROR;          // Memory allocation failure
     }
@@ -43,7 +85,7 @@ kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, Gocator_Data* data) {
 
     // Initial data buffer
     data->profileBuffer = profileBuffer;
-    data->pointCount = 0;
+    data->validPoints = 0;
 
     // Loop through received data set
     for (i = 0; i < GoDataSet_Count(dataset); ++i) {
@@ -82,14 +124,14 @@ kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, Gocator_Data* data) {
                         // Translate 16-bit range data to engineering units (mm)
                         profileBuffer[arrayIndex].x = XOffset + XResolution * arrayIndex; // Translate X
                         profileBuffer[arrayIndex].z = ZOffset + ZResolution * rangeData[arrayIndex]; // Translate Z
-                        data->pointCount++;
+                        data->validPoints++;
                     } else {
                         // Mark invalid points
                         profileBuffer[arrayIndex].x = XOffset + XResolution * arrayIndex;
                         profileBuffer[arrayIndex].z = INVALID_RANGE_DOUBLE; // Indicate invalid range
                     }
                 }
-                clog("  Profile Valid Point %d out of max %d\n", data->pointCount++, profilePointCount);
+                clog("  Profile Valid Point %d out of max %d\n", data->validPoints++, profilePointCount);
             }
 
         }
@@ -113,14 +155,14 @@ kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, Gocator_Data* data) {
                     if (kData16s[arrayIndex].x != INVALID_RANGE_16BIT) {
                         profileBuffer[arrayIndex].x = XOffset + XResolution * kData16s[arrayIndex].x; // Translate X
                         profileBuffer[arrayIndex].z = ZOffset + ZResolution * kData16s[arrayIndex].y; // Translate Z
-                        data->pointCount++;
+                        data->validPoints++;
                     } else {
                         // Mark invalid points
                         profileBuffer[arrayIndex].x = INVALID_RANGE_DOUBLE;
                         profileBuffer[arrayIndex].z = INVALID_RANGE_DOUBLE; // Indicate invalid range
                     }
                 }
-                clog("  Profile Valid Point %d out of max %d\n", data->pointCount++, profilePointCount);
+                clog("  Profile Valid Point %d out of max %d\n", data->validPoints++, profilePointCount);
             }
             
         }
@@ -140,5 +182,8 @@ kStatus Gocator_ReceiveProfileData(Gocator_Handle* handle, Gocator_Data* data) {
     }
 
     GoDestroy(dataset);
+
+    // Remove all out of the sensor range data
+    RemoveInvalidPoints(data);
     return kOK;
 }

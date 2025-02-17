@@ -10,6 +10,11 @@ set(SRC_FILES
     LineScannerInterface.cpp
 )
 
+set(HEADER_FILES
+    LineScannerInterface.h
+    SensorCommon.h
+)
+
 # Specify the library target
 add_library(LineScannerInterface ${SRC_FILES})  # Use STATIC for static library
 
@@ -19,7 +24,7 @@ target_include_directories(LineScannerInterface PUBLIC
 )
 
 # Create imported library for Go_SDK import libraries
-target_link_libraries(LineScannerInterface Go_Driver clogger)
+target_link_libraries(LineScannerInterface Go_Driver Sszn_Driver clogger)
 
 if(OFF)
     add_executable(lmiTest Samples/TestLineScanner.cpp)
