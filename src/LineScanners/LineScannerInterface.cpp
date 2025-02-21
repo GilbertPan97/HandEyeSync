@@ -18,7 +18,7 @@ LineScannerInterface::LineScannerInterface() {
     }
 }
 
-LineScannerInterface::LineScannerInterface(const std::string branch){
+LineScannerInterface::LineScannerInterface(const std::string brand){
     // Create lmi and sszn camera hanle
     gocator_ = Gocator_Handle();
     kStatus go_status = Gocator_Initialize(&gocator_);
@@ -30,7 +30,7 @@ LineScannerInterface::LineScannerInterface(const std::string branch){
         clog("Error: Sensor handle initial fail.");
     }
 
-    SetBranch(branch);      // Set Current Sensor Branch
+    SetBrand(brand);      // Set Current Sensor Brand
 }
 
 LineScannerInterface::~LineScannerInterface() {
@@ -38,15 +38,15 @@ LineScannerInterface::~LineScannerInterface() {
     Shutdown();
 }
 
-void LineScannerInterface::SetBranch(const std::string& branch) {
-    if (branch == "LMI") {
-        curBranch_ = CameraBranch::LMI;  // Set to LMI if the input string is "LMI"
-        clog("Info: Set current sensor branch to LMI");
-    } else if (branch == "SSZN") {
-        curBranch_ = CameraBranch::SSZN; // Set to SSZN if the input string is "SSZN"
-        clog("Info: Set current sensor branch to SSZN");
+void LineScannerInterface::SetBrand(const std::string& brand) {
+    if (brand == "LMI") {
+        curBrand_ = CameraBrand::LMI;  // Set to LMI if the input string is "LMI"
+        clog("Info: Set current sensor brand to LMI");
+    } else if (brand == "SSZN") {
+        curBrand_ = CameraBrand::SSZN; // Set to SSZN if the input string is "SSZN"
+        clog("Info: Set current sensor brand to SSZN");
     } else {
-        clog("Error: Unknown sensor branch");
+        clog("Error: Unknown sensor brand");
     }
 }
 
@@ -56,13 +56,13 @@ CameraStatus LineScannerInterface::Scan(std::vector<CameraInfo>& cameraList) {
     cList.cam_info = nullptr;
     cList.count = 0;
 
-    // Check which branch to use and call the appropriate discovery function
-    if (curBranch_ == CameraBranch::LMI) {
+    // Check which brand to use and call the appropriate discovery function
+    if (curBrand_ == CameraBrand::LMI) {
         Gocator_Discover(&cList); // Use Gocator_Discover for LMI cameras
-    } else if (curBranch_ == CameraBranch::SSZN) {
+    } else if (curBrand_ == CameraBrand::SSZN) {
         Sszn_Discover(&cList); // Use Sszn_Discover for SSZN cameras
     } else {
-        // If an unknown branch is set, return an error status
+        // If an unknown brand is set, return an error status
         return CameraStatus::DEV_ERROR;
     }
 
@@ -77,18 +77,18 @@ CameraStatus LineScannerInterface::Connect(const std::string& cameraIp) {
     const char* ip_s = _strdup(cameraIp.c_str());
     kStatus status;
 
-    // Check which branch to use and call the appropriate connection function
-    if (curBranch_ == CameraBranch::LMI) {
+    // Check which brand to use and call the appropriate connection function
+    if (curBrand_ == CameraBrand::LMI) {
         status = Gocator_Connect(&gocator_, ip_s); // LMI cameras need connect before open
-    } else if (curBranch_ == CameraBranch::SSZN) {
+    } else if (curBrand_ == CameraBrand::SSZN) {
         // SSZN cameras don't require explicit connection
         clog("Info: SSZN camera does not require explicit connection, it will open directly.");
         if(Sszn_Open(&sszn_, ip_s, 0))      // FIXME: Divice id should be dynamical for multi sensor connect
             status = kOK;
     } else {
-        // If an unknown branch is set, return an error status
+        // If an unknown brand is set, return an error status
         free((void*)ip_s); // Free the duplicated string
-        return CameraStatus::DEV_ERROR; // Unknown branch type
+        return CameraStatus::DEV_ERROR; // Unknown brand type
     }
 
     free((void*)ip_s);      // Free the duplicated string after using it
@@ -100,16 +100,16 @@ CameraStatus LineScannerInterface::Connect(const std::string& cameraIp) {
 CameraStatus LineScannerInterface::Disconnect() {
     kStatus status;
 
-    // Check the current camera branch and call the appropriate disconnect function
-    if (curBranch_ == CameraBranch::LMI) {
+    // Check the current camera brand and call the appropriate disconnect function
+    if (curBrand_ == CameraBrand::LMI) {
         status = Gocator_DisConnect(&gocator_);  // Disconnect the LMI camera
-    } else if (curBranch_ == CameraBranch::SSZN) {
+    } else if (curBrand_ == CameraBrand::SSZN) {
         // SSZN camera does not require explicit disconnection
         clog("Info: SSZN camera does not require explicit disconnection, it will close directly.");
         if(Sszn_Close(&sszn_))
             status = kOK;
     } else {
-        return CameraStatus::DEV_ERROR;  // Unsupported camera branch
+        return CameraStatus::DEV_ERROR;  // Unsupported camera brand
     }
 
     // Return the corresponding camera status based on the disconnection result
@@ -121,17 +121,17 @@ CameraStatus LineScannerInterface::Disconnect(const std::string& cameraIp) {
     const char* ip_s = _strdup(cameraIp.c_str());  // Duplicate the IP address for the function call
     kStatus status;
 
-    // Check the current camera branch and call the appropriate disconnect function
-    if (curBranch_ == CameraBranch::LMI) {
+    // Check the current camera brand and call the appropriate disconnect function
+    if (curBrand_ == CameraBrand::LMI) {
         status = Gocator_DisConnect(&gocator_, ip_s);  // Disconnect the LMI camera
-    } else if (curBranch_ == CameraBranch::SSZN) {
+    } else if (curBrand_ == CameraBrand::SSZN) {
         // SSZN camera does not require explicit disconnection
         clog("Info: SSZN camera does not require explicit disconnection, it will close directly.");
         if(Sszn_Close(&sszn_))
             status = kOK;
     } else {
         free((void*)ip_s);  // Free the duplicated IP address memory
-        return CameraStatus::DEV_ERROR;  // Unsupported camera branch
+        return CameraStatus::DEV_ERROR;  // Unsupported camera brand
     }
 
     free((void*)ip_s);  // Free the duplicated IP address memory
@@ -143,8 +143,8 @@ CameraStatus LineScannerInterface::Disconnect(const std::string& cameraIp) {
 CameraStatus LineScannerInterface::SetStatus(bool open) {
     kStatus status;     // For LMI, we expect a kStatus return value
 
-    // Check the current camera branch and perform actions accordingly
-    if (curBranch_ == CameraBranch::LMI) {
+    // Check the current camera brand and perform actions accordingly
+    if (curBrand_ == CameraBrand::LMI) {
         // For LMI cameras, open or close based on the input flag
         if (open) {
             status = Gocator_Open(&gocator_);
@@ -153,11 +153,11 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
         }
         status = kOK;
         clog("Info: Set status successfully (status: %s).\n", open ? "true" : "false");
-    } else if (curBranch_ == CameraBranch::SSZN) {
+    } else if (curBrand_ == CameraBrand::SSZN) {
         // For SSZN cameras, explicitly open or close has been process when camera connect
         status = kOK;
     } else {
-        return CameraStatus::DEV_ERROR;  // Unsupported camera branch
+        return CameraStatus::DEV_ERROR;  // Unsupported camera brand
     }
         
     // Return the corresponding camera status based on the disconnection result
@@ -167,16 +167,16 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
 CameraStatus LineScannerInterface::GrabOnce() {
     bool success;
     
-    if (curBranch_ == CameraBranch::LMI) {
+    if (curBrand_ == CameraBrand::LMI) {
         // For LMI cameras, use the Gocator function to receive profile data
         if (Gocator_ReceiveProfileData(&gocator_, &profile_) == kOK)
             success = EXIT_SUCCESS;
-    } else if (curBranch_ == CameraBranch::SSZN) {
+    } else if (curBrand_ == CameraBrand::SSZN) {
         // For SSZN cameras, use the SSZN-specific function (assuming it's named similarly)
         // FIXME: Sszn_ReceiveProfileData throw a bug when build
         // success = Sszn_ReceiveProfileData(&sszn_, &profile_);
     } else {
-        return CameraStatus::DEV_ERROR;  // Unsupported camera branch
+        return CameraStatus::DEV_ERROR;  // Unsupported camera brand
     }
 
     // Check the result of the data retrieval

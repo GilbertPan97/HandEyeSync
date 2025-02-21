@@ -15,10 +15,10 @@ enum class CameraStatus {
     DEV_NOT_CONNECTED, // Camera is not connected
 };
 
-// Define camera branch enumeration
-enum class CameraBranch {
-    LMI,   // LMI camera branch
-    SSZN,  // SSZN camera branch
+// Define camera brand enumeration
+enum class CameraBrand {
+    LMI,   // LMI camera brand
+    SSZN,  // SSZN camera brand
 };
 
 // Struct to hold camera information
@@ -42,27 +42,27 @@ class LineScannerInterface {
 private:
     Gocator_Handle gocator_;    // Handle for the specific camera
     Sszn_Handle sszn_;          // Handle for the specific camera
-    CameraBranch curBranch_;
+    CameraBrand curBrand_;
 
     ProfileData profile_;         // Data from the camera scan
 
 public:
     // Default constructor, initializes the camera handle and prepares the interface.
     LineScannerInterface();
-    LineScannerInterface(const std::string branch);
+    LineScannerInterface(const std::string brand);
     
     // Destructor, cleans up resources and shuts down the camera.
     ~LineScannerInterface();
 
     /**
-     * @brief Sets the branch of the camera based on a string input.
+     * @brief Sets the brand of the camera based on a string input.
      * 
-     * This function allows you to set the branch type of the camera using a string. 
-     * For example, passing "LMI" sets the branch to LMI, and passing "SSZN" sets it to SSZN.
+     * This function allows you to set the brand type of the camera using a string. 
+     * For example, passing "LMI" sets the brand to LMI, and passing "SSZN" sets it to SSZN.
      * 
-     * @param branch A string representing the branch type to be set for the camera.
+     * @param brand A string representing the brand type to be set for the camera.
      */
-    void SetBranch(const std::string& branch);
+    void SetBrand(const std::string& brand);
 
     /**
      * @brief Scans for available cameras and populates the camera list.

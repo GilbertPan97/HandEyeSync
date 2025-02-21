@@ -94,13 +94,10 @@ void MainWindow::createMenuBar()
     QMenu *deviceMenu = menuBar()->addMenu("Device");
 
     // Add Sszn, LMI, and FanucRobot menu items
-    QAction *ssznAction = deviceMenu->addAction("Sszn");
-    ssznAction->setCheckable(true);  
-    QAction *lmiAction = deviceMenu->addAction("LMI");
-    lmiAction->setCheckable(true);
+    QAction *sensorAction = deviceMenu->addAction("Sensor");
+    sensorAction->setCheckable(true);  
 
-    connect(ssznAction, &QAction::triggered, this, [this, ssznAction]() { showScanCameraDialog(ssznAction); });
-    connect(lmiAction, &QAction::triggered, this, [this, lmiAction]() { showScanCameraDialog(lmiAction); });
+    connect(sensorAction, &QAction::triggered, this, [this, sensorAction]() { showScanCameraDialog(sensorAction); });
     deviceMenu->addSeparator();
 
     QAction *fanucRobotAction = deviceMenu->addAction("FanucRobot");
@@ -818,48 +815,69 @@ void MainWindow::onRunButtonReleased() {
 }
 
 void MainWindow::showScanCameraDialog(QAction *actBtn) {
-    // TODO: Merge sszn and lmi action.
-    std::string actionBranchName = actBtn->objectName().toStdString();
-    if (actionBranchName != curCamInfo_.brand && curCamInfo_.isConnected) {
-        // Disconnect other branch camera before create current connect.
-        sensorApi_.Disconnect(curCamInfo_.ipAddress);
-
-        QString msg = QString("Detected that the %1 camera is already connected, \
-            it will be automatically disconnected when creating the current connection.")
-            .arg(QString::fromStdString(curCamInfo_.brand));
-        QMessageBox::warning(this, "Warning", msg);
-    }
-
     // Create a dialog to set camera connect
     QDialog dialog(this);
     dialog.setWindowTitle("Scan Cameras");
-    dialog.setFixedSize(600, 200);
+    dialog.setFixedSize(500, 220);
 
     QVBoxLayout *layout = new QVBoxLayout(&dialog); 
     layout->setContentsMargins(10, 10, 10, 10); 
 
-    QLabel *infoLabel = new QLabel("Select Camera:", &dialog);
-    layout->addWidget(infoLabel);
+    // Create a combo box for selecting sensor brand
+    QHBoxLayout *brandLayout = new QHBoxLayout(&dialog);
+    QLabel *brandLabel = new QLabel("Sensor brand:", &dialog);
+    brandLayout->addWidget(brandLabel);
+
+    QComboBox *brandComboBox = new QComboBox(&dialog);
+    brandLayout->addWidget(brandComboBox, 1);
+    brandComboBox->addItem("LMI");    // Add items to the combo box
+    brandComboBox->addItem("SSZN");
+
+    connect(brandComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+            [brandComboBox, this]() {
+                QString selectedItem = brandComboBox->currentText();
+                sensorApi_.SetBrand(selectedItem.toStdString());
+                logWin_->log("Selected brand: " + selectedItem);
+            });
+    layout->addLayout(brandLayout);
 
     // Create a combo box for selecting camera IDs
+    QHBoxLayout *infoLayout = new QHBoxLayout(&dialog);
+    QLabel *infoLabel = new QLabel("Select Sensor:", &dialog);
+    infoLayout->addWidget(infoLabel);
+    
     QComboBox *cameraComboBox = new QComboBox(&dialog);
-    layout->addWidget(cameraComboBox); // Add combo box to layout
+    infoLayout->addWidget(cameraComboBox, 1);       // Add combo box to layout
+    layout->addLayout(infoLayout);
+    
+    // Initial UI with current sensor config
     if (curCamInfo_.id !=-1){
+        // Check the brand of the current camera info
+        if (curCamInfo_.brand == "LMI")
+            brandComboBox->setCurrentIndex(0);  // Set the first item (LMI) as the selected item
+        else if (curCamInfo_.brand == "SSZN")
+            brandComboBox->setCurrentIndex(1);  // Set the second item (SSZN) as the selected item
+        // If there are more brands to check, add additional else if conditions:
+        else {
+            logWin_->log("Error: Unknown sensor brand.");
+            brandComboBox->setCurrentIndex(-1);
+        }
         cameraComboBox->addItem(QString("%1 - %2").arg(curCamInfo_.id)
                     .arg(QString::fromStdString(curCamInfo_.ipAddress)));
     }
 
-    QPushButton *scanButton = new QPushButton("Scan", &dialog); // Scan button
+    // Scan sensor button
+    QPushButton *scanButton = new QPushButton("Scan", &dialog); 
     layout->addWidget(scanButton);
 
     // Create a group box for camera status
-    QGroupBox *statusGroupBox = new QGroupBox("Camera Status", &dialog); // Create a group box
-    QVBoxLayout *statusLayout = new QVBoxLayout(statusGroupBox); // Create a vertical layout for the group box
+    QGroupBox *statusGroupBox = new QGroupBox("Current Sensor", &dialog); 
+    QVBoxLayout *statusLayout = new QVBoxLayout(statusGroupBox);
 
     // Create a label for displaying current camera brand
-    QLabel *brandLabel = new QLabel("Camera Brand: " + 
+    QLabel *brandInfo = new QLabel("Camera Brand: " + 
         QString::fromStdString(curCamInfo_.brand), statusGroupBox); // Initial brand label
-    statusLayout->addWidget(brandLabel);        // Add brand label to group box layout
+    statusLayout->addWidget(brandInfo);        // Add brand label to group box layout
 
     // Create a horizontal layout for status and camera ID
     QString id_s = (curCamInfo_.id == -1) ? "N/A" : QString::number(curCamInfo_.id);
@@ -868,25 +886,24 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     QLabel *statusLabel = new QLabel("Status: " + conn_s, statusGroupBox); // Initial status
     QLabel *cameraIdLabel = new QLabel("Camera ID: " + id_s, statusGroupBox); // Initial camera ID
 
-    statusIdLayout->addWidget(statusLabel); // Add status label to horizontal layout
-    statusIdLayout->addWidget(cameraIdLabel); // Add camera ID label to horizontal layout
-    statusLayout->addLayout(statusIdLayout); // Add horizontal layout to group box layout
+    statusIdLayout->addWidget(statusLabel);     // Add status label to horizontal layout
+    statusIdLayout->addWidget(cameraIdLabel);   // Add camera ID label to horizontal layout
+    statusLayout->addLayout(statusIdLayout);    // Add horizontal layout to group box layout
 
-    layout->addWidget(statusGroupBox); // Add group box to main layout
+    layout->addWidget(statusGroupBox);
 
     // Create a horizontal layout for connect and disconnect buttons
     QHBoxLayout *buttonLayout = new QHBoxLayout();
-    QPushButton *connectButton = new QPushButton("Connect", &dialog); // Connect button
-    buttonLayout->addWidget(connectButton); // Add connect button to layout
+    QPushButton *connectButton = new QPushButton("Connect", &dialog);
+    buttonLayout->addWidget(connectButton);
+    QPushButton *disconnectButton = new QPushButton("Disconnect", &dialog);
+    buttonLayout->addWidget(disconnectButton);
 
-    QPushButton *disconnectButton = new QPushButton("Disconnect", &dialog); // Disconnect button
-    buttonLayout->addWidget(disconnectButton); // Add disconnect button to layout
-
-    layout->addLayout(buttonLayout); // Add horizontal layout to main layout
+    layout->addLayout(buttonLayout);    // Add horizontal layout to main layout
 
     // Create a label for displaying camera information
     QLabel *cameraInfoLabel = new QLabel(&dialog); // Define camera info label
-    layout->addWidget(cameraInfoLabel); // Add to layout
+    layout->addWidget(cameraInfoLabel); 
 
     connect(scanButton, &QPushButton::clicked, [=]() {
         std::vector<CameraInfo> sensorList; // Vector to hold camera info
