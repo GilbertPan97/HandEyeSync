@@ -64,7 +64,7 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     // Create a QWidget to hold the buttons
     QWidget *buttonContainer = new QWidget(widget);
     QHBoxLayout *buttonLayout = new QHBoxLayout(buttonContainer);
-    buttonLayout->setContentsMargins(10, 10, 0, 0); // Add margins for button layout
+    buttonLayout->setContentsMargins(20, 10, 0, 0); // Add margins for button layout
 
     // Helper lambda function to create buttons
     auto createButton = [&](const QString& iconPath, const QString& toolTip,
@@ -104,8 +104,14 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     this->show();
 }
 
-void DockWidgetViewer::plotPoints(const std::vector<std::pair<double, double>>& points, bool connectPoints) {
-    // Clear old data
+void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints) {
+    // Cache current plot data
+    if (curPlotData_ == nullptr) {
+        curPlotData_ = new RenderData();
+    }
+    *curPlotData_ = points; 
+    
+    // Clear plot old data
     customPlot_->graph(0)->data()->clear();  // Clear the current graph's data
 
     // Prepare vectors for x and z coordinates

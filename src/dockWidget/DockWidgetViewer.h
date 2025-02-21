@@ -15,10 +15,14 @@
  * This class provides a custom widget for plotting data points on a QCustomPlot object.
  * The plot can either connect the points with lines or display them as discrete points, depending on the specified mode.
  */
+
+using RenderData = std::vector<std::pair<double, double>>;
+
 class DockWidgetViewer : public ads::CDockWidget {
 private:
     QList<QPushButton*> btnList_;
     QCustomPlot *customPlot_;
+    RenderData *curPlotData_;
 
 public:
     /**
@@ -44,7 +48,7 @@ public:
      *                      If true, the points will be connected with lines. If false, the points will
      *                      be displayed as discrete points without any connecting lines.
      */
-    void plotPoints(const std::vector<std::pair<double, double>>& points, bool connectPoints);
+    void plotPoints(const RenderData& points, bool connectPoints);
 
     /**
      * @brief Handles resize events for the DockWidgetViewer.
