@@ -7,13 +7,14 @@
         <file>icons/save-file.png</file>
 
         <file>icons/globe.png</file>
-        <file>icons/download.png</file>
+        <file>icons/download0.png</file>
         <file>icons/sensor.png</file>
         <file>icons/add-images.png</file>
         <file>icons/add-robot.png</file>
-
-        <file>icons/play.png</file>
-        <file>icons/pause.png</file>
+        <file>icons/run.png</file>
+        <file>icons/stop.png</file>
+		
+		<file>icons/picking.png</file>
 
         <file>icons/setting.png</file>
 
@@ -21,5 +22,12 @@
         <file>icons/export.png</file>
 
         <file>images/icon.png</file>
+
+        <file>icons/play.png</file>
+        <file>icons/pause.png</file>
+        <file>icons/photo-capture.png</file>
+        <file>icons/upload.png</file>
+        <file>icons/refresh.png</file>
+        <file>icons/trash.png</file>
     </qresource>
 </RCC>

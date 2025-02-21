@@ -9,6 +9,7 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QStringList>
+#include <QPushButton>
 
 #include <opencv2/core/types.hpp>
 
@@ -46,7 +47,7 @@ public:
      * @param name The name of the property.
      * @param value The value of the property.
      */
-    void addProperty(const QString& name, const QString& value);
+    void addProperty(const QString& name, const QString& value, QPushButton* button = nullptr);
 
     /**
      * @brief Adds a property with a combo box for selection.

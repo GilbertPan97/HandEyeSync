@@ -23,8 +23,10 @@ set(LIB_HEADERS
     DockWidgetProperty.h
 )
 
+set(QRC_FILE "${CMAKE_SOURCE_DIR}/resources.qrc")
+
 # Create a library (static or shared)
-add_library(DockWidgetLibs STATIC ${LIB_SOURCES} ${LIB_HEADERS})
+add_library(DockWidgetLibs STATIC ${LIB_SOURCES} ${LIB_HEADERS} ${QRC_FILE})
 
 # Link Qt5 Widgets and ads to the library
 target_link_libraries(DockWidgetLibs PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets QtAdvancedDocking QCustomPlot ${OpenCV_LIBS})

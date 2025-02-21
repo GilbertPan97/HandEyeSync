@@ -5,6 +5,8 @@
 #include "qcustomplot.h"
 
 #include <QString>
+#include <QList>
+#include <QPushButton>
 
 /**
  * @class DockWidgetViewer
@@ -15,7 +17,8 @@
  */
 class DockWidgetViewer : public ads::CDockWidget {
 private:
-    QCustomPlot *customPlot_; ///< Pointer to the QCustomPlot object for plotting.
+    QList<QPushButton*> btnList_;
+    QCustomPlot *customPlot_;
 
 public:
     /**

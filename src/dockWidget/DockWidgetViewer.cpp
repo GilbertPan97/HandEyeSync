@@ -57,15 +57,50 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
 
     // Create a QWidget to hold the main layout
     QWidget *widget = new QWidget(this);
+    widget->setStyleSheet("background: #444444;");
     QVBoxLayout *layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 0); // Remove margins for layout
+    layout->setContentsMargins(0, 0, 0, 0);
+
+    // Create a QWidget to hold the buttons
+    QWidget *buttonContainer = new QWidget(widget);
+    QHBoxLayout *buttonLayout = new QHBoxLayout(buttonContainer);
+    buttonLayout->setContentsMargins(10, 10, 0, 0); // Add margins for button layout
+
+    // Helper lambda function to create buttons
+    auto createButton = [&](const QString& iconPath, const QString& toolTip,
+                            const QSize& btnSize = QSize(25, 25), 
+                            const QSize& iconSize = QSize(18, 18)) -> QPushButton* 
+    {
+        QPushButton* button = new QPushButton(QIcon(iconPath), "", this);
+        button->setToolTip(toolTip);
+        button->setFixedSize(btnSize);
+        button->setIconSize(iconSize);
+        btnList_.push_back(button);
+        return button;
+    };
+
+    // Create buttons for controlling the display functionality
+    QPushButton *ctlBtn_play = createButton(":/icons/play.png", "Run and pause camera grab");
+    QPushButton *ctlBtn_capture = createButton(":/icons/photo-capture.png", "Capture current view");
+    QPushButton *ctlBtn_download = createButton(":/icons/download0.png", "Download data");
+    QPushButton *ctlBtn_upload = createButton(":/icons/upload.png", "Upload data");
+    QPushButton *ctlBtn_refresh = createButton(":/icons/refresh.png", "Refresh the view");
+    QPushButton *ctlBtn_trash = createButton(":/icons/trash.png", "Clear data");
+
+    // Add buttons to the container layout
+    buttonLayout->addWidget(ctlBtn_play);
+    buttonLayout->addWidget(ctlBtn_capture);
+    buttonLayout->addWidget(ctlBtn_download);
+    buttonLayout->addWidget(ctlBtn_upload);
+    buttonLayout->addWidget(ctlBtn_refresh);
+    buttonLayout->addWidget(ctlBtn_trash);
 
     // Add button container to the main layout
-    // layout->addWidget(buttonContainer, 0, Qt::AlignLeft | Qt::AlignTop); // Align buttons to top-left
+    layout->addWidget(buttonContainer, 0, Qt::AlignLeft | Qt::AlignTop); // Align buttons to top-left
     layout->addWidget(customPlot_, 1); // Add the custom plot below the buttons with stretch factor
 
-    widget->setLayout(layout); // Set the layout to the widget
-    this->setWidget(widget); // Set the widget with the layout to the dock widget
+    widget->setLayout(layout); 
+    this->setWidget(widget);
     this->show();
 }
 

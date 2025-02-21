@@ -94,6 +94,7 @@
         "srcommon.h": "c",
         "gocatorcommon.h": "c",
         "clog.h": "c",
-        "sensorcommon.h": "c"
+        "sensorcommon.h": "c",
+        "qstring": "cpp"
     }
 }

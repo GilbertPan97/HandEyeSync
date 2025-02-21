@@ -163,7 +163,7 @@ void MainWindow::createToolBar()
     QComboBox *comboBox = new QComboBox(this);
     comboBox->addItem("0");
     QPushButton *downloadButton = new QPushButton(this);
-    downloadButton->setIcon(QIcon(":/icons/download.png"));
+    downloadButton->setIcon(QIcon(":/icons/download0.png"));
     downloadButton->setToolTip("Collect");
     indexLabel->setEnabled(false);
     comboBox->setEnabled(false);
@@ -173,10 +173,12 @@ void MainWindow::createToolBar()
     collectLayout->addWidget(downloadButton, 0, Qt::AlignVCenter);
 
     // Widgets indexLabel, comboBox and downloadButton only editable when onlineCollectBtn toggled
-    connect(onlineCollectBtn, &QPushButton::toggled, [indexLabel, comboBox, downloadButton, onlineCollectBtn](bool checked) {
+    connect(onlineCollectBtn, &QPushButton::toggled, [=](bool checked) {
         if (checked) {
-            // TODO: Check devices connect status
-            
+            // Check devices connect status
+            if (!curCamInfo_.isConnected) {
+                logWin_->log("Warning: No sensor connected.");
+            }
             // If the button is pressed (checked), enable the controls and remove gray appearance
             indexLabel->setEnabled(true);
             comboBox->setEnabled(true);
@@ -262,7 +264,7 @@ void MainWindow::createToolBar()
     // Add the radio buttons to the layout
     calibTypeLayout->addWidget(eyeInHandRadioButton);
     calibTypeLayout->addWidget(eyeToHandRadioButton);
-    eyeInHandRadioButton->setChecked(true);         // Set a default selection
+    eyeInHandRadioButton->setChecked(true);
     calibMap_["CalibrType"] = "Eye-In-Hand";
 
     // Connect a single lambda function to handle both buttons
@@ -293,7 +295,7 @@ void MainWindow::createToolBar()
 
     QToolButton *runButton = new QToolButton(this);
     runButton->setText("Run");
-    runButton->setIcon(QIcon(":/icons/play.png"));
+    runButton->setIcon(QIcon(":/icons/run.png"));
     runButton->setToolTip("Calibration exec");
     runButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     connect(runButton, &QPushButton::released, this, &MainWindow::onRunButtonReleased);
@@ -643,38 +645,48 @@ void MainWindow::onSettingButtonReleased() {
     settingsDialog->setWindowTitle("Settings");
 
     // Create a layout for the dialog
-    QHBoxLayout *mainLayout = new QHBoxLayout(settingsDialog);
+    QVBoxLayout *mainLayout0 = new QVBoxLayout(settingsDialog);
+    QHBoxLayout *mainLayout = new QHBoxLayout();
 
     // Create a layout for the image (on the top)
-    QVBoxLayout *imageLayout = new QVBoxLayout();
-    QLabel *imageLabel = new QLabel();
+    QGroupBox *imageGBox = new QGroupBox("Model Configuration");
+    QVBoxLayout *modelLayout = new QVBoxLayout();
 
     // Load the image and scale it to fit within the fixed square size
+    QLabel *imageLabel = new QLabel(); 
     QPixmap imagePixmap("");    //:/images/icon.png
     imageLabel->setPixmap(imagePixmap.scaled(300, 300, Qt::KeepAspectRatio));  // Scale image to fit
-
-    // Set the fixed size for the imageLabel to make it a square
-    imageLabel->setFixedSize(300, 300); // Ensure imageLabel is always 300x300px
-
-    // Set label style: gray background for the image area
+    imageLabel->setFixedSize(300, 300);     // Ensure imageLabel is always 300x300px
     imageLabel->setStyleSheet(
         "background-color:rgb(200, 200, 200);"
         "color: #444444;"
         "border: 2px solid #666666;"
     );
-
-    // Center the image inside the label
     imageLabel->setAlignment(Qt::AlignCenter);
 
+    // Create a horizontal layout to place the label and combo box next to each other
+    // Feature Point Direction label and ComboBox
+    QVBoxLayout *configLayout = new QVBoxLayout();
+    QLabel *featureDirectionLabel = new QLabel("Feature Point Direction:");
+    QComboBox *featureDirectionComboBox = new QComboBox();
+    featureDirectionComboBox->addItem("+Y");
+    featureDirectionComboBox->addItem("-Y");
+    QHBoxLayout *featureDirectionLayout = new QHBoxLayout();
+    featureDirectionLayout->addWidget(featureDirectionLabel);
+    featureDirectionLayout->addWidget(featureDirectionComboBox);
+    configLayout->addLayout(featureDirectionLayout);
+
     // Add the image label to the image layout
-    imageLayout->addWidget(imageLabel);
+    modelLayout->addWidget(imageLabel);
+    modelLayout->addLayout(configLayout);
+    imageGBox->setLayout(modelLayout);
 
     // Create a layout for the property table (on the right)
     QVBoxLayout *propertiesLayout = new QVBoxLayout();
 
     // Calibration Model label and ComboBox
     QLabel *calibModelLabel = new QLabel("Calibration Model:");
-    calibModelLabel->setStyleSheet("font-weight: bold;  font-size: 10pt;");
+    // calibModelLabel->setStyleSheet("font-weight: bold;  font-size: 10pt;");
     QComboBox *calibModelComboBox = new QComboBox();
     calibModelComboBox->addItem("Sphere");
     calibModelComboBox->addItem("Edge");
@@ -684,26 +696,28 @@ void MainWindow::onSettingButtonReleased() {
     calibModelLayout->addWidget(calibModelLabel);
     calibModelLayout->addWidget(calibModelComboBox);
 
-    // Feature Point Direction label and ComboBox
-    QLabel *featureDirectionLabel = new QLabel("Feature Point Direction:");
-    featureDirectionLabel->setStyleSheet("font-weight: bold; font-size: 10pt;");
-    QComboBox *featureDirectionComboBox = new QComboBox();
-    featureDirectionComboBox->addItem("+Y");
-    featureDirectionComboBox->addItem("-Y");
-
-    // Create a horizontal layout to place the label and combo box next to each other
-    QHBoxLayout *featureDirectionLayout = new QHBoxLayout();
-    featureDirectionLayout->addWidget(featureDirectionLabel);
-    featureDirectionLayout->addWidget(featureDirectionComboBox);
+    QGroupBox *configGroupBox = new QGroupBox("Algorithm Setting");
 
     // Add the horizontal layout to the properties layout
     propertiesLayout->addLayout(calibModelLayout);
-    propertiesLayout->addLayout(featureDirectionLayout);
+    propertiesLayout->addWidget(configGroupBox);
     propertiesLayout->setSpacing(10);
 
     // Add the image layout and properties layout to the main layout
-    mainLayout->addLayout(imageLayout);
+    mainLayout->addWidget(imageGBox);
     mainLayout->addLayout(propertiesLayout);
+
+    // Create a layout for the buttons (Confirm and Cancel)
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    buttonLayout->addStretch();  // Push the buttons to the right
+    QPushButton *confirmButton = new QPushButton("Confirm");
+    QPushButton *cancelButton = new QPushButton("Cancel");
+    buttonLayout->addWidget(confirmButton);
+    buttonLayout->addWidget(cancelButton);
+
+    // Add button layout to the main layout, it will be placed at the bottom of the dialog
+    mainLayout0->addLayout(mainLayout);
+    mainLayout0->addLayout(buttonLayout);
 
     // Set the dialog's layout
     settingsDialog->setLayout(mainLayout);
@@ -741,11 +755,9 @@ void MainWindow::onSettingButtonReleased() {
                 // Update calibMap_["CalibrationModel"] based on the selected item
                 if (index == 0) {
                     calibMap_["CalibrationModel"] = "Sphere";
-
                 } else if (index == 1) {
                     calibMap_["CalibrationModel"] = "Edge";
                 }
-                // Optionally, print the updated value for debugging
                 logWin_->log("Calibration Model set to: " + QString::fromStdString(calibMap_["CalibrationModel"]));
             });
 
@@ -758,29 +770,38 @@ void MainWindow::onSettingButtonReleased() {
                 } else if (index == 1) {
                     calibMap_["FeaturePointDirection"] = "-Y";
                 }
-                // Optionally, print the updated value for debugging
                 logWin_->log("Feature Point Direction set to: " + QString::fromStdString(calibMap_["FeaturePointDirection"]));
             });
+
+    // Connect the confirm button to process data
+    connect(confirmButton, &QPushButton::clicked, [=]() {
+        settingsDialog->accept();  // Close the dialog
+        // Proceed with data processing
+        if (!pointsSetBuffer_.empty()) {
+            auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
+            DataProc proc(profile_lines, CalibObj::SPHERE);
+            float rad_sphere = 80 / 2.0;
+            std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
+            writeFeaturePointsToProfileSheets(ctr_pnts, featuresSheet_);
+        }
+        else {
+            QMessageBox::warning(this, "Error", "Profiles dataset has not been uploaded.");
+            logWin_->log("No profiles data detected.");
+        }
+    });
+
+    // Connect the cancel button to close the dialog without processing
+    connect(cancelButton, &QPushButton::clicked, [=]() {
+        settingsDialog->reject();  // Close the dialog without processing
+    });
 
     // Set the minimum size for the dialog (adjust as needed)
     settingsDialog->setMinimumSize(600, 300); // Adjust minimum size according to content
 
     // Show the dialog
     settingsDialog->exec();
-
-    // TODO: Dateset Process not finished
-    if (!pointsSetBuffer_.empty()) {
-        auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
-        DataProc proc(profile_lines, CalibObj::SPHERE);
-        float rad_sphere = 80 / 2.0;
-        std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
-        writeFeaturePointsToProfileSheets(ctr_pnts, featuresSheet_);
-    }
-    else {
-        QMessageBox::warning(this, "Error", "Profiles dataset has not been uploaded.");
-        logWin_->log("No profiles data detected.");
-    }
 }
+
 
 void MainWindow::onRunButtonReleased() {
     // Check calibration dataset
@@ -818,10 +839,13 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     // Create a dialog to set camera connect
     QDialog dialog(this);
     dialog.setWindowTitle("Scan Cameras");
-    dialog.setFixedSize(500, 220);
+    dialog.setMinimumWidth(500);
+    dialog.setMinimumHeight(220);
 
     QVBoxLayout *layout = new QVBoxLayout(&dialog); 
     layout->setContentsMargins(10, 10, 10, 10); 
+    layout->setAlignment(Qt::AlignCenter);
+    dialog.setLayout(layout);
 
     // Create a combo box for selecting sensor brand
     QHBoxLayout *brandLayout = new QHBoxLayout(&dialog);
@@ -857,7 +881,6 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
             brandComboBox->setCurrentIndex(0);  // Set the first item (LMI) as the selected item
         else if (curCamInfo_.brand == "SSZN")
             brandComboBox->setCurrentIndex(1);  // Set the second item (SSZN) as the selected item
-        // If there are more brands to check, add additional else if conditions:
         else {
             logWin_->log("Error: Unknown sensor brand.");
             brandComboBox->setCurrentIndex(-1);
@@ -989,7 +1012,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
         }
     });
 
-    dialog.exec(); // Show the dialog as a modal window
+    dialog.exec();
 }
 
 // Placeholder slots for menu actions

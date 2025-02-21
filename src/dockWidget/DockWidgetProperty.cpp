@@ -66,6 +66,8 @@ void DockWidgetProperty::initPropertyTable() {
     addProperty("Points", QString("0"));
 
     // 3. Feature
+    // QPushButton* pickBtn = new QPushButton();
+    // pickBtn->setIcon(QIcon(":/icons/picking.png"));
     addProperty("Feature Coord", QString("X: 0, Y: 0, Z: 0"));
 
     // 4. Filter Enable
@@ -77,7 +79,7 @@ void DockWidgetProperty::initPropertyTable() {
 }
 
 // Add a generic property with a text value
-void DockWidgetProperty::addProperty(const QString& name, const QString& value) {
+void DockWidgetProperty::addProperty(const QString& name, const QString& value, QPushButton* button) {
     if (propertyTree) {
         QTreeWidgetItem* item = new QTreeWidgetItem(propertyTree);
         item->setText(0, name);  // Set property name in the first column
@@ -92,10 +94,24 @@ void DockWidgetProperty::addProperty(const QString& name, const QString& value) 
         QLineEdit* lineEdit = new QLineEdit(value);
         lineEdit->setReadOnly(true);  // Set the line edit to be read-only (non-editable)
 
-        propertyTree->setItemWidget(item, 1, lineEdit);
+        // Create a horizontal layout to hold the QLineEdit and QPushButton (if any)
+        QHBoxLayout* layout = new QHBoxLayout();
+        layout->addWidget(lineEdit);
+
+        if (button) {
+            layout->addWidget(button);  // If a button is provided, add it to the layout
+        }
+
+        layout->setContentsMargins(0, 0, 0, 0);  // Remove margins around the layout
+
+        // Create a widget that will contain the layout
+        QWidget* widget = new QWidget();
+        widget->setLayout(layout);
+
+        // Set the widget (containing both the QLineEdit and optionally the QPushButton) as the item widget
+        propertyTree->setItemWidget(item, 1, widget);
     }
 }
-
 
 // Add a property with a combo box for selection
 void DockWidgetProperty::addProperty(const QString& name, const QStringList& options, const QString& currentOption) {

@@ -20,6 +20,19 @@ QTextEdit {
     border: 1px solid #444444;
 }
 
+/* ===================== QGroupBox Style ===================== */
+QGroupBox::title {
+    background-color: #353535;    /* Set title background to match group box */
+    color: rgb(255, 255, 255);    /* Set title color */
+    font-size: 13px;              /* Ensure the font size is correct */
+    font-family: "Arial", sans-serif;  /* Set font family if needed */
+    padding-left: 10px;           /* Set left padding */
+    padding-right: 15px;          /* Set right padding */
+    padding-top: 0px;             /* Reduce the top padding to align with box */
+    padding-bottom: 0px;          /* Ensure the bottom padding does not push the title down */
+}
+
+
 /* ===================== QLineEdit Style ===================== */
 
 QLineEdit {
