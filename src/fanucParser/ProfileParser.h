@@ -7,6 +7,7 @@
 #include <vector>
 #include <utility>
 #include <functional>
+#include <opencv2/opencv.hpp>
 
 class ProfileParser {
 public:
@@ -23,7 +24,13 @@ public:
     std::vector<std::vector<std::pair<double, double>>> parseProfileFiles(
         const std::string& folderPath, 
         const std::string& type,
+        const std::string& scanLineNodeName,
         const std::function<void(int)>& progressCallback = nullptr);
+
+    std::vector<cv::Point3f> ProfileParser::parseFeatureFiles(
+        const std::string& folderPath, 
+        const std::string& type,
+        const std::string& scanLineNodeName);
 
 private:
     // Helper functions can be added here if necessary

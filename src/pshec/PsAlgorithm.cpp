@@ -101,107 +101,237 @@ namespace ProfileScanner
         return true;
     }
 
-    bool algorithm::Separate_Calib(std::vector<Eigen::Matrix4f> htm_end2base0,
-                                    std::vector<Eigen::Vector3f> p_cam0, 
-                                    std::vector<Eigen::Matrix4f> htm_end2base1,
-                                    std::vector<Eigen::Vector3f> p_cam1,
-                                    Eigen::Matrix3f & R_solution,
-                                    Eigen::Vector3f & t_solution){
+    // bool algorithm::Separate_Calib(std::vector<Eigen::Matrix4f> htm_end2base0,
+    //                                 std::vector<Eigen::Vector3f> p_cam0, 
+    //                                 std::vector<Eigen::Matrix4f> htm_end2base1,
+    //                                 std::vector<Eigen::Vector3f> p_cam1,
+    //                                 Eigen::Matrix3f & R_solution,
+    //                                 Eigen::Vector3f & t_solution){
 
-        if(solve_method_ == SolveMethod::REGRESSION){
+    //     if(solve_method_ == SolveMethod::REGRESSION){
 
-            /* ======= 1. Recovering the rotation ======= */ 
-            size_t nbr_calibR = htm_end2base0.size();
-            std::vector<Eigen::Matrix3f> Rb_stack(nbr_calibR);      // Rb: tool frame rotation in robot base (constant)
-            std::vector<Eigen::Vector3f> pb_stack(nbr_calibR);      // pb: tool frame position in robot base (variable)
-            std::vector<Eigen::Vector3f> vt_stack(nbr_calibR - 1);  // block edge vector (tool frame: robot flange)
-            std::vector<Eigen::Vector3f> vs_stack(nbr_calibR - 1);  // vlock edge vector (sensor frame: camera)
-            for (size_t i = 0; i < nbr_calibR; i++){
-                CalibUtils::HomogeneousMtr2RT(htm_end2base0[i], Rb_stack[i], pb_stack[i]);
+    //         /* ======= 1. Recovering the rotation ======= */ 
+    //         size_t nbr_calibR = htm_end2base0.size();
+    //         std::vector<Eigen::Matrix3f> Rb_stack(nbr_calibR);      // Rb: tool frame rotation in robot base (constant)
+    //         std::vector<Eigen::Vector3f> pb_stack(nbr_calibR);      // pb: tool frame position in robot base (variable)
+    //         std::vector<Eigen::Vector3f> vt_stack(nbr_calibR - 1);  // block edge vector (tool frame: robot flange)
+    //         std::vector<Eigen::Vector3f> vs_stack(nbr_calibR - 1);  // vlock edge vector (sensor frame: camera)
+    //         for (size_t i = 0; i < nbr_calibR; i++){
+    //             CalibUtils::HomogeneousMtr2RT(htm_end2base0[i], Rb_stack[i], pb_stack[i]);
                 
-                // calculate vector from first point to ps_stack[i] (i > 0)
-                if (i != 0){
-                    vt_stack[i - 1] = pb_stack[i] - pb_stack[0];
-                    vs_stack[i - 1] = p_cam0[i] - p_cam0[0];
-                } 
-            }
+    //             // calculate vector from first point to ps_stack[i] (i > 0)
+    //             if (i != 0){
+    //                 vt_stack[i - 1] = pb_stack[i] - pb_stack[0];
+    //                 vs_stack[i - 1] = p_cam0[i] - p_cam0[0];
+    //             } 
+    //         }
 
-            // TODO: Calculate Rb: Rb_stack average, Rb should be constant, which mean Rb_stack[i] are the same
-            auto Rb =  Rb_stack[0];
-            Eigen::MatrixXf Hr(3*(vt_stack.size()-1), 9);
-            Eigen::VectorXf br(3*(vt_stack.size()-1));
-            for (size_t i = 0; i < vt_stack.size()-1; i++){
-                size_t j = i + 1;
-                auto B1 = Eigen::kroneckerProduct(vs_stack[i].cross(vs_stack[j]).transpose(), Rb);
-                auto B2 = Eigen::kroneckerProduct(vs_stack[i].transpose(), Rb);
-                auto B3 = Eigen::kroneckerProduct(vs_stack[j].transpose(), Rb);
-                auto bri = -vt_stack[i].cross(vt_stack[j]);
+    //         // TODO: Calculate Rb: Rb_stack average, Rb should be constant, which mean Rb_stack[i] are the same
+    //         auto Rb =  Rb_stack[0];
+    //         Eigen::MatrixXf Hr(3*(vt_stack.size()-1), 9);
+    //         Eigen::VectorXf br(3*(vt_stack.size()-1));
+    //         for (size_t i = 0; i < vt_stack.size()-1; i++){
+    //             size_t j = i + 1;
+    //             auto B1 = Eigen::kroneckerProduct(vs_stack[i].cross(vs_stack[j]).transpose(), Rb);
+    //             auto B2 = Eigen::kroneckerProduct(vs_stack[i].transpose(), Rb);
+    //             auto B3 = Eigen::kroneckerProduct(vs_stack[j].transpose(), Rb);
+    //             auto bri = -vt_stack[i].cross(vt_stack[j]);
 
-                auto A1 = B1;
-                auto A2 = CalibUtils::skew(vt_stack[j]).transpose() * B2;
-                auto A3 = CalibUtils::skew(vt_stack[i]).transpose() * B3;
+    //             auto A1 = B1;
+    //             auto A2 = CalibUtils::skew(vt_stack[j]).transpose() * B2;
+    //             auto A3 = CalibUtils::skew(vt_stack[i]).transpose() * B3;
                 
-                auto Hri = A1 + A2 - A3;
+    //             auto Hri = A1 + A2 - A3;
 
-                Hr.block<3, 9>(3 * i, 0) = Hri;
-                br.block<3, 1>(3 * i, 0) = bri;
+    //             Hr.block<3, 9>(3 * i, 0) = Hri;
+    //             br.block<3, 1>(3 * i, 0) = bri;
+    //         }
+    //         // std::cout << "INFO: H is:\n" << Hr << std::endl;
+    //         // Eigen::FullPivLU<Eigen::MatrixXf> lu(Hr);
+    //         // std::cout << "INFO: The rank of H is: " << lu.rank() << std::endl;
+
+    //         Eigen::MatrixXf Hr_pinv = Hr.completeOrthogonalDecomposition().pseudoInverse();
+    //         auto R_vec = Hr_pinv * br;        // R_vec = vec(Rx) size: 9, 1
+    //         R_solution << R_vec.block<3,1>(0, 0),
+    //                       R_vec.block<3,1>(3, 0),
+    //                       R_vec.block<3,1>(6, 0);
+    //         auto R_schmidt = rota_schmidt_orth(R_solution);
+    //         auto R_svd = svd_orth(R_solution);
+    //         std::cout << "======================== Orthogonal Rotation Matrix ========================\n";
+    //         std::cout << "INFO: Original rotation component is:\n [" << R_solution << " ].\n";
+    //         std::cout << "INFO: Rotation_schmidt is:\n [" << R_schmidt << " ].\n"
+    //                   << "INFO: Rotation_svd is:\n [" << R_svd << " ].\n";
+    //         std::cout << "============================================================================\n";
+    //         std::cout << "INFO: Rotation calibration errors:\n" << (br - Hr * R_vec).transpose() << std::endl;
+
+    //         /* ======= 2. Recovering block edge vector ======= */ 
+    //         std::vector<Eigen::Vector3f> vb_stack;
+    //         Eigen::Vector3f vb = {0, 0, 0};
+    //         std::cout << "INFO: edge vector in robot base frame:\n";
+    //         for (size_t i = 0; i < vt_stack.size(); i++){
+    //             Eigen::Vector3f vb_i = (Rb * R_solution * vs_stack[i] + vt_stack[i]).normalized();
+    //             vb = vb + vb_i;
+    //             std::cout << "INFO: vb-[" << i << "] is: "
+    //                       << vb_i.transpose() << std::endl;
+    //             vb_stack.push_back(vb_i);
+    //         }
+    //         // vb = vb / vb_stack.size();
+    //         vb = vb_stack[0];
+
+    //         /* ======= 3. Recovering the translation ======= */
+    //         size_t nbr_calibT = htm_end2base1.size();
+    //         std::vector<Eigen::Matrix3f> Rb_stack1(nbr_calibT);      // Rb: tool frame rotation in robot base (constant)
+    //         std::vector<Eigen::Vector3f> pb_stack1(nbr_calibT);      // pb: tool frame position in robot base (variable)
+    //         for (size_t i = 0; i < nbr_calibT; i++){
+    //             CalibUtils::HomogeneousMtr2RT(htm_end2base1[i], Rb_stack1[i], pb_stack1[i]);
+    //         }
+    //         std::vector<Eigen::Vector3f> ps_stack1 = p_cam1;         // ps: feature point coordinate in sensor (camera) frame
+
+    //         Eigen::MatrixXf Ht(3 * (Rb_stack1.size() - 1), 3);
+    //         Eigen::VectorXf bt(3 * (Rb_stack1.size() - 1));
+    //         for (size_t i = 0; i < Rb_stack1.size()-1; i++){
+    //             size_t j = i + 1;
+    //             auto Hti = CalibUtils::skew(vb).transpose() * (Rb_stack1[j] - Rb_stack1[i]);
+    //             auto bti = -(Rb_stack1[j] * R_solution * ps_stack1[j] - Rb_stack1[i] * R_solution *
+    //                             ps_stack1[i] + pb_stack1[j] - pb_stack1[i]).cross(vb);
+
+    //             Ht.block<3, 3>(3 * i, 0) = Hti;
+    //             bt.block<3, 1>(3 * i, 0) = bti;
+    //         }
+    //         Eigen::MatrixXf Ht_pinv = Ht.completeOrthogonalDecomposition().pseudoInverse();
+    //         t_solution = Ht_pinv * bt;
+    //     }
+
+    //     return true;
+    // }
+
+    bool algorithm::Separate_Calib(std::vector<Eigen::Matrix4f> htm_end2base0, std::vector<Eigen::Vector3f> p_cam0, 
+                                   std::vector<Eigen::Matrix4f> htm_end2base1, std::vector<Eigen::Vector3f> p_cam1,
+                                   Eigen::Matrix3f & R_solution, Eigen::Vector3f & t_solution) 
+    {     
+        int cnt_solve = 0;
+        const int max_iter = 100;
+        const float threshold = 0.0001;
+    
+        while (cnt_solve < max_iter) {
+            cnt_solve++;
+    
+            int nbr_calibR = htm_end2base0.size();
+            std::vector<Eigen::Matrix3f> Rb_stack(nbr_calibR);
+            std::vector<Eigen::Vector3f> tb_stack(nbr_calibR);
+            std::vector<Eigen::Vector3f> vt_stack(nbr_calibR - 1);
+            std::vector<Eigen::Vector3f> vs_stack(nbr_calibR - 1);
+    
+            // Recover rotation component
+            for (int i = 0; i < nbr_calibR; ++i) {
+                Eigen::Matrix3f Rb = htm_end2base0[i].block<3, 3>(0, 0);
+                Eigen::Vector3f tb = htm_end2base0[i].block<3, 1>(0, 3);
+                Rb_stack[i] = Rb;
+                tb_stack[i] = tb;
+    
+                if (i > 0) {
+                    vt_stack[i - 1] = tb_stack[i] - tb_stack[0];
+                    vs_stack[i - 1] = (p_cam0[i] - p_cam0[0]);
+                }
             }
-            // std::cout << "INFO: H is:\n" << Hr << std::endl;
-            // Eigen::FullPivLU<Eigen::MatrixXf> lu(Hr);
-            // std::cout << "INFO: The rank of H is: " << lu.rank() << std::endl;
-
-            Eigen::MatrixXf Hr_pinv = Hr.completeOrthogonalDecomposition().pseudoInverse();
-            auto R_vec = Hr_pinv * br;        // R_vec = vec(Rx) size: 9, 1
-            R_solution << R_vec.block<3,1>(0, 0),
-                          R_vec.block<3,1>(3, 0),
-                          R_vec.block<3,1>(6, 0);
-            auto R_schmidt = rota_schmidt_orth(R_solution);
-            auto R_svd = svd_orth(R_solution);
-            std::cout << "======================== Orthogonal Rotation Matrix ========================\n";
-            std::cout << "INFO: Original rotation component is:\n [" << R_solution << " ].\n";
-            std::cout << "INFO: Rotation_schmidt is:\n [" << R_schmidt << " ].\n"
-                      << "INFO: Rotation_svd is:\n [" << R_svd << " ].\n";
-            std::cout << "============================================================================\n";
-            std::cout << "INFO: Rotation calibration errors:\n" << (br - Hr * R_vec).transpose() << std::endl;
-
-            /* ======= 2. Recovering block edge vector ======= */ 
-            std::vector<Eigen::Vector3f> vb_stack;
-            Eigen::Vector3f vb = {0, 0, 0};
-            std::cout << "INFO: edge vector in robot base frame:\n";
-            for (size_t i = 0; i < vt_stack.size(); i++){
-                Eigen::Vector3f vb_i = (Rb * R_solution * vs_stack[i] + vt_stack[i]).normalized();
-                vb = vb + vb_i;
-                std::cout << "INFO: vb-[" << i << "] is: "
-                          << vb_i.transpose() << std::endl;
-                vb_stack.push_back(vb_i);
+    
+            Eigen::Matrix3f Rb = Rb_stack[0];
+            Eigen::Matrix3f R_init = Eigen::Matrix3f::Identity();
+            Eigen::VectorXf delR(9);
+            delR.setConstant(10000);
+    
+            int n_step = 0;
+            while (delR.norm() > threshold && n_step < 1000) {
+                Eigen::MatrixXf Hr(3 * (vt_stack.size() - 1), 3);
+                Eigen::VectorXf br(3 * (vt_stack.size() - 1));
+    
+                for (size_t i = 0; i < vt_stack.size() - 1; ++i) {
+                    size_t j = i + 1;
+                    Eigen::Matrix3f B1 = -Rb * CalibUtils::skew(R_init * vs_stack[i].cross(vs_stack[j]));
+                    Eigen::Matrix3f B2 = -CalibUtils::skew(vt_stack[j]) * Rb * CalibUtils::skew(R_init * vs_stack[i]);
+                    Eigen::Matrix3f B3 = CalibUtils::skew(vt_stack[i]) * Rb * CalibUtils::skew(R_init * vs_stack[j]);
+                    Eigen::Matrix3f Hri = B1 + B2 + B3;
+    
+                    Eigen::Vector3f bri = Rb * R_init * vs_stack[i].cross(vs_stack[j]) +
+                                          vs_stack[i].cross(vt_stack[j]) -
+                                          vs_stack[j].cross(vt_stack[i]) +
+                                          vt_stack[i].cross(vt_stack[j]);
+    
+                    Hr.block<3, 3>(3 * i, 0) = Hri;
+                    br.segment<3>(3 * i) = bri;
+                }
+    
+                delR = Hr.colPivHouseholderQr().solve(br);
+                float theta = delR.norm();
+                R_init = CalibUtils::skewexp(delR / theta, theta) * R_init;
+                n_step++;
             }
-            // vb = vb / vb_stack.size();
-            vb = vb_stack[0];
-
-            /* ======= 3. Recovering the translation ======= */
-            size_t nbr_calibT = htm_end2base1.size();
-            std::vector<Eigen::Matrix3f> Rb_stack1(nbr_calibT);      // Rb: tool frame rotation in robot base (constant)
-            std::vector<Eigen::Vector3f> pb_stack1(nbr_calibT);      // pb: tool frame position in robot base (variable)
-            for (size_t i = 0; i < nbr_calibT; i++){
-                CalibUtils::HomogeneousMtr2RT(htm_end2base1[i], Rb_stack1[i], pb_stack1[i]);
+    
+            std::cout << "Iterative error is: " << delR.norm() << std::endl;
+            R_solution = R_init;
+    
+            // Calculate edge vector vb in the robot base frame
+            Eigen::Vector3f vb = Eigen::Vector3f::Zero();
+            std::vector<Eigen::Vector3f> vb_stack(vt_stack.size());
+            for (size_t i = 0; i < vt_stack.size(); ++i) {
+                Eigen::Vector3f vb_i = Rb * R_solution * vs_stack[i] + vt_stack[i];
+                vb_i.normalize();
+                vb += vb_i;
+                vb_stack[i] = vb_i;
             }
-            std::vector<Eigen::Vector3f> ps_stack1 = p_cam1;         // ps: feature point coordinate in sensor (camera) frame
-
+    
+            Eigen::Vector3f vb_average = vb / vt_stack.size();
+            std::cout << "Average vb is: " << vb_average.transpose() << std::endl;
+    
+            // Recover translation component
+            int nbr_calibT = htm_end2base1.size();
+            std::vector<Eigen::Matrix3f> Rb_stack1(nbr_calibT);
+            std::vector<Eigen::Vector3f> tb_stack1(nbr_calibT);
+            for (int i = 0; i < nbr_calibT; ++i) {
+                Eigen::Matrix3f Rb = htm_end2base1[i].block<3, 3>(0, 0);
+                Eigen::Vector3f tb = htm_end2base1[i].block<3, 1>(0, 3);
+                Rb_stack1[i] = Rb;
+                tb_stack1[i] = tb;
+            }
+    
             Eigen::MatrixXf Ht(3 * (Rb_stack1.size() - 1), 3);
             Eigen::VectorXf bt(3 * (Rb_stack1.size() - 1));
-            for (size_t i = 0; i < Rb_stack1.size()-1; i++){
-                size_t j = i + 1;
-                auto Hti = CalibUtils::skew(vb).transpose() * (Rb_stack1[j] - Rb_stack1[i]);
-                auto bti = -(Rb_stack1[j] * R_solution * ps_stack1[j] - Rb_stack1[i] * R_solution *
-                                ps_stack1[i] + pb_stack1[j] - pb_stack1[i]).cross(vb);
-
+    
+            for (int i = 0; i < Rb_stack1.size() - 1; ++i) {
+                int j = i + 1;
+                Eigen::Matrix3f Hti = CalibUtils::skew(vb_average).transpose() * (Rb_stack1[j] - Rb_stack1[i]);
+                Eigen::Vector3f bti = (Rb_stack1[j] * R_solution * p_cam1[j] -
+                                       Rb_stack1[i] * R_solution * p_cam1[i] + tb_stack1[j] - tb_stack1[i]).cross(vb_average);
+    
                 Ht.block<3, 3>(3 * i, 0) = Hti;
-                bt.block<3, 1>(3 * i, 0) = bti;
+                bt.segment<3>(3 * i) = bti;
             }
+    
             Eigen::MatrixXf Ht_pinv = Ht.completeOrthogonalDecomposition().pseudoInverse();
             t_solution = Ht_pinv * bt;
+    
+            // Verify calibration result
+            Eigen::Vector3f vb_average1 = Eigen::Vector3f::Zero();
+            for (int i = 0; i < nbr_calibT; ++i) {
+                Eigen::Matrix3f Rb = Rb_stack1[i];
+                Eigen::Vector3f tb = tb_stack1[i];
+                Eigen::Vector3f pb = Rb * (R_solution * p_cam1[i] + t_solution) + tb;
+                Eigen::Vector3f vb_i = pb - tb_stack1[0];
+                vb_i.normalize();
+                vb_average1 += vb_i;
+            }
+            vb_average1 /= nbr_calibT;
+    
+            float err_step = vb_average1.cross(vb_average).norm();
+            const float thresh_step_dev = 0.001;
+            if (err_step < thresh_step_dev) {
+                break;
+            } else {
+                std::cout << "Falling in local solution for component R, solver run again." << std::endl;
+                continue;
+            }
         }
-
+    
         return true;
     }
 

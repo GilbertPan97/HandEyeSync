@@ -66,9 +66,9 @@ void DockWidgetProperty::initPropertyTable() {
     addProperty("Points", QString("0"));
 
     // 3. Feature
-    // QPushButton* pickBtn = new QPushButton();
-    // pickBtn->setIcon(QIcon(":/icons/picking.png"));
-    addProperty("Feature Coord", QString("X: 0, Y: 0, Z: 0"));
+    QPushButton* pickBtn = new QPushButton();
+    pickBtn->setIcon(QIcon(":/icons/picking.png"));
+    addProperty("Feature Coord", QString("X: 0, Y: 0, Z: 0"), pickBtn);
 
     // 4. Filter Enable
     addProperty("Filter Enable", false);
@@ -156,7 +156,7 @@ void DockWidgetProperty::addProperty(const QString& name, bool checked) {
     }
 }
 
-void DockWidgetProperty::writeProfileSheetToProperties(const ProfileSheet& profile) {
+void DockWidgetProperty::writeProfileSheetToProperties(const ProfileSheet& profile, bool button_enable) {
     // Clear existing properties before adding new ones
     clearProperties();
 
@@ -167,11 +167,16 @@ void DockWidgetProperty::writeProfileSheetToProperties(const ProfileSheet& profi
     addProperty("Point Count", QString::number(profile.pointCount));
 
     // 3. Feature Point (X, Y, Z)
+    QPushButton* pickBtn = new QPushButton();
+    pickBtn->setIcon(QIcon(":/icons/picking.png"));
     QString featurePoint = QString("X: %1, Y: %2, Z: %3")
                                .arg(profile.featurePoint.x)
                                .arg(profile.featurePoint.y)
                                .arg(profile.featurePoint.z);
-    addProperty("Feature Point", featurePoint);
+    if (button_enable)
+        addProperty("Feature Point", featurePoint, pickBtn);
+    else 
+        addProperty("Feature Point", featurePoint);
 
     // 4. Filter Enable
     addProperty("Filter Enable", profile.enableFilter);

@@ -35,6 +35,7 @@ public:
      * @param parent The parent widget (optional). Default is nullptr.
      */
     explicit DockWidgetViewer(const QString& title, QWidget* parent = nullptr);
+    ~DockWidgetViewer();
 
     /**
      * @brief Plots a set of points on the QCustomPlot object.
@@ -48,7 +49,7 @@ public:
      *                      If true, the points will be connected with lines. If false, the points will
      *                      be displayed as discrete points without any connecting lines.
      */
-    void plotPoints(const RenderData& points, bool connectPoints);
+    void plotPoints(const RenderData& points, bool connectPoints, const std::pair<double, double>& fea_point);
 
     /**
      * @brief Handles resize events for the DockWidgetViewer.
@@ -71,6 +72,10 @@ public:
      * @param customPlot A pointer to the QCustomPlot object that needs to maintain the aspect ratio.
      */
     void keepDisplayAspectRatio(QCustomPlot *customPlot);
+
+private:
+    bool isEmpty(const std::pair<double, double>& fea_point);
+    bool isValid(const std::pair<double, double>& fea_point);
 };
 
 #endif // DOCK_WIDGET_VIEWER_H

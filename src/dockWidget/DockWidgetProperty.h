@@ -68,7 +68,7 @@ public:
      * @brief Writes ProfileSheet data into the properties table.
      * @param profile The ProfileSheet object containing the data to display.
      */
-    void writeProfileSheetToProperties(const ProfileSheet& profile);
+    void writeProfileSheetToProperties(const ProfileSheet& profile, bool button_enable);
 
     /**
      * @brief Clears all properties from the widget.

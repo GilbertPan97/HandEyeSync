@@ -139,6 +139,15 @@ namespace CalibUtils
         return skew_mat;
     }
 
+    Eigen::Matrix3f skewexp(const Eigen::VectorXf &v, float theta) {
+        Eigen::Matrix3f R;
+        float c = cos(theta);
+        float s = sin(theta);
+        Eigen::Matrix3f K = skew(v.head<3>());
+        R = Eigen::Matrix3f::Identity() + s * K + (1 - c) * K * K;
+        return R;
+    }
+
     Eigen::Matrix3f rodrigues(const Eigen::Vector3f& v) {
         Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
         float theta = v.norm();

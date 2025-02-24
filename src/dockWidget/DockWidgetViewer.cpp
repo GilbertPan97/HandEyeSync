@@ -47,13 +47,17 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     customPlot_->xAxis2->setTickPen(axisPen); // Set tick pen for top x-axis
     customPlot_->yAxis2->setTickPen(axisPen); // Set tick pen for right y-axis
 
-    // Add a graph to the custom plot
+    // Add a graph to the custom plot: Profile 
     customPlot_->addGraph();
-    customPlot_->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 8)); // Use disc markers
-    customPlot_->graph(0)->setPen(QPen(QColor("#B29F25"), 2)); // Set line color and width
-
-    // Disable lines by setting the line style to none
+    customPlot_->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 6));
+    customPlot_->graph(0)->setPen(QPen(QColor("#B29F25"), 2));
     customPlot_->graph(0)->setLineStyle(QCPGraph::lsNone);
+    
+    // Add a graph to the custom plot: Feature 
+    customPlot_->addGraph();
+    customPlot_->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 12));
+    customPlot_->graph(1)->setPen(QPen(QColor("#FF0000"), 2)); 
+    customPlot_->graph(1)->setLineStyle(QCPGraph::lsNone);
 
     // Create a QWidget to hold the main layout
     QWidget *widget = new QWidget(this);
@@ -104,27 +108,32 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     this->show();
 }
 
-void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints) {
+DockWidgetViewer::~DockWidgetViewer() {
+    if (curPlotData_ != nullptr) {
+        delete curPlotData_;  // Free the allocated memory
+    }
+}
+
+void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const std::pair<double, double>& fea_point) {
     // Cache current plot data
     if (curPlotData_ == nullptr) {
         curPlotData_ = new RenderData();
     }
-    *curPlotData_ = points; 
+
+    // // TODO: Cache plot data
+    // *curPlotData_ = points; 
     
-    // Clear plot old data
-    customPlot_->graph(0)->data()->clear();  // Clear the current graph's data
+    // Clear all plot old data, including graph(0) and graph(1)
+    customPlot_->graph(0)->data()->clear();     // Profile graph
+    customPlot_->graph(1)->data()->clear();     // Feature graph
 
-    // Prepare vectors for x and z coordinates
-    std::vector<double> keys;       // x coordinates
-    std::vector<double> values;     // z coordinates
-
-    // Populate keys and values with x and z coordinates from points
+    // Render profile data to graph(0)
+    std::vector<double> keys;               // x coordinates
+    std::vector<double> values;             // z coordinates
     for (const auto& point : points) {
         keys.push_back(point.first);        // Add x coordinate to keys
         values.push_back(point.second);     // Add z coordinate to values
     }
-
-    // Add new data points to the graph
     customPlot_->graph(0)->addData(QVector<double>::fromStdVector(keys), QVector<double>::fromStdVector(values));
 
     // Set the line style based on the connectPoints parameter
@@ -134,6 +143,16 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints) 
         customPlot_->graph(0)->setLineStyle(QCPGraph::lsNone);  // Only plot points without connecting lines
     }
 
+    // Render profile data to graph(1)
+    if (isValid(fea_point)) {
+        // Prepare vectors for x and z coordinates -- Profile
+        std::vector<double> keys1;               // x coordinates
+        std::vector<double> values1;             // z coordinates
+        keys1.push_back(fea_point.first);        // Add x coordinate to keys1
+        values1.push_back(fea_point.second);     // Add z coordinate to values1
+        customPlot_->graph(1)->addData(QVector<double>::fromStdVector(keys1), QVector<double>::fromStdVector(values1));
+    }
+
     // Automatically fit the axes to the data range
     customPlot_->xAxis->rescale();
     customPlot_->yAxis->rescale();
@@ -141,7 +160,6 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints) 
 
     // Replot to update the view with the new data
     keepDisplayAspectRatio(customPlot_);
-    // customPlot_->replot();
 }
 
 void DockWidgetViewer::resizeEvent(QResizeEvent *event) {
@@ -190,3 +208,11 @@ void DockWidgetViewer::keepDisplayAspectRatio(QCustomPlot *customPlot) {
     customPlot->replot();
 }
 
+bool DockWidgetViewer::isEmpty(const std::pair<double, double>& fea_point) {
+    // Check if both elements of the pair are NaN (representing "empty")
+    return std::isnan(fea_point.first) && std::isnan(fea_point.second);
+}
+
+bool DockWidgetViewer::isValid(const std::pair<double, double>& fea_point) {
+    return !std::isnan(fea_point.first) && !std::isnan(fea_point.second) && fea_point.first != 0.0 && fea_point.second != 0.0;
+}

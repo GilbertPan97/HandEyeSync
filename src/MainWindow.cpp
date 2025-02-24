@@ -555,41 +555,44 @@ void MainWindow::onAddImgActionTriggered() {
         } 
 
         pointsSetBuffer_.clear();
-        try {
-            ProfileParser profileParser;
+        ProfileParser profileParser;
+        std::vector<cv::Point3f> features;
+        try { 
             // Attempt to parse the profile files and get the points
-            // TODO: Place progCallback function out of mainwindow
-            std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };
-            pointsSetBuffer_ = profileParser.parseProfileFiles(folderPath.toStdString(), dataFormat.toStdString(), progCallback);
-            featuresSheet_ = parseProfilePointsToProfileSheets(pointsSetBuffer_);
-
-            // Set browserWin_ profile preview
-            browserWin_->setContentFromPoints(pointsSetBuffer_);        
-
-            // Attempt to plot the points (the first set of points from the buffer)
-            viewerWin_->plotPoints(pointsSetBuffer_[0], false);
-            propertyWin_->writeProfileSheetToProperties(featuresSheet_[0]);
-
-            // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
-            // that logs the selected dataset item's index and pose data to the log window.
-            connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
-                viewerWin_->plotPoints(pointsSetBuffer_[index], false);
-                propertyWin_->writeProfileSheetToProperties(featuresSheet_[index]);
-                // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
-                logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
-            });
-
-            // If everything succeeds, log a success message
-            logWin_->log("Dataset Loaded Successfully.");
+            std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };    // TODO: Place progCallback function out of mainwindow
+            pointsSetBuffer_ = profileParser.parseProfileFiles(folderPath.toStdString(), dataFormat.toStdString(), "profile", progCallback);
+            features = profileParser.parseFeatureFiles(folderPath.toStdString(), dataFormat.toStdString(), "corner_point");
         } catch (const std::exception& e) {
             // If any exception is thrown, log the failure message
-            QMessageBox::warning(this, "Error", "Profile data parsing fail.");
-            logWin_->log(QString("Load Profile Dataset Failed: %1").arg(e.what()));
+            QMessageBox::warning(this, "Error", "Profiles/Features data parsing fail.");
+            logWin_->log(QString("Load Dataset Failed: %1").arg(e.what()));
         } catch (...) {
             // Catch any other unexpected exceptions
-            QMessageBox::warning(this, "Error", "Profile data parsing fail.");
-            logWin_->log("Load Profile Dataset Failed: Unknown error occurred.");
+            QMessageBox::warning(this, "Error", "Profiles/Features data parsing fail.");
+            logWin_->log("Load Dataset Failed: Unknown error occurred.");
         }
+
+        // Profile sheets record
+        featuresSheet_ = parseProfilePointsToProfileSheets(pointsSetBuffer_, features);
+
+        // Set browserWin_ profile preview
+        browserWin_->setContentFromPoints(pointsSetBuffer_);
+
+        // Attempt to plot the points (the first set of points from the buffer)
+        viewerWin_->plotPoints(pointsSetBuffer_[0], false, projectToXozPlane(featuresSheet_[0].featurePoint));
+        propertyWin_->writeProfileSheetToProperties(featuresSheet_[0], true);
+
+        // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
+        // that logs the selected dataset item's index and pose data to the log window.
+        connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
+            viewerWin_->plotPoints(pointsSetBuffer_[index], false, projectToXozPlane(featuresSheet_[index].featurePoint));
+            propertyWin_->writeProfileSheetToProperties(featuresSheet_[index], true);
+            // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
+            logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
+        });
+
+        // If everything succeeds, log a success message
+        logWin_->log("Dataset Loaded Successfully.");
 
         // Display the selected options
         QString summary = QString("Sensor Type: %1\nData Format: %2\nData Folder: %3")
@@ -802,7 +805,6 @@ void MainWindow::onSettingButtonReleased() {
     settingsDialog->exec();
 }
 
-
 void MainWindow::onRunButtonReleased() {
     // Check calibration dataset
     if (pointsSetBuffer_.empty() || robDataBuffer_.empty()) {
@@ -854,7 +856,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
 
     QComboBox *brandComboBox = new QComboBox(&dialog);
     brandLayout->addWidget(brandComboBox, 1);
-    brandComboBox->addItem("LMI");    // Add items to the combo box
+    brandComboBox->addItem("LMI"); 
     brandComboBox->addItem("SSZN");
 
     connect(brandComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), 
@@ -1126,7 +1128,7 @@ std::vector<Eigen::Vector<float, 6>> MainWindow::convertRobDataBuffer(const std:
 }
 
 // Function to ProfilePoints to ProfileSheet
-std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(const std::vector<ProfilePoints>& pointsSetBuffer) {
+std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(const std::vector<ProfilePoints>& pointsSetBuffer, std::vector<cv::Point3f> features) {
     std::vector<ProfileSheet> featuresSheet;
 
     // Iterate through the pointsSetBuffer to create ProfileSheet objects
@@ -1135,11 +1137,15 @@ std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(const st
 
         // Create a ProfileSheet for each ProfilePoints
         ProfileSheet profileSheet;
-        profileSheet.profileIndex = static_cast<int>(i);           // Set the profile index
-        profileSheet.pointCount = static_cast<int>(points.size()); // Set the number of points in the profile
-        profileSheet.featurePoint = cv::Point3f(0, 0, 0);          // Leave featurePoint empty or set to a default value (0,0,0)
-        profileSheet.enableFilter = false;                           // Set the filter flag (can be adjusted)
-        profileSheet.filterType = "";                                // Set filter type (can be adjusted)
+        profileSheet.profileIndex = static_cast<int>(i);            // Set the profile index
+        profileSheet.pointCount = static_cast<int>(points.size());  // Set the number of points in the profile
+        profileSheet.enableFilter = false;                          // Set the filter flag (can be adjusted)
+        profileSheet.filterType = "";                               // Set filter type (can be adjusted)
+
+        if (!features.empty())
+            profileSheet.featurePoint = features[i];                    // Leave featurePoint empty or set to a default value (0,0,0)
+        else
+            profileSheet.featurePoint = {0, 0, 0};
 
         // Add the profileSheet to the featuresSheet vector
         featuresSheet.push_back(profileSheet);
@@ -1188,4 +1194,16 @@ void MainWindow::writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f
             // Optionally, you can clear profileSheets or perform other actions here if desired.
         }
     }
+}
+
+// Function to project 3D points onto the X-OZ plane (ignore Y coordinate)
+std::pair<double, double> MainWindow::projectToXozPlane(const cv::Point3f& point) {
+    std::pair<double, double> projectedPoint;
+
+
+    // Discard the Y coordinate and keep X and Z for projection onto X-OZ plane
+    projectedPoint = std::make_pair(static_cast<double>(point.x), static_cast<double>(point.z));
+
+    // Return the vector of projected 2D points (X, Z)
+    return projectedPoint;
 }

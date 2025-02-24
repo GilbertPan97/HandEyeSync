@@ -46,6 +46,8 @@ namespace CalibUtils
 
     Eigen::Matrix3f skew(const Eigen::Vector3f& v);
 
+    Eigen::Matrix3f skewexp(const Eigen::VectorXf &v, float theta);
+
     Eigen::Matrix3f rodrigues(const Eigen::Vector3f& v);
 
     std::vector<Eigen::Vector3f> toEigenPoints(const std::vector<cv::Point3f>& points);
