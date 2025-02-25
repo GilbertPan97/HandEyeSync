@@ -585,6 +585,7 @@ void MainWindow::onAddImgActionTriggered() {
 
         // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
         // that logs the selected dataset item's index and pose data to the log window.
+        disconnect(browserWin_, &DockWidgetBrowser::itemSelected, nullptr, nullptr);    // Disconnect any previous connection
         connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
             viewerWin_->plotPoints(pointsSetBuffer_[index], false, projectToXozPlane(featuresSheet_[index].featurePoint));
             propertyWin_->writeProfileSheetToProperties(featuresSheet_[index], true);
