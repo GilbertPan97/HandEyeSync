@@ -29,6 +29,8 @@ struct ProfileSheet {
  * @brief A customized dock widget for displaying and editing properties, inheriting from ads::CDockWidget.
  */
 class DockWidgetProperty : public ads::CDockWidget {
+    Q_OBJECT
+    
 public:
     /**
      * @brief Constructor for DockWidgetProperty.
@@ -74,6 +76,9 @@ public:
      * @brief Clears all properties from the widget.
      */
     void clearProperties();
+
+signals:
+    void pickFeatureStatus(bool isPicked);
 
 private:
     QTreeWidget* propertyTree; ///< A tree widget to display properties

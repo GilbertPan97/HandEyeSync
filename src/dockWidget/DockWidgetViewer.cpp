@@ -123,7 +123,7 @@ DockWidgetViewer::~DockWidgetViewer() {
     }
 }
 
-void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const cv::Point3f& fea_point) {
+void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const cv::Point3f& fea_point, int index) {
     // Cache current plot data
     if (curPlotData_ == nullptr) {
         curPlotData_ = new RenderData();
@@ -131,7 +131,7 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
 
     // Cache plot data and feature point
     *curPlotData_ = points; 
-    *curProfileSheet_ = parseProfileToProfileSheet(points, fea_point);
+    *curProfileSheet_ = parseProfileToProfileSheet(points, fea_point, index);
     
     // Clear all plot old data, including graph(0) and graph(1)
     customPlot_->graph(0)->data()->clear();     // Profile graph
@@ -154,7 +154,7 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
     }
 
     // Render profile data to graph(1)
-    if (isValid(fea_point)) {
+    if (!isValid(fea_point)) {
         // Prepare vectors for x and z coordinates -- Profile
         std::vector<double> keys1;              // x coordinates
         std::vector<double> values1;            // z coordinates
@@ -218,6 +218,79 @@ void DockWidgetViewer::keepDisplayAspectRatio(QCustomPlot *customPlot) {
     customPlot->replot();
 }
 
+void DockWidgetViewer::onPickFeatureStatusChanged(bool isPicked) {
+    // When the feature picking is enabled, allow updating the points
+    if (isPicked) {
+        qDebug() << "Feature picking enabled";
+        // Enable mouse tracking to detect mouse movements
+        setMouseTracking(true);  
+        connect(customPlot_, &QCustomPlot::mousePress, this, &DockWidgetViewer::mousePressEvent);
+        connect(customPlot_, &QCustomPlot::mouseMove, this, &DockWidgetViewer::mouseMoveEvent);
+        // TODO: Record feature point
+        // customPlot_->graph(0)->setSelectable(QCP::SelectionType::stSingleData);
+    } else {
+        // When feature picking is disabled, do not allow updating the points
+        qDebug() << "Feature picking disabled";
+        // Disable mouse tracking, so mouse events won't be detected
+        setMouseTracking(false);
+        customPlot_->clearItems();
+        customPlot_->replot(); 
+        // customPlot_->graph(0)->setSelectable(QCP::SelectionType::stWhole);
+    }
+}
+
+void DockWidgetViewer::mousePressEvent(QMouseEvent *event) {
+    // If mouse tracking is disabled, return early and do nothing
+    if (!hasMouseTracking()) return;
+
+    // Get the mouse position and convert it to plot coordinates
+    QPointF plotPos(event->pos().x(), event->pos().y());
+    double x = customPlot_->xAxis->pixelToCoord(plotPos.x());
+    double y = customPlot_->yAxis->pixelToCoord(plotPos.y());
+
+    // Update the point on the graph with the new coordinates
+    updateGraph1Point(x, y);
+    
+    qDebug() << "Mouse Pressed at: (" << x << ", " << y << ")";
+}
+
+void DockWidgetViewer::mouseMoveEvent(QMouseEvent *event) {
+    // If mouse tracking is disabled, return early and do nothing
+    if (!hasMouseTracking()) return;
+
+    // Get the mouse position and convert it to plot coordinates
+    QPointF plotPos(event->pos().x(), event->pos().y());
+    double x = customPlot_->xAxis->pixelToCoord(plotPos.x());
+    double y = customPlot_->yAxis->pixelToCoord(plotPos.y());
+
+    // Create the crosshair lines (horizontal and vertical)
+    // First clear any existing items (for dynamic updates)
+    customPlot_->clearItems();
+
+    // Draw vertical line (along the X-axis)
+    QCPItemLine *verticalLine = new QCPItemLine(customPlot_);
+    verticalLine->start->setCoords(x, customPlot_->yAxis->range().lower);
+    verticalLine->end->setCoords(x, customPlot_->yAxis->range().upper);
+    verticalLine->setPen(QPen(Qt::red)); // Use red color for vertical line
+
+    // Draw horizontal line (along the Y-axis)
+    QCPItemLine *horizontalLine = new QCPItemLine(customPlot_);
+    horizontalLine->start->setCoords(customPlot_->xAxis->range().lower, y);
+    horizontalLine->end->setCoords(customPlot_->xAxis->range().upper, y);
+    horizontalLine->setPen(QPen(Qt::red)); // Use red color for horizontal line
+
+    // Optional: You can also add a "+" marker at the intersection
+    QCPItemText *crossText = new QCPItemText(customPlot_);
+    crossText->setPositionAlignment(Qt::AlignCenter);
+    crossText->setText("+");
+    crossText->position->setCoords(x, y);
+    crossText->setFont(QFont("Arial", 12));
+    crossText->setPen(QPen(Qt::black));
+
+    // Replot to update the display
+    customPlot_->replot();
+}
+
 bool DockWidgetViewer::isEmpty(const std::pair<double, double>& fea_point) {
     // Check if both elements of the pair are NaN (representing "empty")
     return std::isnan(fea_point.first) && std::isnan(fea_point.second);
@@ -228,10 +301,10 @@ bool DockWidgetViewer::isValid(const cv::Point3f& fea_point) {
            fea_point.x != 0.0f && fea_point.y != 0.0f && fea_point.z != 0.0f;
 }
 
-ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& profile, cv::Point3f feature) {
+ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& profile, cv::Point3f feature, int index) {
     // Create a ProfileSheet
     ProfileSheet profileSheet;
-    profileSheet.profileIndex = -1;                                 // Set the profile index
+    profileSheet.profileIndex = index;                              // Set the profile index
     profileSheet.pointCount = static_cast<int>(profile.size());     // Set the number of points in the profile
     profileSheet.enableFilter = false;                              // Set the filter flag (can be adjusted)
     profileSheet.filterType = "";                                   // Set filter type (can be adjusted)
@@ -239,4 +312,19 @@ ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& prof
     profileSheet.featurePoint = feature;                            // Leave featurePoint empty or set to a default value (0,0,0)
 
     return profileSheet;
+}
+
+bool DockWidgetViewer::isMouseInsidePlot(const QPoint& pos) const {
+    // Check if the mouse position is inside the plot's bounding box
+    QRect plotArea = customPlot_->axisRect()->rect();  // Use rect() instead of boundingRect()
+    return plotArea.contains(pos);
+}
+
+void DockWidgetViewer::updateGraph1Point(double x, double y) {
+    // Clear the existing data points in graph(1)
+    customPlot_->graph(1)->data()->clear();
+    // Add the new point to graph(1)
+    customPlot_->graph(1)->addData(x, y);
+    // Replot to refresh the view
+    customPlot_->replot();
 }

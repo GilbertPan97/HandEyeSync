@@ -8,6 +8,7 @@
 #include <QString>
 #include <QList>
 #include <QPushButton>
+#include <QMouseEvent>
 
 /**
  * @class DockWidgetViewer
@@ -20,6 +21,8 @@
 using RenderData = std::vector<std::pair<double, double>>;
 
 class DockWidgetViewer : public ads::CDockWidget {
+    Q_OBJECT
+
 private:
     QList<QPushButton*> buttonList_;
     QCustomPlot *customPlot_;
@@ -51,7 +54,7 @@ public:
      *                      If true, the points will be connected with lines. If false, the points will
      *                      be displayed as discrete points without any connecting lines.
      */
-    void plotPoints(const RenderData& points, bool connectPoints, const cv::Point3f& fea_point);
+    void plotPoints(const RenderData& points, bool connectPoints, const cv::Point3f& fea_point, int index);
 
     /**
      * @brief Handles resize events for the DockWidgetViewer.
@@ -75,10 +78,40 @@ public:
      */
     void keepDisplayAspectRatio(QCustomPlot *customPlot);
 
+signals:
+    void mouseClicked(const QPoint& pos);
+
+public slots:
+    // Slot to handle the pickFeatureStatus signal
+    void onPickFeatureStatusChanged(bool isPicked);
+
+// protected:
+    /**
+     * @brief Handles mouse press events on the plot.
+     * 
+     * This function is triggered when the user clicks on the plot area. It captures
+     * the mouse click position and updates graph(1) with the corresponding coordinates.
+     * 
+     * @param event The mouse event that contains the click position.
+     */
+    void mousePressEvent(QMouseEvent *event) override;
+
+    /**
+     * @brief Handles mouse move events on the plot.
+     * 
+     * This function is triggered when the user drags the mouse on the plot area.
+     * It continuously updates the point in graph(1) based on the mouse position.
+     * 
+     * @param event The mouse event that contains the mouse position.
+     */
+    void mouseMoveEvent(QMouseEvent *event) override;
+
 private:
     bool isEmpty(const std::pair<double, double>& fea_point);
     bool isValid(const cv::Point3f& fea_point);
-    ProfileSheet parseProfileToProfileSheet(const RenderData& profile, cv::Point3f feature);
+    ProfileSheet parseProfileToProfileSheet(const RenderData& profile, cv::Point3f feature, int index);
+    bool isMouseInsidePlot(const QPoint& pos) const;
+    void updateGraph1Point(double x, double y);
 };
 
 #endif // DOCK_WIDGET_VIEWER_H

@@ -52,7 +52,11 @@ MainWindow::MainWindow(QWidget *parent)
     dockManager_->setSplitterSizes(rightDockWidgetArea, {static_cast<int>(width * 0.85 * 0.7), static_cast<int>(width * 0.85 * 0.3)});
     centralLayout->addWidget(dockManager_);
 
-    dockWidgets_ << viewerWin_ << logWin_ << browserWin_;
+    dockWidgets_ << viewerWin_ << logWin_ << browserWin_ << propertyWin_;
+
+    // Connect propertyWin_ and viewerWin_, feature point in viewerWin_ will editable when pick button trigered
+    connect(propertyWin_, &DockWidgetProperty::pickFeatureStatus, 
+            viewerWin_, &DockWidgetViewer::onPickFeatureStatusChanged);
 
     // Adjust layout margins to remove any gaps
     centralLayout->setContentsMargins(0, 0, 0, 0);  // No margins between widgets
@@ -185,6 +189,7 @@ void MainWindow::createToolBar()
             comboBox->setEnabled(true);
             downloadButton->setEnabled(true);
             onlineCollectBtn->setText("Collecting... ");
+            onlineCollectBtn->setStyleSheet("background-color: #4CAF50; color: white;");
         } 
         else {
             // If the button is released (unchecked), disable the controls and apply gray appearance
@@ -192,6 +197,7 @@ void MainWindow::createToolBar()
             comboBox->setEnabled(false);
             downloadButton->setEnabled(false);
             onlineCollectBtn->setText("Online Collect");  // Reset to the original text
+            onlineCollectBtn->setStyleSheet("background-color: #444444; color: white;");
         }
     });
 
@@ -580,14 +586,14 @@ void MainWindow::onAddImgActionTriggered() {
         browserWin_->setContentFromPoints(pointsSetBuffer_);
 
         // Attempt to plot the points (the first set of points from the buffer)
-        viewerWin_->plotPoints(pointsSetBuffer_[0], false, featuresSheet_[0].featurePoint);
+        viewerWin_->plotPoints(pointsSetBuffer_[0], false, featuresSheet_[0].featurePoint, 0);
         propertyWin_->writeProfileSheetToProperties(featuresSheet_[0], true);
 
         // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
         // that logs the selected dataset item's index and pose data to the log window.
         disconnect(browserWin_, &DockWidgetBrowser::itemSelected, nullptr, nullptr);    // Disconnect any previous connection
         connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
-            viewerWin_->plotPoints(pointsSetBuffer_[index], false, featuresSheet_[index].featurePoint);
+            viewerWin_->plotPoints(pointsSetBuffer_[index], false, featuresSheet_[index].featurePoint, index);
             propertyWin_->writeProfileSheetToProperties(featuresSheet_[index], true);
             // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
             logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));

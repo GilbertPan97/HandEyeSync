@@ -68,6 +68,7 @@ void DockWidgetProperty::initPropertyTable() {
     // 3. Feature
     QPushButton* pickBtn = new QPushButton();
     pickBtn->setIcon(QIcon(":/icons/picking.png"));
+    pickBtn->setEnabled(false);
     addProperty("Feature Coord", QString("X: 0, Y: 0, Z: 0"), pickBtn);
 
     // 4. Filter Enable
@@ -173,9 +174,21 @@ void DockWidgetProperty::writeProfileSheetToProperties(const ProfileSheet& profi
                                .arg(profile.featurePoint.x)
                                .arg(profile.featurePoint.y)
                                .arg(profile.featurePoint.z);
-    if (button_enable)
+    if (button_enable) {
+        pickBtn->setCheckable(true);
+        connect(pickBtn, &QPushButton::toggled, [this, pickBtn](bool checked) {
+            if (checked) {
+                pickBtn->setChecked(true);
+                pickBtn->setStyleSheet("background-color: #4CAF50; color: white;");
+            } 
+            else {
+                pickBtn->setChecked(false);
+                pickBtn->setStyleSheet("background-color: #444444; color: white;");
+            }
+            emit pickFeatureStatus(checked);    // Emit signal for feature point picking in DockWidgetViewer
+        });
         addProperty("Feature Point", featurePoint, pickBtn);
-    else 
+    } else 
         addProperty("Feature Point", featurePoint);
 
     // 4. Filter Enable
