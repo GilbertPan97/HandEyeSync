@@ -1,10 +1,17 @@
 #include "DockWidgetViewer.h"
 
 DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
-    : ads::CDockWidget(title, parent) {
+    : ads::CDockWidget(title, parent),
+    customPlot_(nullptr),
+    curPlotData_(nullptr)
+{
+    // Initialize private member
+    btnList_ = QList<QPushButton*>();
     customPlot_ = new QCustomPlot(this);
-    customPlot_->setBackground(QColor("#444444"));
+    curPlotData_ = new RenderData();
 
+    // Set customPlot_
+    customPlot_->setBackground(QColor("#444444"));
     customPlot_->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
                                  QCP::iSelectLegend | QCP::iSelectPlottables);
 
@@ -120,8 +127,8 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
         curPlotData_ = new RenderData();
     }
 
-    // // TODO: Cache plot data
-    // *curPlotData_ = points; 
+    // Cache plot data
+    *curPlotData_ = points; 
     
     // Clear all plot old data, including graph(0) and graph(1)
     customPlot_->graph(0)->data()->clear();     // Profile graph

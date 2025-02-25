@@ -178,6 +178,7 @@ void MainWindow::createToolBar()
             // Check devices connect status
             if (!curCamInfo_.isConnected) {
                 logWin_->log("Warning: No sensor connected.");
+                return;
             }
             // If the button is pressed (checked), enable the controls and remove gray appearance
             indexLabel->setEnabled(true);
@@ -783,6 +784,7 @@ void MainWindow::onSettingButtonReleased() {
         if (!pointsSetBuffer_.empty()) {
             auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
             DataProc proc(profile_lines, CalibObj::SPHERE);
+            // TODO: Load rad_sphere from UI
             float rad_sphere = 80 / 2.0;
             std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
             writeFeaturePointsToProfileSheets(ctr_pnts, featuresSheet_);
