@@ -580,14 +580,14 @@ void MainWindow::onAddImgActionTriggered() {
         browserWin_->setContentFromPoints(pointsSetBuffer_);
 
         // Attempt to plot the points (the first set of points from the buffer)
-        viewerWin_->plotPoints(pointsSetBuffer_[0], false, projectToXozPlane(featuresSheet_[0].featurePoint));
+        viewerWin_->plotPoints(pointsSetBuffer_[0], false, featuresSheet_[0].featurePoint);
         propertyWin_->writeProfileSheetToProperties(featuresSheet_[0], true);
 
         // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
         // that logs the selected dataset item's index and pose data to the log window.
         disconnect(browserWin_, &DockWidgetBrowser::itemSelected, nullptr, nullptr);    // Disconnect any previous connection
         connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
-            viewerWin_->plotPoints(pointsSetBuffer_[index], false, projectToXozPlane(featuresSheet_[index].featurePoint));
+            viewerWin_->plotPoints(pointsSetBuffer_[index], false, featuresSheet_[index].featurePoint);
             propertyWin_->writeProfileSheetToProperties(featuresSheet_[index], true);
             // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
             logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));

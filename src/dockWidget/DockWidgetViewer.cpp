@@ -2,13 +2,15 @@
 
 DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     : ads::CDockWidget(title, parent),
-    customPlot_(nullptr),
-    curPlotData_(nullptr)
+      customPlot_(nullptr),
+      curPlotData_(nullptr),
+      curProfileSheet_(nullptr)
 {
     // Initialize private member
-    btnList_ = QList<QPushButton*>();
+    buttonList_ = QList<QPushButton*>();
     customPlot_ = new QCustomPlot(this);
     curPlotData_ = new RenderData();
+    curProfileSheet_ = new ProfileSheet();
 
     // Set customPlot_
     customPlot_->setBackground(QColor("#444444"));
@@ -86,7 +88,7 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
         button->setToolTip(toolTip);
         button->setFixedSize(btnSize);
         button->setIconSize(iconSize);
-        btnList_.push_back(button);
+        buttonList_.push_back(button);
         return button;
     };
 
@@ -121,14 +123,15 @@ DockWidgetViewer::~DockWidgetViewer() {
     }
 }
 
-void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const std::pair<double, double>& fea_point) {
+void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const cv::Point3f& fea_point) {
     // Cache current plot data
     if (curPlotData_ == nullptr) {
         curPlotData_ = new RenderData();
     }
 
-    // Cache plot data
+    // Cache plot data and feature point
     *curPlotData_ = points; 
+    *curProfileSheet_ = parseProfileToProfileSheet(points, fea_point);
     
     // Clear all plot old data, including graph(0) and graph(1)
     customPlot_->graph(0)->data()->clear();     // Profile graph
@@ -153,10 +156,10 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
     // Render profile data to graph(1)
     if (isValid(fea_point)) {
         // Prepare vectors for x and z coordinates -- Profile
-        std::vector<double> keys1;               // x coordinates
-        std::vector<double> values1;             // z coordinates
-        keys1.push_back(fea_point.first);        // Add x coordinate to keys1
-        values1.push_back(fea_point.second);     // Add z coordinate to values1
+        std::vector<double> keys1;              // x coordinates
+        std::vector<double> values1;            // z coordinates
+        keys1.push_back(fea_point.x);           // Add x coordinate to keys1
+        values1.push_back(fea_point.z);         // Add z coordinate to values1
         customPlot_->graph(1)->addData(QVector<double>::fromStdVector(keys1), QVector<double>::fromStdVector(values1));
     }
 
@@ -220,6 +223,20 @@ bool DockWidgetViewer::isEmpty(const std::pair<double, double>& fea_point) {
     return std::isnan(fea_point.first) && std::isnan(fea_point.second);
 }
 
-bool DockWidgetViewer::isValid(const std::pair<double, double>& fea_point) {
-    return !std::isnan(fea_point.first) && !std::isnan(fea_point.second) && fea_point.first != 0.0 && fea_point.second != 0.0;
+bool DockWidgetViewer::isValid(const cv::Point3f& fea_point) {
+    return !std::isnan(fea_point.x) && !std::isnan(fea_point.y) && !std::isnan(fea_point.z) &&
+           fea_point.x != 0.0f && fea_point.y != 0.0f && fea_point.z != 0.0f;
+}
+
+ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& profile, cv::Point3f feature) {
+    // Create a ProfileSheet
+    ProfileSheet profileSheet;
+    profileSheet.profileIndex = -1;                                 // Set the profile index
+    profileSheet.pointCount = static_cast<int>(profile.size());     // Set the number of points in the profile
+    profileSheet.enableFilter = false;                              // Set the filter flag (can be adjusted)
+    profileSheet.filterType = "";                                   // Set filter type (can be adjusted)
+
+    profileSheet.featurePoint = feature;                            // Leave featurePoint empty or set to a default value (0,0,0)
+
+    return profileSheet;
 }

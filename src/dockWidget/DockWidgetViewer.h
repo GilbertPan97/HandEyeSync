@@ -3,6 +3,7 @@
 
 #include "DockWidget.h"
 #include "qcustomplot.h"
+#include "DockWidgetProperty.h"
 
 #include <QString>
 #include <QList>
@@ -20,9 +21,10 @@ using RenderData = std::vector<std::pair<double, double>>;
 
 class DockWidgetViewer : public ads::CDockWidget {
 private:
-    QList<QPushButton*> btnList_;
+    QList<QPushButton*> buttonList_;
     QCustomPlot *customPlot_;
     RenderData *curPlotData_;
+    ProfileSheet *curProfileSheet_;
 
 public:
     /**
@@ -49,7 +51,7 @@ public:
      *                      If true, the points will be connected with lines. If false, the points will
      *                      be displayed as discrete points without any connecting lines.
      */
-    void plotPoints(const RenderData& points, bool connectPoints, const std::pair<double, double>& fea_point);
+    void plotPoints(const RenderData& points, bool connectPoints, const cv::Point3f& fea_point);
 
     /**
      * @brief Handles resize events for the DockWidgetViewer.
@@ -75,7 +77,8 @@ public:
 
 private:
     bool isEmpty(const std::pair<double, double>& fea_point);
-    bool isValid(const std::pair<double, double>& fea_point);
+    bool isValid(const cv::Point3f& fea_point);
+    ProfileSheet parseProfileToProfileSheet(const RenderData& profile, cv::Point3f feature);
 };
 
 #endif // DOCK_WIDGET_VIEWER_H
