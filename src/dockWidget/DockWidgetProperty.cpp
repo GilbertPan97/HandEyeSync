@@ -60,21 +60,24 @@ DockWidgetProperty::DockWidgetProperty(const QString& title, QWidget* parent)
 // Initialize the property table with predefined attributes
 void DockWidgetProperty::initPropertyTable() {
     // 1. Data Index
-    addProperty("Data Index", QString("0"));
+    addProperty("Data Index", QString(" "));
 
     // 2. Points
-    addProperty("Points", QString("0"));
+    addProperty("Points", QString(" "));
 
-    // 3. Feature
+    // 3. Point Count
+    addProperty("File Path", QString(" "));
+
+    // 4. Feature
     QPushButton* pickBtn = new QPushButton();
     pickBtn->setIcon(QIcon(":/icons/picking.png"));
     pickBtn->setEnabled(false);
     addProperty("Feature Coord", QString("X: 0, Y: 0, Z: 0"), pickBtn);
 
-    // 4. Filter Enable
+    // 5. Filter Enable
     addProperty("Filter Enable", false);
 
-    // 5. Filter Tools
+    // 6. Filter Tools
     QStringList filterOptions = {"No Filter", "Gaussian", "Median"};
     addProperty("Filter Tools", filterOptions, "No Filter");
 }
@@ -167,7 +170,10 @@ void DockWidgetProperty::writeProfileSheetToProperties(const ProfileSheet& profi
     // 2. Point Count
     addProperty("Point Count", QString::number(profile.pointCount));
 
-    // 3. Feature Point (X, Y, Z)
+    // 3. Point Count
+    addProperty("File Path", QString::fromStdString(profile.file_path));
+
+    // 4. Feature Point (X, Y, Z)
     QPushButton* pickBtn = new QPushButton();
     pickBtn->setIcon(QIcon(":/icons/picking.png"));
     QString featurePoint = QString("X: %1, Y: %2, Z: %3")
@@ -176,6 +182,7 @@ void DockWidgetProperty::writeProfileSheetToProperties(const ProfileSheet& profi
                                .arg(profile.featurePoint.z);
     if (button_enable) {
         pickBtn->setCheckable(true);
+        emit pickFeatureStatus(false);      // Initial with false
         connect(pickBtn, &QPushButton::toggled, [this, pickBtn](bool checked) {
             if (checked) {
                 pickBtn->setChecked(true);
@@ -191,10 +198,10 @@ void DockWidgetProperty::writeProfileSheetToProperties(const ProfileSheet& profi
     } else 
         addProperty("Feature Point", featurePoint);
 
-    // 4. Filter Enable
+    // 5. Filter Enable
     addProperty("Filter Enable", profile.enableFilter);
 
-    // 5. Filter Type
+    // 6. Filter Type
     QStringList filterOptions = {"No Filter", "Gaussian", "Median"};
     addProperty("Filter Tools", filterOptions, QString::fromStdString(profile.filterType));
 }

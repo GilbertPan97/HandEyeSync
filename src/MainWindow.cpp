@@ -55,8 +55,29 @@ MainWindow::MainWindow(QWidget *parent)
     dockWidgets_ << viewerWin_ << logWin_ << browserWin_ << propertyWin_;
 
     // Connect propertyWin_ and viewerWin_, feature point in viewerWin_ will editable when pick button trigered
-    connect(propertyWin_, &DockWidgetProperty::pickFeatureStatus, 
-            viewerWin_, &DockWidgetViewer::onPickFeatureStatusChanged);
+    connect(propertyWin_, &DockWidgetProperty::pickFeatureStatus, viewerWin_, &DockWidgetViewer::onFeaturePickEnable);
+    connect(viewerWin_, &DockWidgetViewer::updatedFeaturePoint, this, [this](ProfileSheet sheet) {
+        // Check if the ProfileSheet is valid by verifying the profileIndex
+        if (sheet.profileIndex < 0) {
+            // Log an error message and return to prevent further processing
+            logWin_->log("Error: Invalid profileIndex in received point!");
+            return;  // Or handle the error in another way, such as throwing an exception
+        }
+    
+        // Write the ProfileSheet to the properties window
+        propertyWin_->writeProfileSheetToProperties(sheet, true);
+
+        // Save profile and profileSheets_ to files
+        saveProfileToFile(profilesBuffer_[sheet.profileIndex], sheet);
+    
+        // Attempt to replace the ProfileSheet in the profileSheets_
+        try {
+            replaceProfileSheet(profileSheets_, sheet);
+        } catch (const std::exception& e) {
+            // If an error occurs during replacement, catch the exception and log the error
+            logWin_->log(QString("Error replacing ProfileSheet: ") + QString::fromStdString(e.what()));
+        }
+    });
 
     // Adjust layout margins to remove any gaps
     centralLayout->setContentsMargins(0, 0, 0, 0);  // No margins between widgets
@@ -561,14 +582,16 @@ void MainWindow::onAddImgActionTriggered() {
             return;
         } 
 
-        pointsSetBuffer_.clear();
-        ProfileParser profileParser;
+        profilesBuffer_.clear();
         std::vector<cv::Point3f> features;
+        std::vector<std::string> files;
         try { 
             // Attempt to parse the profile files and get the points
-            std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };    // TODO: Place progCallback function out of mainwindow
-            pointsSetBuffer_ = profileParser.parseProfileFiles(folderPath.toStdString(), dataFormat.toStdString(), "profile", progCallback);
-            features = profileParser.parseFeatureFiles(folderPath.toStdString(), dataFormat.toStdString(), "corner_point");
+            ProfileParser profileParser(folderPath.toStdString(), dataFormat.toStdString());            // Create profile parser
+            std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };      // TODO: Place progCallback function out of mainwindow
+            profilesBuffer_ = profileParser.parseProfileFiles("profile", progCallback);
+            features = profileParser.parseFeatureFiles("corner_point");
+            files = profileParser.getFilePaths();
         } catch (const std::exception& e) {
             // If any exception is thrown, log the failure message
             QMessageBox::warning(this, "Error", "Profiles/Features data parsing fail.");
@@ -580,27 +603,27 @@ void MainWindow::onAddImgActionTriggered() {
         }
 
         // Profile sheets record
-        featuresSheet_ = parseProfilePointsToProfileSheets(pointsSetBuffer_, features);
+        profileSheets_ = parseProfilePointsToProfileSheets(profilesBuffer_, features, files);
 
         // Set browserWin_ profile preview
-        browserWin_->setContentFromPoints(pointsSetBuffer_);
+        browserWin_->setContentFromPoints(profilesBuffer_);
 
         // Attempt to plot the points (the first set of points from the buffer)
-        viewerWin_->plotPoints(pointsSetBuffer_[0], false, featuresSheet_[0].featurePoint, 0);
-        propertyWin_->writeProfileSheetToProperties(featuresSheet_[0], true);
+        viewerWin_->plotPoints(profilesBuffer_[0], false, profileSheets_[0], 0);
+        propertyWin_->writeProfileSheetToProperties(profileSheets_[0], true);
 
         // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
         // that logs the selected dataset item's index and pose data to the log window.
         disconnect(browserWin_, &DockWidgetBrowser::itemSelected, nullptr, nullptr);    // Disconnect any previous connection
         connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
-            viewerWin_->plotPoints(pointsSetBuffer_[index], false, featuresSheet_[index].featurePoint, index);
-            propertyWin_->writeProfileSheetToProperties(featuresSheet_[index], true);
-            // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 
+            viewerWin_->plotPoints(profilesBuffer_[index], false, profileSheets_[index], index);
+            propertyWin_->writeProfileSheetToProperties(profileSheets_[index], true);
+            // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 = featuresSheet.index + 1
             logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
         });
 
         // If everything succeeds, log a success message
-        logWin_->log("Dataset Loaded Successfully.");
+        logWin_->log("Dataset Load Successfully.");
 
         // Display the selected options
         QString summary = QString("Sensor Type: %1\nData Format: %2\nData Folder: %3")
@@ -613,7 +636,7 @@ void MainWindow::onAddImgActionTriggered() {
 
 void MainWindow::onAddRobActionTriggered() {
     // 0. Check sensor data buffer first.
-    if (pointsSetBuffer_.empty()) {
+    if (profilesBuffer_.empty()) {
         QMessageBox::warning(this, "Warning", "Please load sensor data before robot data input.");
         return;
     }
@@ -788,13 +811,13 @@ void MainWindow::onSettingButtonReleased() {
     connect(confirmButton, &QPushButton::clicked, [=]() {
         settingsDialog->accept();  // Close the dialog
         // Proceed with data processing
-        if (!pointsSetBuffer_.empty()) {
-            auto profile_lines = convertPointsSetBuffer(pointsSetBuffer_);
+        if (!profilesBuffer_.empty()) {
+            auto profile_lines = convertPointsSetBuffer(profilesBuffer_);
             DataProc proc(profile_lines, CalibObj::SPHERE);
             // TODO: Load rad_sphere from UI
             float rad_sphere = 80 / 2.0;
             std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
-            writeFeaturePointsToProfileSheets(ctr_pnts, featuresSheet_);
+            writeFeaturePointsToProfileSheets(ctr_pnts, profileSheets_);
         }
         else {
             QMessageBox::warning(this, "Error", "Profiles dataset has not been uploaded.");
@@ -816,12 +839,12 @@ void MainWindow::onSettingButtonReleased() {
 
 void MainWindow::onRunButtonReleased() {
     // Check calibration dataset
-    if (pointsSetBuffer_.empty() || robDataBuffer_.empty()) {
+    if (profilesBuffer_.empty() || robDataBuffer_.empty()) {
         QMessageBox::warning(this, "Error", "Calibration data has not been uploaded.");
         logWin_->log("No calibration data detected.");
         return;
     }
-    if (pointsSetBuffer_.size() != robDataBuffer_.size()) {
+    if (profilesBuffer_.size() != robDataBuffer_.size()) {
         QMessageBox::warning(this, "Error", "The size of calibration data does not match.");
         logWin_->log("Mismatch detected in calibration data sizes.");
         return;
@@ -835,7 +858,7 @@ void MainWindow::onRunButtonReleased() {
     CalibType type = calibMap_["CalibType"] == "Eye-In-Hand" ? CalibType::EYE_IN_HAND : CalibType::EYE_TO_HAND;
     hec.SetCalibType(type);
 	hec.SetRobPose(xyzwpr_data);
-	hec.SetProfileData(extractFeaturePointsFromProfileSheet(featuresSheet_), CalibObj::SPHERE);
+	hec.SetProfileData(extractFeaturePointsFromProfileSheet(profileSheets_), CalibObj::SPHERE);
 	hec.run(ProfileScanner::SolveMethod::ITERATION);
     float calib_error = hec.CalcCalibError();
 
@@ -1137,7 +1160,11 @@ std::vector<Eigen::Vector<float, 6>> MainWindow::convertRobDataBuffer(const std:
 }
 
 // Function to ProfilePoints to ProfileSheet
-std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(const std::vector<ProfilePoints>& pointsSetBuffer, std::vector<cv::Point3f> features) {
+std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(
+    const std::vector<ProfilePoints>& pointsSetBuffer, 
+    std::vector<cv::Point3f> features,
+    std::vector<std::string> paths) 
+{
     std::vector<ProfileSheet> featuresSheet;
 
     // Iterate through the pointsSetBuffer to create ProfileSheet objects
@@ -1148,6 +1175,7 @@ std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(const st
         ProfileSheet profileSheet;
         profileSheet.profileIndex = static_cast<int>(i);            // Set the profile index
         profileSheet.pointCount = static_cast<int>(points.size());  // Set the number of points in the profile
+        profileSheet.file_path = paths[i];
         profileSheet.enableFilter = false;                          // Set the filter flag (can be adjusted)
         profileSheet.filterType = "";                               // Set filter type (can be adjusted)
 
@@ -1215,4 +1243,48 @@ std::pair<double, double> MainWindow::projectToXozPlane(const cv::Point3f& point
 
     // Return the vector of projected 2D points (X, Z)
     return projectedPoint;
+}
+
+void MainWindow::replaceProfileSheet(std::vector<ProfileSheet>& profiles, const ProfileSheet& newProfile) {
+    // Find the ProfileSheet in profiles with the same profileIndex as newProfile
+    auto it = std::find_if(profiles.begin(), profiles.end(), [&newProfile](const ProfileSheet& profile) {
+        return profile.profileIndex == newProfile.profileIndex;
+    });
+
+    // If a matching profile is found, replace it
+    if (it != profiles.end()) {
+        *it = newProfile;  // Replace the old profile with the new one
+    } else {
+        // If no matching profile is found, you can throw an exception or handle the case
+        throw std::out_of_range("Profile with given profileIndex not found!");
+    }
+}
+
+void MainWindow::saveProfileToFile(const ProfilePoints& profile, const ProfileSheet& sheet) {
+    // Open the YML file for writing
+    cv::FileStorage fs(sheet.file_path, cv::FileStorage::WRITE);
+
+    // Check if file opened successfully
+    if (!fs.isOpened()) {
+        std::cerr << "Failed to open file: " << sheet.file_path << std::endl;
+        return;
+    }
+
+    // Convert ProfilePoints to a flat list of x, y, z values
+    std::vector<double> profileData;
+    for (const auto& point : profile) {
+        profileData.push_back(point.first);  // x-coordinate
+        profileData.push_back(0.0);          // y-coordinate (set to 0 as per requirement)
+        profileData.push_back(point.second); // z-coordinate
+    }
+
+    // Write profile data to the YML file
+    fs << "profile" << profileData;
+
+    // Write corner point (feature point) to the YML file
+    std::vector<double> cornerPoint = {sheet.featurePoint.x, sheet.featurePoint.y, sheet.featurePoint.z};
+    fs << "corner_point" << cornerPoint;
+
+    // Close the file after writing
+    fs.release();
 }

@@ -54,7 +54,7 @@ public:
      *                      If true, the points will be connected with lines. If false, the points will
      *                      be displayed as discrete points without any connecting lines.
      */
-    void plotPoints(const RenderData& points, bool connectPoints, const cv::Point3f& fea_point, int index);
+    void plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet, int index);
 
     /**
      * @brief Handles resize events for the DockWidgetViewer.
@@ -79,11 +79,11 @@ public:
     void keepDisplayAspectRatio(QCustomPlot *customPlot);
 
 signals:
-    void mouseClicked(const QPoint& pos);
+    void updatedFeaturePoint(const ProfileSheet point);
 
 public slots:
     // Slot to handle the pickFeatureStatus signal
-    void onPickFeatureStatusChanged(bool isPicked);
+    void onFeaturePickEnable(bool enable);
 
 // protected:
     /**
@@ -109,7 +109,7 @@ public slots:
 private:
     bool isEmpty(const std::pair<double, double>& fea_point);
     bool isValid(const cv::Point3f& fea_point);
-    ProfileSheet parseProfileToProfileSheet(const RenderData& profile, cv::Point3f feature, int index);
+    ProfileSheet parseProfileToProfileSheet(const RenderData& profile, const ProfileSheet feature, int index);
     bool isMouseInsidePlot(const QPoint& pos) const;
     void updateGraph1Point(double x, double y);
 };

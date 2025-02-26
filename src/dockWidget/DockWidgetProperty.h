@@ -16,6 +16,7 @@
 struct ProfileSheet {
     int profileIndex;              // Profile Index
     int pointCount;                // Number of points in profile
+    std::string file_path;         // Profile file path
     cv::Point3f featurePoint;      // Feature point in camera frame (for example, center of sphere or edge corner)
     bool enableFilter;             // Whether filter is enabled for this profile
     std::string filterType;        // Filter type (e.g., "Gaussian", "Median", etc.)

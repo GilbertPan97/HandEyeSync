@@ -123,7 +123,7 @@ DockWidgetViewer::~DockWidgetViewer() {
     }
 }
 
-void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const cv::Point3f& fea_point, int index) {
+void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet, int index) {
     // Cache current plot data
     if (curPlotData_ == nullptr) {
         curPlotData_ = new RenderData();
@@ -131,7 +131,7 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
 
     // Cache plot data and feature point
     *curPlotData_ = points; 
-    *curProfileSheet_ = parseProfileToProfileSheet(points, fea_point, index);
+    *curProfileSheet_ = parseProfileToProfileSheet(points, profile_sheet, index);
     
     // Clear all plot old data, including graph(0) and graph(1)
     customPlot_->graph(0)->data()->clear();     // Profile graph
@@ -154,12 +154,12 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
     }
 
     // Render profile data to graph(1)
-    if (!isValid(fea_point)) {
+    if (!isValid(profile_sheet.featurePoint)) {
         // Prepare vectors for x and z coordinates -- Profile
         std::vector<double> keys1;              // x coordinates
         std::vector<double> values1;            // z coordinates
-        keys1.push_back(fea_point.x);           // Add x coordinate to keys1
-        values1.push_back(fea_point.z);         // Add z coordinate to values1
+        keys1.push_back(profile_sheet.featurePoint.x);           // Add x coordinate to keys1
+        values1.push_back(profile_sheet.featurePoint.z);         // Add z coordinate to values1
         customPlot_->graph(1)->addData(QVector<double>::fromStdVector(keys1), QVector<double>::fromStdVector(values1));
     }
 
@@ -218,21 +218,22 @@ void DockWidgetViewer::keepDisplayAspectRatio(QCustomPlot *customPlot) {
     customPlot->replot();
 }
 
-void DockWidgetViewer::onPickFeatureStatusChanged(bool isPicked) {
+void DockWidgetViewer::onFeaturePickEnable(bool enable) {
     // When the feature picking is enabled, allow updating the points
-    if (isPicked) {
+    if (enable) {
         qDebug() << "Feature picking enabled";
         // Enable mouse tracking to detect mouse movements
         setMouseTracking(true);  
         connect(customPlot_, &QCustomPlot::mousePress, this, &DockWidgetViewer::mousePressEvent);
         connect(customPlot_, &QCustomPlot::mouseMove, this, &DockWidgetViewer::mouseMoveEvent);
-        // TODO: Record feature point
         // customPlot_->graph(0)->setSelectable(QCP::SelectionType::stSingleData);
     } else {
         // When feature picking is disabled, do not allow updating the points
         qDebug() << "Feature picking disabled";
         // Disable mouse tracking, so mouse events won't be detected
         setMouseTracking(false);
+        disconnect(customPlot_, &QCustomPlot::mousePress, this, &DockWidgetViewer::mousePressEvent);
+        disconnect(customPlot_, &QCustomPlot::mouseMove, this, &DockWidgetViewer::mouseMoveEvent);
         customPlot_->clearItems();
         customPlot_->replot(); 
         // customPlot_->graph(0)->setSelectable(QCP::SelectionType::stWhole);
@@ -246,12 +247,12 @@ void DockWidgetViewer::mousePressEvent(QMouseEvent *event) {
     // Get the mouse position and convert it to plot coordinates
     QPointF plotPos(event->pos().x(), event->pos().y());
     double x = customPlot_->xAxis->pixelToCoord(plotPos.x());
-    double y = customPlot_->yAxis->pixelToCoord(plotPos.y());
+    double z = customPlot_->yAxis->pixelToCoord(plotPos.y());
 
     // Update the point on the graph with the new coordinates
-    updateGraph1Point(x, y);
+    updateGraph1Point(x, z);
     
-    qDebug() << "Mouse Pressed at: (" << x << ", " << y << ")";
+    qDebug() << "Mouse Pressed at: (" << x << ", " << z << ")";
 }
 
 void DockWidgetViewer::mouseMoveEvent(QMouseEvent *event) {
@@ -301,15 +302,16 @@ bool DockWidgetViewer::isValid(const cv::Point3f& fea_point) {
            fea_point.x != 0.0f && fea_point.y != 0.0f && fea_point.z != 0.0f;
 }
 
-ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& profile, cv::Point3f feature, int index) {
+ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& profile, const ProfileSheet sheet, int index) {
     // Create a ProfileSheet
     ProfileSheet profileSheet;
     profileSheet.profileIndex = index;                              // Set the profile index
+    profileSheet.file_path = sheet.file_path;
     profileSheet.pointCount = static_cast<int>(profile.size());     // Set the number of points in the profile
     profileSheet.enableFilter = false;                              // Set the filter flag (can be adjusted)
     profileSheet.filterType = "";                                   // Set filter type (can be adjusted)
 
-    profileSheet.featurePoint = feature;                            // Leave featurePoint empty or set to a default value (0,0,0)
+    profileSheet.featurePoint = sheet.featurePoint;                 // Leave featurePoint empty or set to a default value (0,0,0)
 
     return profileSheet;
 }
@@ -320,11 +322,32 @@ bool DockWidgetViewer::isMouseInsidePlot(const QPoint& pos) const {
     return plotArea.contains(pos);
 }
 
-void DockWidgetViewer::updateGraph1Point(double x, double y) {
-    // Clear the existing data points in graph(1)
+void DockWidgetViewer::updateGraph1Point(double x, double z) {
+    // Check if customPlot_ is valid
+    if (customPlot_ == nullptr) {
+        throw std::runtime_error("customPlot_ is null!");
+    }
+
+    // Check if graph(1) is valid
+    if (customPlot_->graphCount() <= 1 || customPlot_->graph(1) == nullptr) {
+        throw std::runtime_error("Graph 1 does not exist!");
+    }
+
+    // Optional: Validate x and z (you can adjust the validation based on your requirements)
+    if (std::isnan(x) || std::isnan(z)) {
+        throw std::runtime_error("Invalid data: x or z is NaN!");
+    }
+
+    // Replot to refresh the view in graph(1)
     customPlot_->graph(1)->data()->clear();
-    // Add the new point to graph(1)
-    customPlot_->graph(1)->addData(x, y);
-    // Replot to refresh the view
+    customPlot_->graph(1)->addData(x, z);
     customPlot_->replot();
+
+    // Update featurePoint if curProfileSheet_ is valid
+    if (curProfileSheet_ != nullptr) {
+        curProfileSheet_->featurePoint = cv::Point3f(x, 0, z);
+        emit updatedFeaturePoint(*curProfileSheet_);
+    } else {
+        throw std::runtime_error("curProfileSheet_ is null!");
+    }
 }

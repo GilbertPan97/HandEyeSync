@@ -1,14 +1,44 @@
 // ProfileParser.cpp
 #include "ProfileParser.h"
 
-#include <filesystem>
 #include <algorithm>
 #include <iostream>
 #include <regex>
 
-namespace fs = std::filesystem;
+ProfileParser::ProfileParser(const std::string& folderPath, const std::string& type) {
+    // Normalize the file extension to lowercase
+    normalizedType_ = type;
+    std::transform(normalizedType_.begin(), normalizedType_.end(), normalizedType_.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
 
-ProfileParser::ProfileParser() {}
+    // Iterate through the directory using std::filesystem
+    filePaths_.clear();
+    for (const auto& entry : fs::directory_iterator(folderPath)) {
+        if (entry.is_regular_file()) {
+            std::string extension = entry.path().extension().string();
+            std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) {
+                return std::tolower(c);
+            });
+            if (extension == ("." + normalizedType_)) {
+                filePaths_.push_back(entry.path());
+            }
+        }
+    }
+
+    // Check if filePaths is empty and throw an exception
+    if (filePaths_.empty()) {
+        throw std::runtime_error("No files with the specified type (" + normalizedType_ +
+            ") found in the directory: " + folderPath);
+    }
+
+    // Sort the file paths by numeric value extracted from filenames
+    std::sort(filePaths_.begin(), filePaths_.end(), [this](const fs::path& a, const fs::path& b) {
+        double numA = extractNumericValueFromFilename(a.filename().string());
+        double numB = extractNumericValueFromFilename(b.filename().string());
+        return numA < numB;
+    });
+}
 
 ProfileParser::~ProfileParser() {}
 
@@ -22,53 +52,18 @@ double ProfileParser::extractNumericValueFromFilename(const std::string& filenam
 }
 
 std::vector<std::vector<std::pair<double, double>>> ProfileParser::parseProfileFiles(
-    const std::string& folderPath, 
-    const std::string& type,
     const std::string& scanLineNodeName,
     const std::function<void(int)>& progressCallback
 ) {
     std::vector<std::vector<std::pair<double, double>>> pointsList;
 
-    // Normalize the file extension to lowercase
-    std::string normalizedType = type;
-    std::transform(normalizedType.begin(), normalizedType.end(), normalizedType.begin(), [](unsigned char c) {
-        return std::tolower(c);
-    });
-
-    // Iterate through the directory using std::filesystem
-    std::vector<fs::path> filePaths;
-    for (const auto& entry : fs::directory_iterator(folderPath)) {
-        if (entry.is_regular_file()) {
-            std::string extension = entry.path().extension().string();
-            std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) {
-                return std::tolower(c);
-            });
-            if (extension == ("." + normalizedType)) {
-                filePaths.push_back(entry.path());
-            }
-        }
-    }
-
-    // Check if filePaths is empty and throw an exception
-    if (filePaths.empty()) {
-        throw std::runtime_error("No files with the specified type (" + normalizedType +
-            ") found in the directory: " + folderPath);
-    }
-
-    // Sort the file paths by numeric value extracted from filenames
-    std::sort(filePaths.begin(), filePaths.end(), [this](const fs::path& a, const fs::path& b) {
-        double numA = extractNumericValueFromFilename(a.filename().string());
-        double numB = extractNumericValueFromFilename(b.filename().string());
-        return numA < numB;
-    });
-
     // Process each file
-    for (size_t i = 0; i < filePaths.size(); ++i) {
-        const auto& filePath = filePaths[i];
+    for (size_t i = 0; i < filePaths_.size(); ++i) {
+        const auto& filePath = filePaths_[i];
 
         // Notify progress if progressCallback is provided
         if (progressCallback) {
-            int progress = static_cast<int>((static_cast<double>(i + 1) / filePaths.size()) * 100);
+            int progress = static_cast<int>((static_cast<double>(i + 1) / filePaths_.size()) * 100);
             progressCallback(progress);
         }
 
@@ -99,49 +94,17 @@ std::vector<std::vector<std::pair<double, double>>> ProfileParser::parseProfileF
     return pointsList;
 }
 
-std::vector<cv::Point3f> ProfileParser::parseFeatureFiles(
-    const std::string& folderPath, 
-    const std::string& type,
-    const std::string& scanLineNodeName
-) {
+std::vector<cv::Point3f> ProfileParser::parseFeatureFiles( const std::string& scanLineNodeName ) {
     std::vector<cv::Point3f> pointsList;
 
     // Normalize the file extension to lowercase
-    std::string normalizedType = type;
-    std::transform(normalizedType.begin(), normalizedType.end(), normalizedType.begin(), [](unsigned char c) {
+    std::transform(normalizedType_.begin(), normalizedType_.end(), normalizedType_.begin(), [](unsigned char c) {
         return std::tolower(c);
     });
 
-    // Iterate through the directory using std::filesystem
-    std::vector<fs::path> filePaths;
-    for (const auto& entry : fs::directory_iterator(folderPath)) {
-        if (entry.is_regular_file()) {
-            std::string extension = entry.path().extension().string();
-            std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) {
-                return std::tolower(c);
-            });
-            if (extension == ("." + normalizedType)) {
-                filePaths.push_back(entry.path());
-            }
-        }
-    }
-
-    // Check if filePaths is empty and throw an exception
-    if (filePaths.empty()) {
-        throw std::runtime_error("No files with the specified type (" + normalizedType +
-            ") found in the directory: " + folderPath);
-    }
-
-    // Sort the file paths by numeric value extracted from filenames
-    std::sort(filePaths.begin(), filePaths.end(), [this](const fs::path& a, const fs::path& b) {
-        double numA = extractNumericValueFromFilename(a.filename().string());
-        double numB = extractNumericValueFromFilename(b.filename().string());
-        return numA < numB;
-    });
-
     // Process each file
-    for (size_t i = 0; i < filePaths.size(); ++i) {
-        const auto& filePath = filePaths[i];
+    for (size_t i = 0; i < filePaths_.size(); ++i) {
+        const auto& filePath = filePaths_[i];
 
         cv::FileStorage fs(filePath.string(), cv::FileStorage::READ);
         if (!fs.isOpened()) {
@@ -166,4 +129,16 @@ std::vector<cv::Point3f> ProfileParser::parseFeatureFiles(
 
     return pointsList;
 }
+
+std::vector<std::string> ProfileParser::getFilePaths() {
+    std::vector<std::string> filePathsStr; // Vector to store the string paths
+
+    // Iterate over each path in filePaths_ and convert it to string
+    for (const auto& path : filePaths_) {
+        filePathsStr.push_back(path.string()); // Convert fs::path to string and add to the vector
+    }
+
+    return filePathsStr; // Return the vector of file paths as strings
+}
+
 

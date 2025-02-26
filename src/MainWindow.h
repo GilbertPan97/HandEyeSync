@@ -61,10 +61,14 @@ private:
 
     std::vector<std::vector<cv::Point3f>> convertPointsSetBuffer(const std::vector<ProfilePoints>& pointsSetBuffer);
     std::vector<Eigen::Vector<float, 6>> convertRobDataBuffer(const std::vector<FanucRobPose>& robDataBuffer);
-    std::vector<ProfileSheet> parseProfilePointsToProfileSheets(const std::vector<ProfilePoints>& pointsSetBuffer, std::vector<cv::Point3f> features);
+    std::vector<ProfileSheet> parseProfilePointsToProfileSheets(const std::vector<ProfilePoints>& pointsSetBuffer, 
+                                                                std::vector<cv::Point3f> features, 
+                                                                std::vector<std::string> paths);
     std::vector<cv::Point3f> extractFeaturePointsFromProfileSheet(const std::vector<ProfileSheet>& profileSheets);
     void writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::vector<ProfileSheet>& profileSheets);
     std::pair<double, double> projectToXozPlane(const cv::Point3f& point);
+    void replaceProfileSheet(std::vector<ProfileSheet>& profiles, const ProfileSheet& newProfile);
+    void saveProfileToFile(const ProfilePoints& profile, const ProfileSheet& sheet);
 
 private slots:
     // Placeholder slots for menu actions
@@ -94,9 +98,9 @@ private:
     DockWidgetProperty* propertyWin_;
 
     // Calibration dataset
-    std::vector<ProfilePoints> pointsSetBuffer_;
+    std::vector<ProfilePoints> profilesBuffer_;
     std::vector<FanucRobPose> robDataBuffer_;
-    std::vector<ProfileSheet> featuresSheet_;
+    std::vector<ProfileSheet> profileSheets_;
 
     // Calibration configuration
     SensorType sensorType_;
