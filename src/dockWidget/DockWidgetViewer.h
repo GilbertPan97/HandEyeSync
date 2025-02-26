@@ -85,7 +85,7 @@ public slots:
     // Slot to handle the pickFeatureStatus signal
     void onFeaturePickEnable(bool enable);
 
-// protected:
+protected:
     /**
      * @brief Handles mouse press events on the plot.
      * 

@@ -40,6 +40,11 @@ MainWindow::MainWindow(QWidget *parent)
     browserWin_ = new DockWidgetBrowser("Data Browser", this);
     propertyWin_ = new DockWidgetProperty("Property Browser", this);
 
+    viewerWin_->setFeatures(viewerWin_->features() & ~QDockWidget::DockWidgetClosable);
+    logWin_->setFeatures(logWin_->features() & ~QDockWidget::DockWidgetClosable);
+    browserWin_->setFeatures(browserWin_->features() & ~QDockWidget::DockWidgetClosable);
+    propertyWin_->setFeatures(propertyWin_->features() & ~QDockWidget::DockWidgetClosable);
+
     dockManager_->addDockWidget(ads::TopDockWidgetArea, viewerWin_);
     auto rightDockWidgetArea = dockManager_->addDockWidget(ads::RightDockWidgetArea, propertyWin_);
     auto bottomDockWidgetArea = dockManager_->addDockWidget(ads::BottomDockWidgetArea, logWin_);
@@ -134,8 +139,30 @@ void MainWindow::createMenuBar()
     QAction *cutAction = editMenu->addAction("Cut");
 
     QMenu *windowMenu = menuBar()->addMenu("Window");
-    QAction *maximizeAction = windowMenu->addAction("Maximize");
-    QAction *minimizeAction = windowMenu->addAction("Minimize");
+    // Dynamically add dock widgets to the window menu
+    for (ads::CDockWidget* dockWidget : dockWidgets_) {
+        QAction* dockAction = windowMenu->addAction(dockWidget->windowTitle());
+        dockAction->setCheckable(true);
+
+        // Initially set the checked state based on visibility
+        dockAction->setChecked(!dockWidget->isClosed());
+
+        // Connect the action to toggle dock widget visibility
+        connect(dockAction, &QAction::triggered, this, [this, dockWidget](bool checked) {
+            // If the dockWidget is not visible (i.e., it was closed), show it
+            if (checked) {
+                dockWidget->show(); // Reopen the dock widget
+            } else {
+                dockWidget->hide(); // Hide the dock widget
+            }
+        });
+
+        // Connect to the signal when dockWidget's visibility changes
+        connect(dockWidget, &ads::CDockWidget::visibilityChanged, this, [this, dockAction, dockWidget](bool visible) {
+            // Update the menu item state when the dock widget visibility changes
+            dockAction->setChecked(visible);
+        });
+    }
 
     QMenu *helpMenu = menuBar()->addMenu("Help");
     QAction *aboutAction = helpMenu->addAction("About");
