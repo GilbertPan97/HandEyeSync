@@ -9,6 +9,7 @@
 #include <QList>
 #include <QPushButton>
 #include <QMouseEvent>
+#include <opencv2/opencv.hpp>
 
 /**
  * @class DockWidgetViewer
@@ -85,6 +86,56 @@ public slots:
     // Slot to handle the pickFeatureStatus signal
     void onFeaturePickEnable(bool enable);
 
+    void onSensorOpsEnable(bool enable);
+
+    /**
+     * @brief Slot to handle the "Play" button click.
+     * 
+     * This slot starts or pauses the image capture from the line scan camera when the "Play" button is clicked. 
+     * If the camera is paused, it resumes the data collection; if the camera is already running, it pauses the capture.
+     */
+    void onPlayClicked();
+
+    /**
+     * @brief Slot to handle the "Capture" button click.
+     * 
+     * This slot captures the current image (profile data) from the line scan camera and adds it to the plot. 
+     * It freezes the current frame, displaying it as a snapshot on the QCustomPlot.
+     */
+    void onCaptureClicked();
+
+    /**
+     * @brief Slot to handle the "Download" button click.
+     * 
+     * This slot allows the user to download the currently displayed profile data from the plot to a local file 
+     * or external storage for further processing or storage.
+     */
+    void onDownloadClicked();
+
+    /**
+     * @brief Slot to handle the "Upload" button click.
+     * 
+     * This slot uploads the current profile data from the plot to a remote server or database for further 
+     * analysis or storage. It sends the data in a predefined format (e.g., CSV, JSON).
+     */
+    void onUploadClicked();
+
+    /**
+     * @brief Slot to handle the "Refresh" button click.
+     * 
+     * This slot refreshes the plot view. It reloads the profile data and re-renders the plot, 
+     * useful if there have been updates or changes to the data being displayed.
+     */
+    void onRefreshClicked();
+
+    /**
+     * @brief Slot to handle the "Trash" button click.
+     * 
+     * This slot clears the data currently displayed on the plot, effectively resetting the view. 
+     * It removes all points and resets the plot area to its initial state.
+     */
+    void onTrashClicked();
+
 protected:
     /**
      * @brief Handles mouse press events on the plot.
@@ -112,6 +163,7 @@ private:
     ProfileSheet parseProfileToProfileSheet(const RenderData& profile, const ProfileSheet feature, int index);
     bool isMouseInsidePlot(const QPoint& pos) const;
     void updateGraph1Point(double x, double y);
+    void saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet);
 };
 
 #endif // DOCK_WIDGET_VIEWER_H

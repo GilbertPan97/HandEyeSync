@@ -70,6 +70,9 @@ private:
     void replaceProfileSheet(std::vector<ProfileSheet>& profiles, const ProfileSheet& newProfile);
     void saveProfileToFile(const ProfilePoints& profile, const ProfileSheet& sheet);
 
+signals:
+    void sensorConnStatue(bool checked);
+
 private slots:
     // Placeholder slots for menu actions
     void newFile();

@@ -88,25 +88,33 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
         button->setToolTip(toolTip);
         button->setFixedSize(btnSize);
         button->setIconSize(iconSize);
+
+        // Create buttonList_ to store button pointer
         buttonList_.push_back(button);
+        
+        // Add buttons to the container layout
+        buttonLayout->addWidget(button);
         return button;
     };
 
     // Create buttons for controlling the display functionality
     QPushButton *ctlBtn_play = createButton(":/icons/play.png", "Run and pause camera grab");
     QPushButton *ctlBtn_capture = createButton(":/icons/photo-capture.png", "Capture current view");
-    QPushButton *ctlBtn_download = createButton(":/icons/download0.png", "Download data");
+    QPushButton *ctlBtn_download = createButton(":/icons/download.png", "Download data");
     QPushButton *ctlBtn_upload = createButton(":/icons/upload.png", "Upload data");
     QPushButton *ctlBtn_refresh = createButton(":/icons/refresh.png", "Refresh the view");
     QPushButton *ctlBtn_trash = createButton(":/icons/trash.png", "Clear data");
 
-    // Add buttons to the container layout
-    buttonLayout->addWidget(ctlBtn_play);
-    buttonLayout->addWidget(ctlBtn_capture);
-    buttonLayout->addWidget(ctlBtn_download);
-    buttonLayout->addWidget(ctlBtn_upload);
-    buttonLayout->addWidget(ctlBtn_refresh);
-    buttonLayout->addWidget(ctlBtn_trash);
+    // Connect buttons' clicked signal to respective slots
+    connect(ctlBtn_play, &QPushButton::clicked, this, &DockWidgetViewer::onPlayClicked);
+    connect(ctlBtn_capture, &QPushButton::clicked, this, &DockWidgetViewer::onCaptureClicked);
+    connect(ctlBtn_download, &QPushButton::clicked, this, &DockWidgetViewer::onDownloadClicked);
+    connect(ctlBtn_upload, &QPushButton::clicked, this, &DockWidgetViewer::onUploadClicked);
+    connect(ctlBtn_refresh, &QPushButton::clicked, this, &DockWidgetViewer::onRefreshClicked);
+    connect(ctlBtn_trash, &QPushButton::clicked, this, &DockWidgetViewer::onTrashClicked);
+
+    ctlBtn_play->setEnabled(false);
+    ctlBtn_capture->setEnabled(false);
 
     // Add button container to the main layout
     layout->addWidget(buttonContainer, 0, Qt::AlignLeft | Qt::AlignTop); // Align buttons to top-left
@@ -240,6 +248,138 @@ void DockWidgetViewer::onFeaturePickEnable(bool enable) {
     }
 }
 
+void DockWidgetViewer::onSensorOpsEnable(bool enable) {
+    if (enable) {
+        buttonList_[0]->setEnabled(true);   // Button ctlBtn_play
+        buttonList_[1]->setEnabled(true);   // Button ctlBtn_capture
+    } 
+    else {
+        buttonList_[0]->setEnabled(false);
+        buttonList_[1]->setEnabled(false);
+    }
+}
+
+void DockWidgetViewer::onPlayClicked() {
+    qDebug() << "Play button clicked. Run and pause camera grab.";
+    // Add the actual logic to start/stop camera grab
+}
+
+void DockWidgetViewer::onCaptureClicked() {
+    qDebug() << "Capture button clicked. Capture current view.";
+    // Add the actual logic to capture the current view
+}
+
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QStandardPaths>
+
+void DockWidgetViewer::onDownloadClicked() {
+    // Check if curPlotData_ and curProfileSheet_ are valid
+    if (curPlotData_ == nullptr || curPlotData_->empty() || 
+        curProfileSheet_ == nullptr || curProfileSheet_->file_path.empty()) {
+        // Show a warning message if data is invalid
+        QMessageBox::warning(this, "Invalid Data", "Please ensure the data is valid before saving.", QMessageBox::Ok);
+        return;
+    }
+
+    // Open a file save dialog to choose where to save the file
+    QString filePath = QFileDialog::getSaveFileName(
+        this,
+        "Save Profile Data", 
+        QStandardPaths::writableLocation(QStandardPaths::DesktopLocation),  // Default to the desktop
+        "YML Files (*.yml);;All Files (*)"
+    );
+
+    // If the user cancels the dialog, filePath will be empty
+    if (filePath.isEmpty())
+        return;
+
+    // Convert QFileDialog return value (QString) to std::string
+    std::string stdFilePath = filePath.toStdString();
+
+    // Check if the user provided a file extension, if not, add the default '.yml'
+    if (stdFilePath.find(".yml") == std::string::npos) {
+        stdFilePath.append(".yml");
+    }
+
+    // Update the file path in the profile sheet
+    curProfileSheet_->file_path = stdFilePath;
+
+    // Call the function to save the profile data to the selected file
+    saveProfileToFile(*curPlotData_, *curProfileSheet_);
+}
+
+void DockWidgetViewer::onUploadClicked() {
+    // Open a file dialog to let the user choose a file
+    QString filePath = QFileDialog::getOpenFileName(
+        this,
+        "Open Profile Data", 
+        QStandardPaths::writableLocation(QStandardPaths::DesktopLocation),  // Default to the desktop
+        "YML Files (*.yml);;All Files (*)"
+    );
+
+    // If the user cancels the dialog, filePath will be empty
+    if (filePath.isEmpty())
+        return;
+
+    // Convert QFileDialog return value (QString) to std::string
+    std::string stdFilePath = filePath.toStdString();
+
+    // Open the YML file for reading
+    cv::FileStorage fs(stdFilePath, cv::FileStorage::READ);
+
+    // Check if the file was opened successfully
+    if (!fs.isOpened()) {
+        QMessageBox::warning(this, "Error", "Failed to open file: " + QString::fromStdString(stdFilePath), QMessageBox::Ok);
+        return;
+    }
+
+    // Load profile data
+    std::vector<double> profileData;
+    fs["profile"] >> profileData;  // Read profile data from the file
+
+    // Load the corner point (feature point)
+    std::vector<double> cornerPoint;
+    fs["corner_point"] >> cornerPoint;
+
+    // Close the file after reading
+    fs.release();
+
+    // If the profile data is not loaded correctly, show an error
+    if (profileData.empty() || cornerPoint.size() != 3) {
+        QMessageBox::warning(this, "Error", "Failed to load valid profile data from the file.", QMessageBox::Ok);
+        return;
+    }
+
+    // Convert the loaded data into the appropriate types
+    RenderData loadedProfile;
+    for (size_t i = 0; i < profileData.size(); i += 3) {
+        loadedProfile.push_back(std::make_pair(profileData[i], profileData[i + 2]));  // Only x and z coordinates
+    }
+
+    // Update curPlotData_ with the loaded profile
+    curPlotData_ = &loadedProfile;
+
+    // Update the corner feature point
+    if (cornerPoint.size() == 3) {
+        curProfileSheet_->featurePoint = cv::Point3f(cornerPoint[0], cornerPoint[1], cornerPoint[2]);
+    }
+
+    // Optionally, update any visual elements, e.g., replot the loaded data
+    plotPoints(*curPlotData_, false, *curProfileSheet_, 0);
+}
+
+
+void DockWidgetViewer::onRefreshClicked() {
+    qDebug() << "Refresh button clicked. Refresh the view.";
+    // Add the actual logic to refresh the view
+}
+
+void DockWidgetViewer::onTrashClicked() {
+    qDebug() << "Trash button clicked. Clear data.";
+    // Add the actual logic to clear the data
+}
+
 void DockWidgetViewer::mousePressEvent(QMouseEvent *event) {
     // If mouse tracking is disabled, return early and do nothing
     if (!hasMouseTracking()) return;
@@ -350,4 +490,33 @@ void DockWidgetViewer::updateGraph1Point(double x, double z) {
     } else {
         throw std::runtime_error("curProfileSheet_ is null!");
     }
+}
+
+void DockWidgetViewer::saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet) {
+    // Open the YML file for writing
+    cv::FileStorage fs(sheet.file_path, cv::FileStorage::WRITE);
+
+    // Check if file opened successfully
+    if (!fs.isOpened()) {
+        std::cerr << "Failed to open file: " << sheet.file_path << std::endl;
+        return;
+    }
+
+    // Convert ProfilePoints to a flat list of x, y, z values
+    std::vector<double> profileData;
+    for (const auto& point : profile) {
+        profileData.push_back(point.first);  // x-coordinate
+        profileData.push_back(0.0);          // y-coordinate (set to 0 as per requirement)
+        profileData.push_back(point.second); // z-coordinate
+    }
+
+    // Write profile data to the YML file
+    fs << "profile" << profileData;
+
+    // Write corner point (feature point) to the YML file
+    std::vector<double> cornerPoint = {sheet.featurePoint.x, sheet.featurePoint.y, sheet.featurePoint.z};
+    fs << "corner_point" << cornerPoint;
+
+    // Close the file after writing
+    fs.release();
 }

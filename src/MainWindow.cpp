@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
         if (sheet.profileIndex < 0) {
             // Log an error message and return to prevent further processing
             logWin_->log("Error: Invalid profileIndex in received point!");
-            return;  // Or handle the error in another way, such as throwing an exception
+            return;
         }
     
         // Write the ProfileSheet to the properties window
@@ -83,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent)
             logWin_->log(QString("Error replacing ProfileSheet: ") + QString::fromStdString(e.what()));
         }
     });
+    connect(this, &MainWindow::sensorConnStatue, viewerWin_, &DockWidgetViewer::onSensorOpsEnable);
 
     // Adjust layout margins to remove any gaps
     centralLayout->setContentsMargins(0, 0, 0, 0);  // No margins between widgets
@@ -215,7 +216,7 @@ void MainWindow::createToolBar()
     QComboBox *comboBox = new QComboBox(this);
     comboBox->addItem("0");
     QPushButton *downloadButton = new QPushButton(this);
-    downloadButton->setIcon(QIcon(":/icons/download0.png"));
+    downloadButton->setIcon(QIcon(":/icons/download.png"));
     downloadButton->setToolTip("Collect");
     indexLabel->setEnabled(false);
     comboBox->setEnabled(false);
@@ -1039,7 +1040,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
         if (curCamInfo_.ipAddress.empty() || curCamInfo_.ipAddress == "0.0.0.0") {
             // Show warning message if IP address is not set
             QMessageBox::warning(this, "Warning", "Please select a valid camera IP address before connecting.");
-            return; // Exit the function to prevent connecting
+            return;
         }
 
         // Attempt to connect to the camera
@@ -1051,6 +1052,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
             logWin_->log(logMsg);
             statusLabel->setText("Status: Connected");  // Update status label
             actBtn->setChecked(true);                   // Set menu QAction status true if camera connected.
+            emit sensorConnStatue(true);
         } else {
             // Show error message if connection fails
             QMessageBox::critical(this, "Error", "Failed to connect to the camera.");
@@ -1067,6 +1069,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
             logWin_->log(logMsg);
             statusLabel->setText("Status: Disconnected"); // Update status label
             actBtn->setChecked(false);                  // Set menu QAction status
+            emit sensorConnStatue(false);
         } else {
             // Show error message if connection fails
             QMessageBox::critical(this, "Error", "Failed to disconnect to the camera.");
@@ -1254,8 +1257,7 @@ void MainWindow::writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f
             }
         } else {
             // Handle the case where the sizes don't match (you could choose to clear and rewrite, or handle the mismatch)
-            qDebug() << "Error: The number of points does not match the size of profileSheets.";
-            // Optionally, you can clear profileSheets or perform other actions here if desired.
+            logWin_->log("Error: The number of points does not match the size of profileSheets.");
         }
     }
 }
