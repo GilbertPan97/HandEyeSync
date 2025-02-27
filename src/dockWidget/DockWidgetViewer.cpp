@@ -106,8 +106,9 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     QPushButton *ctlBtn_trash = createButton(":/icons/trash.png", "Clear data");
 
     // Connect buttons' clicked signal to respective slots
-    connect(ctlBtn_play, &QPushButton::clicked, this, &DockWidgetViewer::onPlayClicked);
-    connect(ctlBtn_capture, &QPushButton::clicked, this, &DockWidgetViewer::onCaptureClicked);
+    ctlBtn_play->setCheckable(true);
+    // connect(ctlBtn_play, &QPushButton::toggled, this, &DockWidgetViewer::onPlayClicked);
+    // connect(ctlBtn_capture, &QPushButton::clicked, this, &DockWidgetViewer::onCaptureClicked);
     connect(ctlBtn_download, &QPushButton::clicked, this, &DockWidgetViewer::onDownloadClicked);
     connect(ctlBtn_upload, &QPushButton::clicked, this, &DockWidgetViewer::onUploadClicked);
     connect(ctlBtn_refresh, &QPushButton::clicked, this, &DockWidgetViewer::onRefreshClicked);
@@ -131,7 +132,7 @@ DockWidgetViewer::~DockWidgetViewer() {
     }
 }
 
-void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet, int index) {
+void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet) {
     // Cache current plot data
     if (curPlotData_ == nullptr) {
         curPlotData_ = new RenderData();
@@ -139,7 +140,7 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
 
     // Cache plot data and feature point
     *curPlotData_ = points; 
-    *curProfileSheet_ = parseProfileToProfileSheet(points, profile_sheet, index);
+    *curProfileSheet_ = parseProfileToProfileSheet(points, profile_sheet);
     
     // Clear all plot old data, including graph(0) and graph(1)
     customPlot_->graph(0)->data()->clear();     // Profile graph
@@ -226,6 +227,18 @@ void DockWidgetViewer::keepDisplayAspectRatio(QCustomPlot *customPlot) {
     customPlot->replot();
 }
 
+QList<QPushButton*> DockWidgetViewer::getButtonList() {
+    // Check if the button list is empty
+    if (buttonList_.isEmpty()) {
+        // If empty, log a message and return an empty list
+        qDebug() << "Button list is empty!";
+        return QList<QPushButton*>();  // Return an empty QList
+    }
+
+    // Return the populated button list
+    return buttonList_;
+}
+
 void DockWidgetViewer::onFeaturePickEnable(bool enable) {
     // When the feature picking is enabled, allow updating the points
     if (enable) {
@@ -259,19 +272,14 @@ void DockWidgetViewer::onSensorOpsEnable(bool enable) {
     }
 }
 
-void DockWidgetViewer::onPlayClicked() {
-    qDebug() << "Play button clicked. Run and pause camera grab.";
-    // Add the actual logic to start/stop camera grab
-}
+// void DockWidgetViewer::onPlayClicked(bool checked) {
+//     emit sensorWorkStatus(checked);
+// }
 
-void DockWidgetViewer::onCaptureClicked() {
-    qDebug() << "Capture button clicked. Capture current view.";
-    // Add the actual logic to capture the current view
-}
-
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QStandardPaths>
+// void DockWidgetViewer::onCaptureClicked() {
+//     qDebug() << "Capture button clicked. Capture current view.";
+//     // Add the actual logic to capture the current view
+// }
 
 void DockWidgetViewer::onDownloadClicked() {
     // Check if curPlotData_ and curProfileSheet_ are valid
@@ -336,7 +344,7 @@ void DockWidgetViewer::onUploadClicked() {
 
     // Load profile data
     std::vector<double> profileData;
-    fs["profile"] >> profileData;  // Read profile data from the file
+    fs["profile"] >> profileData;       // Read profile data from the file
 
     // Load the corner point (feature point)
     std::vector<double> cornerPoint;
@@ -365,8 +373,8 @@ void DockWidgetViewer::onUploadClicked() {
         curProfileSheet_->featurePoint = cv::Point3f(cornerPoint[0], cornerPoint[1], cornerPoint[2]);
     }
 
-    // Optionally, update any visual elements, e.g., replot the loaded data
-    plotPoints(*curPlotData_, false, *curProfileSheet_, 0);
+    // Update any visual elements, e.g., replot the loaded data
+    plotPoints(*curPlotData_, false, *curProfileSheet_);
 }
 
 
@@ -376,8 +384,7 @@ void DockWidgetViewer::onRefreshClicked() {
 }
 
 void DockWidgetViewer::onTrashClicked() {
-    qDebug() << "Trash button clicked. Clear data.";
-    // Add the actual logic to clear the data
+
 }
 
 void DockWidgetViewer::mousePressEvent(QMouseEvent *event) {
@@ -442,10 +449,10 @@ bool DockWidgetViewer::isValid(const cv::Point3f& fea_point) {
            fea_point.x != 0.0f && fea_point.y != 0.0f && fea_point.z != 0.0f;
 }
 
-ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& profile, const ProfileSheet sheet, int index) {
+ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& profile, const ProfileSheet sheet) {
     // Create a ProfileSheet
     ProfileSheet profileSheet;
-    profileSheet.profileIndex = index;                              // Set the profile index
+    profileSheet.profileIndex = sheet.profileIndex;                 // Set the profile index
     profileSheet.file_path = sheet.file_path;
     profileSheet.pointCount = static_cast<int>(profile.size());     // Set the number of points in the profile
     profileSheet.enableFilter = false;                              // Set the filter flag (can be adjusted)

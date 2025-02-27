@@ -23,6 +23,15 @@ struct ProfileSheet {
 
     ProfileSheet(int index = -1, int count = 0, const cv::Point3f& feature = cv::Point3f(0, 0, 0), bool enable = false, const std::string& filter = "")
         : profileIndex(index), pointCount(count), featurePoint(feature), enableFilter(enable), filterType(filter) {}
+    // Clear method to reset the struct to default values
+    void clear() {
+        profileIndex = -1;
+        pointCount = 0;
+        file_path.clear();
+        featurePoint = cv::Point3f(0, 0, 0);
+        enableFilter = false;
+        filterType.clear();
+    }
 };
 
 /**

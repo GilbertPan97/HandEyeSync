@@ -31,7 +31,7 @@
 
 // Alias for a point that includes x, y, z, w, p, r
 using FanucRobPose = std::vector<double>;
-using ProfilePoints = std::vector<std::pair<double, double>>;
+// using ProfilePoints = std::vector<std::pair<double, double>>;
 
 enum class SensorType {
     ProfileScanner,
@@ -59,16 +59,17 @@ private:
 
     QString sensorTypeToString(SensorType sensorType);
 
-    std::vector<std::vector<cv::Point3f>> convertPointsSetBuffer(const std::vector<ProfilePoints>& pointsSetBuffer);
+    std::vector<std::vector<cv::Point3f>> convertPointsSetBuffer(const std::vector<RenderData>& pointsSetBuffer);
     std::vector<Eigen::Vector<float, 6>> convertRobDataBuffer(const std::vector<FanucRobPose>& robDataBuffer);
-    std::vector<ProfileSheet> parseProfilePointsToProfileSheets(const std::vector<ProfilePoints>& pointsSetBuffer, 
+    std::vector<ProfileSheet> parseProfilePointsToProfileSheets(const std::vector<RenderData>& pointsSetBuffer, 
                                                                 std::vector<cv::Point3f> features, 
                                                                 std::vector<std::string> paths);
     std::vector<cv::Point3f> extractFeaturePointsFromProfileSheet(const std::vector<ProfileSheet>& profileSheets);
     void writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::vector<ProfileSheet>& profileSheets);
     std::pair<double, double> projectToXozPlane(const cv::Point3f& point);
     void replaceProfileSheet(std::vector<ProfileSheet>& profiles, const ProfileSheet& newProfile);
-    void saveProfileToFile(const ProfilePoints& profile, const ProfileSheet& sheet);
+    void saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet);
+    std::vector<std::pair<double, double>> convertToRenderData(const ProfileData& data);
 
 signals:
     void sensorConnStatue(bool checked);
@@ -83,6 +84,10 @@ private slots:
     void onSettingButtonReleased();
     void onRunButtonReleased();
     void showScanCameraDialog(QAction *actBtn);
+    void updateSeneorInfoGroupBox(QGroupBox *statusGroupBox, const CameraInfo &curCamInfo_);
+
+    void onPlayToggled(bool ckecked);
+    void onCaptureClicked();
 
 private:
     QToolBar *topToolBar_;              // Top toolbar
@@ -101,7 +106,7 @@ private:
     DockWidgetProperty* propertyWin_;
 
     // Calibration dataset
-    std::vector<ProfilePoints> profilesBuffer_;
+    std::vector<RenderData> profilesBuffer_;
     std::vector<FanucRobPose> robDataBuffer_;
     std::vector<ProfileSheet> profileSheets_;
 

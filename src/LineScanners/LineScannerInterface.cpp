@@ -137,7 +137,7 @@ CameraStatus LineScannerInterface::Disconnect(const std::string& cameraIp) {
     free((void*)ip_s);  // Free the duplicated IP address memory
 
     // Return the corresponding camera status based on the disconnection result
-    return (status == kOK) ? CameraStatus::DEV_READY : CameraStatus::DEV_ERROR;
+    return (status == kOK) ? CameraStatus::DEV_NOT_CONNECTED : CameraStatus::DEV_ERROR;
 }
 
 CameraStatus LineScannerInterface::SetStatus(bool open) {
@@ -229,6 +229,13 @@ std::vector<CameraInfo> LineScannerInterface::ConvertToCameraInfoList(const Sens
         CameraInfo cameraInfo;
         cameraInfo.id = sdkCameraList.cam_info[i].id; // Copy the ID
         cameraInfo.ipAddress = sdkCameraList.cam_info[i].ipAddress; // Copy the IP address
+
+        if (curBrand_==CameraBrand::LMI)
+            cameraInfo.brand = "LMI";
+        else if(curBrand_==CameraBrand::SSZN)
+            cameraInfo.brand = "SSZN";
+        else
+            cameraInfo.brand = "N/A";
 
         // Add the cameraInfo to the vector
         cameraInfoList.push_back(cameraInfo);

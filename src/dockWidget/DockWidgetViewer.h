@@ -55,7 +55,7 @@ public:
      *                      If true, the points will be connected with lines. If false, the points will
      *                      be displayed as discrete points without any connecting lines.
      */
-    void plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet, int index);
+    void plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet);
 
     /**
      * @brief Handles resize events for the DockWidgetViewer.
@@ -79,8 +79,11 @@ public:
      */
     void keepDisplayAspectRatio(QCustomPlot *customPlot);
 
+    QList<QPushButton*> getButtonList();
+
 signals:
     void updatedFeaturePoint(const ProfileSheet point);
+    // void sensorWorkStatus(bool work);
 
 public slots:
     // Slot to handle the pickFeatureStatus signal
@@ -88,21 +91,21 @@ public slots:
 
     void onSensorOpsEnable(bool enable);
 
-    /**
-     * @brief Slot to handle the "Play" button click.
-     * 
-     * This slot starts or pauses the image capture from the line scan camera when the "Play" button is clicked. 
-     * If the camera is paused, it resumes the data collection; if the camera is already running, it pauses the capture.
-     */
-    void onPlayClicked();
+    // /**
+    //  * @brief Slot to handle the "Play" button click.
+    //  * 
+    //  * This slot starts or pauses the image capture from the line scan camera when the "Play" button is clicked. 
+    //  * If the camera is paused, it resumes the data collection; if the camera is already running, it pauses the capture.
+    //  */
+    // void onPlayClicked(bool checked);
 
-    /**
-     * @brief Slot to handle the "Capture" button click.
-     * 
-     * This slot captures the current image (profile data) from the line scan camera and adds it to the plot. 
-     * It freezes the current frame, displaying it as a snapshot on the QCustomPlot.
-     */
-    void onCaptureClicked();
+    // /**
+    //  * @brief Slot to handle the "Capture" button click.
+    //  * 
+    //  * This slot captures the current image (profile data) from the line scan camera and adds it to the plot. 
+    //  * It freezes the current frame, displaying it as a snapshot on the QCustomPlot.
+    //  */
+    // void onCaptureClicked();
 
     /**
      * @brief Slot to handle the "Download" button click.
@@ -160,7 +163,7 @@ protected:
 private:
     bool isEmpty(const std::pair<double, double>& fea_point);
     bool isValid(const cv::Point3f& fea_point);
-    ProfileSheet parseProfileToProfileSheet(const RenderData& profile, const ProfileSheet feature, int index);
+    ProfileSheet parseProfileToProfileSheet(const RenderData& profile, const ProfileSheet feature);
     bool isMouseInsidePlot(const QPoint& pos) const;
     void updateGraph1Point(double x, double y);
     void saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet);

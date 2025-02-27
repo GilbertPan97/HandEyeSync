@@ -637,14 +637,14 @@ void MainWindow::onAddImgActionTriggered() {
         browserWin_->setContentFromPoints(profilesBuffer_);
 
         // Attempt to plot the points (the first set of points from the buffer)
-        viewerWin_->plotPoints(profilesBuffer_[0], false, profileSheets_[0], 0);
+        viewerWin_->plotPoints(profilesBuffer_[0], false, profileSheets_[0]);
         propertyWin_->writeProfileSheetToProperties(profileSheets_[0], true);
 
         // Connect the itemSelected signal from DockWidgetBrowser to a lambda function
         // that logs the selected dataset item's index and pose data to the log window.
         disconnect(browserWin_, &DockWidgetBrowser::itemSelected, nullptr, nullptr);    // Disconnect any previous connection
         connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
-            viewerWin_->plotPoints(profilesBuffer_[index], false, profileSheets_[index], index);
+            viewerWin_->plotPoints(profilesBuffer_[index], false, profileSheets_[index]);
             propertyWin_->writeProfileSheetToProperties(profileSheets_[index], true);
             // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 = featuresSheet.index + 1
             logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
@@ -916,15 +916,9 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
 
     QComboBox *brandComboBox = new QComboBox(&dialog);
     brandLayout->addWidget(brandComboBox, 1);
+    brandComboBox->addItem(" "); 
     brandComboBox->addItem("LMI"); 
     brandComboBox->addItem("SSZN");
-
-    connect(brandComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), 
-            [brandComboBox, this]() {
-                QString selectedItem = brandComboBox->currentText();
-                sensorApi_.SetBrand(selectedItem.toStdString());
-                logWin_->log("Selected brand: " + selectedItem);
-            });
     layout->addLayout(brandLayout);
 
     // Create a combo box for selecting camera IDs
@@ -936,16 +930,16 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     infoLayout->addWidget(cameraComboBox, 1);       // Add combo box to layout
     layout->addLayout(infoLayout);
     
-    // Initial UI with current sensor config
+    // Initial UI with configured sensor
     if (curCamInfo_.id !=-1){
         // Check the brand of the current camera info
         if (curCamInfo_.brand == "LMI")
-            brandComboBox->setCurrentIndex(0);  // Set the first item (LMI) as the selected item
+            brandComboBox->setCurrentIndex(1);  // Set the first item (LMI) as the selected item
         else if (curCamInfo_.brand == "SSZN")
-            brandComboBox->setCurrentIndex(1);  // Set the second item (SSZN) as the selected item
+            brandComboBox->setCurrentIndex(2);  // Set the second item (SSZN) as the selected item
         else {
             logWin_->log("Error: Unknown sensor brand.");
-            brandComboBox->setCurrentIndex(-1);
+            brandComboBox->setCurrentIndex(0);
         }
         cameraComboBox->addItem(QString("%1 - %2").arg(curCamInfo_.id)
                     .arg(QString::fromStdString(curCamInfo_.ipAddress)));
@@ -957,24 +951,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
 
     // Create a group box for camera status
     QGroupBox *statusGroupBox = new QGroupBox("Current Sensor", &dialog); 
-    QVBoxLayout *statusLayout = new QVBoxLayout(statusGroupBox);
-
-    // Create a label for displaying current camera brand
-    QLabel *brandInfo = new QLabel("Camera Brand: " + 
-        QString::fromStdString(curCamInfo_.brand), statusGroupBox); // Initial brand label
-    statusLayout->addWidget(brandInfo);        // Add brand label to group box layout
-
-    // Create a horizontal layout for status and camera ID
-    QString id_s = (curCamInfo_.id == -1) ? "N/A" : QString::number(curCamInfo_.id);
-    QString conn_s = (curCamInfo_.isConnected) ? "Connected" : "Not Connected";
-    QHBoxLayout *statusIdLayout = new QHBoxLayout();
-    QLabel *statusLabel = new QLabel("Status: " + conn_s, statusGroupBox); // Initial status
-    QLabel *cameraIdLabel = new QLabel("Camera ID: " + id_s, statusGroupBox); // Initial camera ID
-
-    statusIdLayout->addWidget(statusLabel);     // Add status label to horizontal layout
-    statusIdLayout->addWidget(cameraIdLabel);   // Add camera ID label to horizontal layout
-    statusLayout->addLayout(statusIdLayout);    // Add horizontal layout to group box layout
-
+    updateSeneorInfoGroupBox(statusGroupBox, curCamInfo_);      // Update Sensor Group Box Info
     layout->addWidget(statusGroupBox);
 
     // Create a horizontal layout for connect and disconnect buttons
@@ -983,16 +960,24 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     buttonLayout->addWidget(connectButton);
     QPushButton *disconnectButton = new QPushButton("Disconnect", &dialog);
     buttonLayout->addWidget(disconnectButton);
-
     layout->addLayout(buttonLayout);    // Add horizontal layout to main layout
 
     // Create a label for displaying camera information
     QLabel *cameraInfoLabel = new QLabel(&dialog); // Define camera info label
     layout->addWidget(cameraInfoLabel); 
 
+    connect(brandComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+        [=]() {
+            QString selectedItem = brandComboBox->currentText();
+            curCamInfo_.brand = selectedItem.toStdString();
+            updateSeneorInfoGroupBox(statusGroupBox, curCamInfo_);
+            logWin_->log("Selected brand: " + selectedItem);
+    });
+
     connect(scanButton, &QPushButton::clicked, [=]() {
         std::vector<CameraInfo> sensorList; // Vector to hold camera info
         // Scan the cameras and update the sensor list
+        sensorApi_.SetBrand(curCamInfo_.brand);     // Initial set brand
         CameraStatus status = sensorApi_.Scan(sensorList);
         if (status == CameraStatus::DEV_READY) {
             // Populate the combo box with camera info if scan is successful
@@ -1008,14 +993,13 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
                 curCamInfo_.id = sensorList[0].id;               // Update camera ID
                 // Optionally, you can set curCamInfo.brand if brand information is available
                 curCamInfo_.brand = sensorList[0].brand;         // Update camera brand if needed
-                cameraIdLabel->setText(QString("Camera ID: %1").arg(curCamInfo_.id)); // Update with the first camera ID
             } else {
                 QMessageBox::warning(this, "Warning", "No device detected.");
                 return;
             }
 
             // Update status and camera ID labels
-            cameraIdLabel->setText(QString("Camera ID: %1").arg(sensorList[0].id)); // Update with the first camera ID
+            updateSeneorInfoGroupBox(statusGroupBox, curCamInfo_);
             cameraInfoLabel->setText("Cameras scanned successfully."); // Update camera info label
 
             // Connect the combo box selection change to update curCamInfo
@@ -1048,11 +1032,15 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
         if (status == CameraStatus::DEV_READY) {
             // Update connection status and brand label if successful
             curCamInfo_.isConnected = true;
+            updateSeneorInfoGroupBox(statusGroupBox, curCamInfo_);
             QString logMsg = QString("Info: Connected to camera: %1").arg(QString::fromStdString(curCamInfo_.ipAddress));
             logWin_->log(logMsg);
-            statusLabel->setText("Status: Connected");  // Update status label
             actBtn->setChecked(true);                   // Set menu QAction status true if camera connected.
+
+            // Emit signal to enable DockWidgetViewer buttons and connect sensor slot
             emit sensorConnStatue(true);
+            connect(viewerWin_->getButtonList()[0], &QPushButton::toggled, this, &MainWindow::onPlayToggled);
+            connect(viewerWin_->getButtonList()[1], &QPushButton::clicked, this, &MainWindow::onCaptureClicked);
         } else {
             // Show error message if connection fails
             QMessageBox::critical(this, "Error", "Failed to connect to the camera.");
@@ -1065,11 +1053,15 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
         if (status == CameraStatus::DEV_NOT_CONNECTED) {
             // Update connection status and brand label if disconnect successful
             curCamInfo_.isConnected = false;
+            updateSeneorInfoGroupBox(statusGroupBox, curCamInfo_);
             QString logMsg = QString("Info: Disconnected to camera: %1").arg(QString::fromStdString(curCamInfo_.ipAddress));
             logWin_->log(logMsg);
-            statusLabel->setText("Status: Disconnected"); // Update status label
             actBtn->setChecked(false);                  // Set menu QAction status
+
+            // Emit signal to disable DockWidgetViewer buttons and disconnect sensor slot
             emit sensorConnStatue(false);
+            disconnect(viewerWin_->getButtonList()[0], &QPushButton::toggled, this, &MainWindow::onPlayToggled);
+            disconnect(viewerWin_->getButtonList()[1], &QPushButton::clicked, this, &MainWindow::onCaptureClicked);
         } else {
             // Show error message if connection fails
             QMessageBox::critical(this, "Error", "Failed to disconnect to the camera.");
@@ -1077,6 +1069,51 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     });
 
     dialog.exec();
+}
+
+void MainWindow::updateSeneorInfoGroupBox(QGroupBox *statusGroupBox, const CameraInfo &curCamInfo_) {
+    // Clear all items in the old layout
+    QLayout *oldLayout = statusGroupBox->layout();
+    if (oldLayout) {
+        QWidgetList widgets = statusGroupBox->findChildren<QWidget*>();
+        for (QWidget* widget : widgets) {
+            widget->deleteLater(); // Delete widgets from the layout
+        }
+        delete oldLayout;
+    } 
+    // Create a new vertical layout for the group box
+    QVBoxLayout *statusLayout = new QVBoxLayout(statusGroupBox);
+
+    // Create a label for displaying current camera brand
+    QLabel *brandInfo = new QLabel("Camera Brand: " + 
+        QString::fromStdString(curCamInfo_.brand), statusGroupBox); // Initial brand label
+    statusLayout->addWidget(brandInfo);        // Add brand label to group box layout
+
+    // Create a horizontal layout for status and camera ID
+    QString id_s = (curCamInfo_.id == -1) ? "N/A" : QString::number(curCamInfo_.id);
+    QString conn_s = (curCamInfo_.isConnected) ? "Connected" : "Not Connected";
+    QHBoxLayout *statusIdLayout = new QHBoxLayout();
+    QLabel *statusLabel = new QLabel("Status: " + conn_s, statusGroupBox); // Initial status
+    QLabel *cameraIdLabel = new QLabel("Camera ID: " + id_s, statusGroupBox); // Initial camera ID
+
+    statusIdLayout->addWidget(statusLabel);     // Add status label to horizontal layout
+    statusIdLayout->addWidget(cameraIdLabel);   // Add camera ID label to horizontal layout
+    statusLayout->addLayout(statusIdLayout);    // Add horizontal layout to group box layout
+
+    // Apply the new layout to the group box
+    statusGroupBox->setLayout(statusLayout);  // Make sure to set the new layout
+}
+
+void MainWindow::onPlayToggled(bool ckecked) {
+
+}
+
+void MainWindow::onCaptureClicked() {
+    sensorApi_.SetStatus(true);
+    sensorApi_.GrabOnce();
+    RenderData profile = convertToRenderData(sensorApi_.RetriveData());
+    ProfileSheet sheet;
+    viewerWin_->plotPoints(profile, false, sheet);
 }
 
 // Placeholder slots for menu actions
@@ -1152,7 +1189,7 @@ QString MainWindow::sensorTypeToString(SensorType sensorType) {
 }
 
 // Convert pointsSetBuffer_ to std::vector<std::vector<cv::Point3f>>
-std::vector<std::vector<cv::Point3f>> MainWindow::convertPointsSetBuffer(const std::vector<ProfilePoints>& pointsSetBuffer) {
+std::vector<std::vector<cv::Point3f>> MainWindow::convertPointsSetBuffer(const std::vector<RenderData>& pointsSetBuffer) {
     std::vector<std::vector<cv::Point3f>> result;
 
     for (const auto& profile : pointsSetBuffer) {
@@ -1189,9 +1226,9 @@ std::vector<Eigen::Vector<float, 6>> MainWindow::convertRobDataBuffer(const std:
     return result;
 }
 
-// Function to ProfilePoints to ProfileSheet
+// Function to RenderData to ProfileSheet
 std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(
-    const std::vector<ProfilePoints>& pointsSetBuffer, 
+    const std::vector<RenderData>& pointsSetBuffer, 
     std::vector<cv::Point3f> features,
     std::vector<std::string> paths) 
 {
@@ -1199,9 +1236,9 @@ std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(
 
     // Iterate through the pointsSetBuffer to create ProfileSheet objects
     for (size_t i = 0; i < pointsSetBuffer.size(); ++i) {
-        const ProfilePoints& points = pointsSetBuffer[i];
+        const RenderData& points = pointsSetBuffer[i];
 
-        // Create a ProfileSheet for each ProfilePoints
+        // Create a ProfileSheet for each RenderData
         ProfileSheet profileSheet;
         profileSheet.profileIndex = static_cast<int>(i);            // Set the profile index
         profileSheet.pointCount = static_cast<int>(points.size());  // Set the number of points in the profile
@@ -1289,7 +1326,7 @@ void MainWindow::replaceProfileSheet(std::vector<ProfileSheet>& profiles, const 
     }
 }
 
-void MainWindow::saveProfileToFile(const ProfilePoints& profile, const ProfileSheet& sheet) {
+void MainWindow::saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet) {
     // Open the YML file for writing
     cv::FileStorage fs(sheet.file_path, cv::FileStorage::WRITE);
 
@@ -1316,4 +1353,21 @@ void MainWindow::saveProfileToFile(const ProfilePoints& profile, const ProfileSh
 
     // Close the file after writing
     fs.release();
+}
+
+std::vector<std::pair<double, double>> MainWindow::convertToRenderData(const ProfileData& data) {
+    std::vector<std::pair<double, double>> profilePoints;
+    
+    // Ensure there are valid points in the buffer
+    if (data.profileBuffer == nullptr || data.validPoints == 0) {
+        return profilePoints; // Return empty vector if no valid points
+    }
+
+    // Extract the x, z coordinates from valid profile points
+    for (size_t i = 0; i < data.validPoints; ++i) {
+        const ProfilePoint& point = data.profileBuffer[i];
+        profilePoints.emplace_back(point.x, point.z); // Add the (x, z) pair to the vector
+    }
+
+    return profilePoints;
 }
