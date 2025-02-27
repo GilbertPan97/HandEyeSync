@@ -36,6 +36,7 @@ subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LineScanners)
 set(SRC_FILES
     src/main.cpp
     src/MainWindow.cpp
+    src/ThreadWorker.cpp
 )
 
 set(QRC_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources.qrc")

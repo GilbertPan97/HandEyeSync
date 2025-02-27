@@ -14,6 +14,7 @@
 #include "PsAlgorithm.h"
 #include "DataProcessor.h"
 #include "LineScannerInterface.h"
+#include "ThreadWorker.h"
 
 #include <QMainWindow>
 #include <QTextEdit>
@@ -27,6 +28,7 @@
 #include <QToolButton>
 #include <QList>
 #include <QHBoxLayout>
+#include <QThread>
 #include <nlohmann/json.hpp>
 
 // Alias for a point that includes x, y, z, w, p, r
@@ -88,6 +90,7 @@ private slots:
 
     void onPlayToggled(bool ckecked);
     void onCaptureClicked();
+    void replotSensorData();
 
 private:
     QToolBar *topToolBar_;              // Top toolbar
@@ -96,6 +99,9 @@ private:
 
     CameraInfo curCamInfo_;             // Store current selected sensor information
     LineScannerInterface sensorApi_;    // Make sensorApi a member variable
+    ThreadWorker *grabWorker_;
+    QThread *grabThread_;
+    bool isGrabing_;
 
     // DockWidgets
     ads::CDockManager* dockManager_;

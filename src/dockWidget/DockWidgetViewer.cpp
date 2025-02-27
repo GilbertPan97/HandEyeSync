@@ -132,7 +132,7 @@ DockWidgetViewer::~DockWidgetViewer() {
     }
 }
 
-void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet) {
+void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet, bool autoFitRange) {
     // Cache current plot data
     if (curPlotData_ == nullptr) {
         curPlotData_ = new RenderData();
@@ -163,7 +163,7 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
     }
 
     // Render profile data to graph(1)
-    if (!isValid(profile_sheet.featurePoint)) {
+    if (isValid(profile_sheet.featurePoint)) {
         // Prepare vectors for x and z coordinates -- Profile
         std::vector<double> keys1;              // x coordinates
         std::vector<double> values1;            // z coordinates
@@ -173,9 +173,11 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
     }
 
     // Automatically fit the axes to the data range
-    customPlot_->xAxis->rescale();
-    customPlot_->yAxis->rescale();
-    customPlot_->rescaleAxes(true);
+    if (autoFitRange) {
+        customPlot_->xAxis->rescale();
+        customPlot_->yAxis->rescale();
+        customPlot_->rescaleAxes(true);
+    }
 
     // Replot to update the view with the new data
     keepDisplayAspectRatio(customPlot_);
@@ -445,8 +447,16 @@ bool DockWidgetViewer::isEmpty(const std::pair<double, double>& fea_point) {
 }
 
 bool DockWidgetViewer::isValid(const cv::Point3f& fea_point) {
-    return !std::isnan(fea_point.x) && !std::isnan(fea_point.y) && !std::isnan(fea_point.z) &&
-           fea_point.x != 0.0f && fea_point.y != 0.0f && fea_point.z != 0.0f;
+    const float epsilon = 1e-6f;  // Define a tolerance value to handle floating point precision issues
+
+    // Check if the point coordinates are not NaN
+    bool isNotNaN = !std::isnan(fea_point.x) && !std::isnan(fea_point.y) && !std::isnan(fea_point.z);
+
+    // Check if any coordinate is not close to zero, using the tolerance value
+    bool isNotZero = (std::abs(fea_point.x) > epsilon || std::abs(fea_point.y) > epsilon || std::abs(fea_point.z) > epsilon);
+
+    // Return true if both conditions are satisfied
+    return isNotNaN && isNotZero;
 }
 
 ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& profile, const ProfileSheet sheet) {

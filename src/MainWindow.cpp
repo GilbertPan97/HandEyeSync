@@ -930,7 +930,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     infoLayout->addWidget(cameraComboBox, 1);       // Add combo box to layout
     layout->addLayout(infoLayout);
     
-    // Initial UI with configured sensor
+    // Initial with configured sensor
     if (curCamInfo_.id !=-1){
         // Check the brand of the current camera info
         if (curCamInfo_.brand == "LMI")
@@ -944,6 +944,8 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
         cameraComboBox->addItem(QString("%1 - %2").arg(curCamInfo_.id)
                     .arg(QString::fromStdString(curCamInfo_.ipAddress)));
     }
+    // Initial action button status
+    actBtn->setChecked(curCamInfo_.isConnected);
 
     // Scan sensor button
     QPushButton *scanButton = new QPushButton("Scan", &dialog); 
@@ -1018,8 +1020,15 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     });
 
     // Connect the buttons to slot functions, including connect and disconnect.
-    actBtn->setChecked(false);      // Forbid default setChecked when action is triggered.
     connect(connectButton, &QPushButton::clicked, [=]() {
+        // Create a new thread for camera grabbing
+        grabThread_ = new QThread(this); 
+        grabWorker_ = new ThreadWorker(&sensorApi_);    // Grab data cache in sensorApi_
+        grabWorker_->moveToThread(grabThread_);
+        connect(grabThread_, &QThread::started, grabWorker_, &ThreadWorker::startGrabbing);
+        // connect(grabThread, &QThread::finished, grabWorker, &ThreadWorker::stopGrabbing);
+        connect(grabWorker_, &ThreadWorker::updatePlot, this, &MainWindow::replotSensorData);
+
         // Check if the IP address is valid (not empty)
         if (curCamInfo_.ipAddress.empty() || curCamInfo_.ipAddress == "0.0.0.0") {
             // Show warning message if IP address is not set
@@ -1048,6 +1057,10 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     });
 
     connect(disconnectButton, &QPushButton::clicked, [=]() {
+        // Destroy grab thread
+        delete grabThread_;
+        delete grabWorker_;
+
         // Attempt to disconnect to the camera
         CameraStatus status = sensorApi_.Disconnect(curCamInfo_.ipAddress);
         if (status == CameraStatus::DEV_NOT_CONNECTED) {
@@ -1105,15 +1118,48 @@ void MainWindow::updateSeneorInfoGroupBox(QGroupBox *statusGroupBox, const Camer
 }
 
 void MainWindow::onPlayToggled(bool ckecked) {
+    // Check sensor connect first
+    if (!curCamInfo_.isConnected) {
+        QMessageBox::warning(this, "Input Error", "Please connect sensor before open it.");
+        return;
+    }
 
+    // Check the current icon and toggle between play and pause icons
+    if (!isGrabing_) {
+        // Switch to pause icon
+        viewerWin_->getButtonList()[0]->setIcon(QIcon(":/icons/pause.png"));
+        viewerWin_->getButtonList()[0]->setToolTip("Pause camera grab");
+        isGrabing_ = true;
+
+        // Start the thread, triggering ContinueGrabPlot, sensor shouble open first
+        sensorApi_.SetStatus(true);
+        grabThread_->start();
+    } else {
+        // Switch to play icon
+        viewerWin_->getButtonList()[0]->setIcon(QIcon(":/icons/play.png"));
+        viewerWin_->getButtonList()[0]->setToolTip("Run camera grab");
+
+        // isPlay set to false to stop thread loop
+        isGrabing_ = false;
+        grabWorker_->stopGrabbing();
+        grabThread_->quit();
+        sensorApi_.SetStatus(false);  // Stop the camera
+    }
 }
 
 void MainWindow::onCaptureClicked() {
-    sensorApi_.SetStatus(true);
-    sensorApi_.GrabOnce();
+    // sensorApi_.SetStatus(true);
+    // sensorApi_.GrabOnce();
+    // RenderData profile = convertToRenderData(sensorApi_.RetriveData());
+    // ProfileSheet sheet;
+    // viewerWin_->plotPoints(profile, false, sheet);
+}
+
+void MainWindow::replotSensorData() {
+    // TODO: Retrive data range
     RenderData profile = convertToRenderData(sensorApi_.RetriveData());
     ProfileSheet sheet;
-    viewerWin_->plotPoints(profile, false, sheet);
+    viewerWin_->plotPoints(profile, false, sheet, false);
 }
 
 // Placeholder slots for menu actions

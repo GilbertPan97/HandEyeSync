@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Remove invalid points from the profile
+// BUG: Remove invalid points from the profile
 void RemoveInvalidPoints(ProfileData* data) {
     if (data == NULL || data->profileBuffer == NULL) {
         return; // No valid data to process
@@ -18,7 +18,7 @@ void RemoveInvalidPoints(ProfileData* data) {
     size_t validCount = 0;
 
     // Iterate through the profileBuffer and filter out invalid points
-    for (size_t i = 0; i < data->validPoints; ++i) {
+    for (size_t i = 0; i < data->totalCount; ++i) {
         if (data->profileBuffer[i].x != INVALID_RANGE_DOUBLE && 
             data->profileBuffer[i].z != INVALID_RANGE_DOUBLE) {
             validPoints[validCount++] = data->profileBuffer[i]; // Store valid point

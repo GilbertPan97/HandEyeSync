@@ -55,7 +55,7 @@ public:
      *                      If true, the points will be connected with lines. If false, the points will
      *                      be displayed as discrete points without any connecting lines.
      */
-    void plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet);
+    void plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet, bool autoFitRange=true);
 
     /**
      * @brief Handles resize events for the DockWidgetViewer.
