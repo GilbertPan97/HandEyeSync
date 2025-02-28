@@ -30,11 +30,11 @@ struct CameraInfo {
 
     // Default constructor
     CameraInfo() 
-        : id(-1), brand("N/A"), ipAddress("0.0.0.0"), isConnected(false) {} // Initialize with default values
+        : id(-1), brand("N/A"), ipAddress("0.0.0.0"), isConnected(false) {}
 
     // Parameterized constructor
     CameraInfo(int cameraId, const std::string& cameraBrand, const std::string& ip)
-        : id(cameraId), brand(cameraBrand), ipAddress(ip), isConnected(false) {} // Default isConnected to false
+        : id(cameraId), brand(cameraBrand), ipAddress(ip), isConnected(false) {}
 };
 
 // Define the Line Scanner Interface class

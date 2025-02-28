@@ -1015,7 +1015,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
                 }
             });
         } else {
-            cameraInfoLabel->setText("Failed to scan cameras."); // Display error message
+            cameraInfoLabel->setText("Failed to scan cameras.");
         }
     });
 
@@ -1026,7 +1026,6 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
         grabWorker_ = new ThreadWorker(&sensorApi_);    // Grab data cache in sensorApi_
         grabWorker_->moveToThread(grabThread_);
         connect(grabThread_, &QThread::started, grabWorker_, &ThreadWorker::startGrabbing);
-        // connect(grabThread, &QThread::finished, grabWorker, &ThreadWorker::stopGrabbing);
         connect(grabWorker_, &ThreadWorker::updatePlot, this, &MainWindow::replotSensorData);
 
         // Check if the IP address is valid (not empty)
@@ -1057,10 +1056,6 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     });
 
     connect(disconnectButton, &QPushButton::clicked, [=]() {
-        // Destroy grab thread
-        delete grabThread_;
-        delete grabWorker_;
-
         // Attempt to disconnect to the camera
         CameraStatus status = sensorApi_.Disconnect(curCamInfo_.ipAddress);
         if (status == CameraStatus::DEV_NOT_CONNECTED) {
@@ -1075,6 +1070,15 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
             emit sensorConnStatue(false);
             disconnect(viewerWin_->getButtonList()[0], &QPushButton::toggled, this, &MainWindow::onPlayToggled);
             disconnect(viewerWin_->getButtonList()[1], &QPushButton::clicked, this, &MainWindow::onCaptureClicked);
+
+            // Stop the grabbing process
+            grabWorker_->stopGrabbing();  // Ensure the worker stops grabbing
+            grabThread_->quit();
+            grabThread_->wait();  // Blocks until the thread finishes
+
+            // Stop and destroy grab thread
+            delete grabThread_;
+            delete grabWorker_;
         } else {
             // Show error message if connection fails
             QMessageBox::critical(this, "Error", "Failed to disconnect to the camera.");
@@ -1125,7 +1129,7 @@ void MainWindow::onPlayToggled(bool ckecked) {
     }
 
     // Check the current icon and toggle between play and pause icons
-    if (!isGrabing_) {
+    if (ckecked) {
         // Switch to pause icon
         viewerWin_->getButtonList()[0]->setIcon(QIcon(":/icons/pause.png"));
         viewerWin_->getButtonList()[0]->setToolTip("Pause camera grab");
@@ -1156,10 +1160,20 @@ void MainWindow::onCaptureClicked() {
 }
 
 void MainWindow::replotSensorData() {
-    // TODO: Retrive data range
-    RenderData profile = convertToRenderData(sensorApi_.RetriveData());
+    // Step 1: Retrieve data from the sensor
+    auto sensorData = sensorApi_.RetriveData();
+
+    // Step 2: Convert the data to the renderable format
+    RenderData profile = convertToRenderData(sensorData);
+    
+    // Step 3: Prepare the ProfileSheet (assuming it contains relevant display settings)
     ProfileSheet sheet;
+    
+    // Step 4: Plot the points on the viewer window
     viewerWin_->plotPoints(profile, false, sheet, false);
+    
+    // Step 5: Refresh the viewer window (or any relevant UI element)
+    viewerWin_->update();
 }
 
 // Placeholder slots for menu actions

@@ -95,6 +95,8 @@
         "gocatorcommon.h": "c",
         "clog.h": "c",
         "sensorcommon.h": "c",
-        "qstring": "cpp"
+        "qstring": "cpp",
+        "qthread": "cpp",
+        "qobject": "cpp"
     }
 }

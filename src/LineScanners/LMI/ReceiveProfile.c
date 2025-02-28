@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// BUG: Remove invalid points from the profile
 void RemoveInvalidPoints(ProfileData* data) {
     if (data == NULL || data->profileBuffer == NULL) {
         return; // No valid data to process
