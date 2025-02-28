@@ -83,12 +83,12 @@ CameraStatus LineScannerInterface::Connect(const std::string& cameraIp) {
     } else if (curBrand_ == CameraBrand::SSZN) {
         // SSZN cameras don't require explicit connection
         clog("Info: SSZN camera does not require explicit connection, it will open directly.");
-        if(Sszn_Open(&sszn_, ip_s, 0))      // FIXME: Divice id should be dynamical for multi sensor connect
+        if(Sszn_Open(&sszn_, ip_s, 0)==EXIT_SUCCESS)      // FIXME: Divice id should be dynamical for multi sensor connect
             status = kOK;
     } else {
         // If an unknown brand is set, return an error status
-        free((void*)ip_s); // Free the duplicated string
-        return CameraStatus::DEV_ERROR; // Unknown brand type
+        free((void*)ip_s);                  // Free the duplicated string
+        return CameraStatus::DEV_ERROR;     // Unknown brand type
     }
 
     free((void*)ip_s);      // Free the duplicated string after using it
@@ -106,7 +106,7 @@ CameraStatus LineScannerInterface::Disconnect() {
     } else if (curBrand_ == CameraBrand::SSZN) {
         // SSZN camera does not require explicit disconnection
         clog("Info: SSZN camera does not require explicit disconnection, it will close directly.");
-        if(Sszn_Close(&sszn_))
+        if(Sszn_Close(&sszn_)==EXIT_SUCCESS)
             status = kOK;
     } else {
         return CameraStatus::DEV_ERROR;  // Unsupported camera brand
@@ -127,7 +127,7 @@ CameraStatus LineScannerInterface::Disconnect(const std::string& cameraIp) {
     } else if (curBrand_ == CameraBrand::SSZN) {
         // SSZN camera does not require explicit disconnection
         clog("Info: SSZN camera does not require explicit disconnection, it will close directly.");
-        if(Sszn_Close(&sszn_))
+        if(Sszn_Close(&sszn_)==EXIT_SUCCESS)
             status = kOK;
     } else {
         free((void*)ip_s);  // Free the duplicated IP address memory
@@ -174,7 +174,7 @@ CameraStatus LineScannerInterface::GrabOnce() {
     } else if (curBrand_ == CameraBrand::SSZN) {
         // For SSZN cameras, use the SSZN-specific function (assuming it's named similarly)
         // FIXME: Sszn_ReceiveProfileData throw a bug when build
-        // success = Sszn_ReceiveProfileData(&sszn_, &profile_);
+        success = Sszn_ReceiveProfileData(&sszn_, &profile_);
     } else {
         return CameraStatus::DEV_ERROR;  // Unsupported camera brand
     }

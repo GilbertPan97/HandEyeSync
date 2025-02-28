@@ -30,9 +30,10 @@ bool Sszn_Discover(Sensor_List* cameraList) {
     // Iterate over the found devices and populate the camera list
     for (int i = 0; i < ReadNum; ++i) {
         // Populate camera info (assign a unique ID for each device)
-        cameraList->cam_info[i].id = i + 1;
+        cameraList->cam_info[i].id = i;
         
         // Convert the 4-byte IP address to a string format (e.g., "192.168.0.1")
+        // FIXME: Multi camera pDevices ip parse fail
         snprintf(cameraList->cam_info[i].ipAddress, sizeof(cameraList->cam_info[i].ipAddress),
                  "%d.%d.%d.%d", pDevices[i].abyIpAddress[0], pDevices[i].abyIpAddress[1],
                  pDevices[i].abyIpAddress[2], pDevices[i].abyIpAddress[3]);
