@@ -44,6 +44,35 @@ QLineEdit {
     font-size: 12px;  /* Set font size */
 }
 
+/* ===================== QSpinBox Style ===================== */
+
+QSpinBox {
+    background-color: #353535;  /* Set background color to dark */
+    color: rgb(255, 255, 255);  /* Set text color to white */
+    border: 2px solid rgb(200, 200, 200);  /* Set border color */
+    border-radius: 4px;  /* Set rounded corners */
+    padding: 2px 8px;  /* Set padding */
+    font-size: 12px;  /* Set font size */
+}
+
+/* Style for spin box arrows */
+QSpinBox::up-button, QSpinBox::down-button {
+    width: 16px;  /* Set button width */
+    background-color: #454545;  /* Slightly lighter background for buttons */
+    border: 1px solid rgb(200, 200, 200);  /* Border color */
+    border-radius: 2px;  /* Slightly rounded corners */
+}
+
+/* Arrow button hover effect */
+QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+    background-color: #505050;  /* Slightly lighter when hovered */
+}
+
+/* Arrow button pressed effect */
+QSpinBox::up-button:pressed, QSpinBox::down-button:pressed {
+    background-color: #606060;  /* Even lighter when pressed */
+}
+
 /* ===================== QComboBox Style ===================== */
 QComboBox {
     background-color: #353535;   /* Set background color to dark */

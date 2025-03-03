@@ -618,12 +618,13 @@ void MainWindow::onAddImgActionTriggered() {
             ProfileParser profileParser(folderPath.toStdString(), dataFormat.toStdString());            // Create profile parser
             std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };      // TODO: Place progCallback function out of mainwindow
             profilesBuffer_ = profileParser.parseProfileFiles("profile", progCallback);
-            features = profileParser.parseFeatureFiles("corner_point");
             files = profileParser.getFilePaths();
+            features = profileParser.parseFeatureFiles("corner_point");
         } catch (const std::exception& e) {
             // If any exception is thrown, log the failure message
-            QMessageBox::warning(this, "Error", "Profiles/Features data parsing fail.");
-            logWin_->log(QString("Load Dataset Failed: %1").arg(e.what()));
+            QString w_msg = QString("Load Dataset Failed: %1").arg(e.what());
+            QMessageBox::warning(this, "Warning", w_msg);
+            logWin_->log(w_msg);
         } catch (...) {
             // Catch any other unexpected exceptions
             QMessageBox::warning(this, "Error", "Profiles/Features data parsing fail.");
@@ -708,47 +709,10 @@ void MainWindow::onSettingButtonReleased() {
 
     // Create a layout for the dialog
     QVBoxLayout *mainLayout0 = new QVBoxLayout(settingsDialog);
-    QHBoxLayout *mainLayout = new QHBoxLayout();
-
-    // Create a layout for the image (on the top)
-    QGroupBox *imageGBox = new QGroupBox("Model Configuration");
-    QVBoxLayout *modelLayout = new QVBoxLayout();
-
-    // Load the image and scale it to fit within the fixed square size
-    QLabel *imageLabel = new QLabel(); 
-    QPixmap imagePixmap("");    //:/images/icon.png
-    imageLabel->setPixmap(imagePixmap.scaled(300, 300, Qt::KeepAspectRatio));  // Scale image to fit
-    imageLabel->setFixedSize(300, 300);     // Ensure imageLabel is always 300x300px
-    imageLabel->setStyleSheet(
-        "background-color:rgb(200, 200, 200);"
-        "color: #444444;"
-        "border: 2px solid #666666;"
-    );
-    imageLabel->setAlignment(Qt::AlignCenter);
-
-    // Create a horizontal layout to place the label and combo box next to each other
-    // Feature Point Direction label and ComboBox
-    QVBoxLayout *configLayout = new QVBoxLayout();
-    QLabel *featureDirectionLabel = new QLabel("Feature Point Direction:");
-    QComboBox *featureDirectionComboBox = new QComboBox();
-    featureDirectionComboBox->addItem("+Y");
-    featureDirectionComboBox->addItem("-Y");
-    QHBoxLayout *featureDirectionLayout = new QHBoxLayout();
-    featureDirectionLayout->addWidget(featureDirectionLabel);
-    featureDirectionLayout->addWidget(featureDirectionComboBox);
-    configLayout->addLayout(featureDirectionLayout);
-
-    // Add the image label to the image layout
-    modelLayout->addWidget(imageLabel);
-    modelLayout->addLayout(configLayout);
-    imageGBox->setLayout(modelLayout);
-
-    // Create a layout for the property table (on the right)
-    QVBoxLayout *propertiesLayout = new QVBoxLayout();
+    QHBoxLayout *mainLayout = new QHBoxLayout();        // Not include "Confirm" and "Cancel" buttons
 
     // Calibration Model label and ComboBox
     QLabel *calibModelLabel = new QLabel("Calibration Model:");
-    // calibModelLabel->setStyleSheet("font-weight: bold;  font-size: 10pt;");
     QComboBox *calibModelComboBox = new QComboBox();
     calibModelComboBox->addItem("Sphere");
     calibModelComboBox->addItem("Edge");
@@ -758,7 +722,30 @@ void MainWindow::onSettingButtonReleased() {
     calibModelLayout->addWidget(calibModelLabel);
     calibModelLayout->addWidget(calibModelComboBox);
 
-    QGroupBox *configGroupBox = new QGroupBox("Algorithm Setting");
+    // Set initial "CalibrationModel" value based on calibMap_
+    if (calibMap_.contains("CalibrationModel")) {
+        QString calibModel = QString::fromStdString(calibMap_["CalibrationModel"]);
+        if (calibModel == "Sphere") {
+            calibModelComboBox->setCurrentIndex(0);
+        } else if (calibModel == "Edge") {
+            calibModelComboBox->setCurrentIndex(1);
+        }
+    } 
+    else {
+        calibMap_["CalibrationModel"] = "Sphere";
+        calibModelComboBox->setCurrentIndex(0);
+    }
+
+    /* =============================================== */
+    // Create a layout for the image (on the top)
+    QGroupBox *imageGBox = new QGroupBox("Model Configuration");
+    updateCalibModelGroupBox(imageGBox, calibMap_);
+
+    /* =============================================== */
+
+    // Create algorithm "configGroutBox".
+    QVBoxLayout *propertiesLayout = new QVBoxLayout();
+    QGroupBox *configGroupBox = new QGroupBox("Algorithm Setting"); 
 
     // Add the horizontal layout to the properties layout
     propertiesLayout->addLayout(calibModelLayout);
@@ -784,66 +771,34 @@ void MainWindow::onSettingButtonReleased() {
     // Set the dialog's layout
     settingsDialog->setLayout(mainLayout);
 
-    // Set initial values based on calibMap_
-    if (calibMap_.contains("CalibrationModel")) {
-        QString calibModel = QString::fromStdString(calibMap_["CalibrationModel"]);
-        if (calibModel == "Sphere") {
-            calibModelComboBox->setCurrentIndex(0);
-        } else if (calibModel == "Edge") {
-            calibModelComboBox->setCurrentIndex(1);
-        }
-    } 
-    else {
-        calibMap_["CalibrationModel"] = "Sphere";
-        calibModelComboBox->setCurrentIndex(0);
-    }
-
-    if (calibMap_.contains("FeaturePointDirection")) {
-        QString featureDirection = QString::fromStdString(calibMap_["FeaturePointDirection"]);
-        if (featureDirection == "+Y") {
-            featureDirectionComboBox->setCurrentIndex(0);
-        } else if (featureDirection == "-Y") {
-            featureDirectionComboBox->setCurrentIndex(1);
-        }
-    }
-    else {
-        calibMap_["FeaturePointDirection"] = "+Y";
-        featureDirectionComboBox->setCurrentIndex(0);
-    }
-
     // Connect the calibModelComboBox signal to update calibMap_["CalibrationModel"]
     connect(calibModelComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            [=](int index) {
-                // Update calibMap_["CalibrationModel"] based on the selected item
-                if (index == 0) {
-                    calibMap_["CalibrationModel"] = "Sphere";
-                } else if (index == 1) {
-                    calibMap_["CalibrationModel"] = "Edge";
-                }
-                logWin_->log("Calibration Model set to: " + QString::fromStdString(calibMap_["CalibrationModel"]));
-            });
-
-    // Connect the featureDirectionComboBox signal to update calibMap_["FeaturePointDirection"]
-    connect(featureDirectionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            [=](int index) {
-                // Update calibMap_["FeaturePointDirection"] based on the selected item
-                if (index == 0) {
-                    calibMap_["FeaturePointDirection"] = "+Y";
-                } else if (index == 1) {
-                    calibMap_["FeaturePointDirection"] = "-Y";
-                }
-                logWin_->log("Feature Point Direction set to: " + QString::fromStdString(calibMap_["FeaturePointDirection"]));
-            });
+        [=](int index) {
+            // Update calibMap_["CalibrationModel"] based on the selected item
+            if (index == 0) {
+                calibMap_["CalibrationModel"] = "Sphere";
+            } else if (index == 1) {
+                calibMap_["CalibrationModel"] = "Edge";
+            }
+            logWin_->log("Calibration Model set to: " + QString::fromStdString(calibMap_["CalibrationModel"]));
+            updateCalibModelGroupBox(imageGBox, calibMap_);
+    });
 
     // Connect the confirm button to process data
     connect(confirmButton, &QPushButton::clicked, [=]() {
-        settingsDialog->accept();  // Close the dialog
+        settingsDialog->accept();       // Close the dialog
+
         // Proceed with data processing
-        if (!profilesBuffer_.empty()) {
+        if (!profilesBuffer_.empty() && calibMap_["CalibrationModel"] == "Sphere" 
+            && calibMap_.contains("FeaturePointDirection") && calibMap_.contains("SphereRadius")) 
+        {
             auto profile_lines = convertPointsSetBuffer(profilesBuffer_);
             DataProc proc(profile_lines, CalibObj::SPHERE);
-            // TODO: Load rad_sphere from UI
-            float rad_sphere = 80 / 2.0;
+
+            // Load sphere parameters.
+            float rad_sphere = calibMap_["SphereRadius"];
+
+            // TODO: Show processing
             std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
             writeFeaturePointsToProfileSheets(ctr_pnts, profileSheets_);
         }
@@ -1119,6 +1074,109 @@ void MainWindow::updateSeneorInfoGroupBox(QGroupBox *statusGroupBox, const Camer
 
     // Apply the new layout to the group box
     statusGroupBox->setLayout(statusLayout);  // Make sure to set the new layout
+}
+
+void MainWindow::updateCalibModelGroupBox(QGroupBox *modelGroupBox, nlohmann::json &calib_map) {
+    // Clear all items in the old layout
+    QLayout *oldLayout = modelGroupBox->layout();
+    if (oldLayout) {
+        QWidgetList widgets = modelGroupBox->findChildren<QWidget*>();
+        for (QWidget* widget : widgets) {
+            widget->deleteLater(); // Delete widgets from the layout
+        }
+        delete oldLayout;
+    } 
+    // Create a new vertical layout for the group box
+    QVBoxLayout *modelLayout = new QVBoxLayout(modelGroupBox);
+
+    // Try to get calibration model from map.
+    QString calibModel = QString();
+    if (calibMap_.contains("CalibrationModel"))
+        calibModel = QString::fromStdString(calibMap_["CalibrationModel"]);
+
+    // Load the image and scale it to fit within the fixed square size
+    QLabel *imageLabel = new QLabel(); 
+    QPixmap imagePixmap("");    //:/images/icon.png
+    imageLabel->setPixmap(imagePixmap.scaled(300, 300, Qt::KeepAspectRatio));  // Scale image to fit
+    imageLabel->setFixedSize(300, 300);     // Ensure imageLabel is always 300x300px
+    imageLabel->setStyleSheet(
+        "background-color:rgb(200, 200, 200);"
+        "color: #444444;"
+        "border: 2px solid #666666;"
+    );
+    imageLabel->setAlignment(Qt::AlignCenter);
+
+    // Create a horizontal layout to place the label and combo box next to each other
+    // Feature Point Direction label and ComboBox
+    QVBoxLayout *configLayout = new QVBoxLayout();
+
+    if (calibModel == "Sphere") {
+        QHBoxLayout *featureDirectionLayout = new QHBoxLayout();
+        QLabel *featureDirectionLabel = new QLabel("Feature Point Direction:");
+        QComboBox *featureDirectionComboBox = new QComboBox();
+        featureDirectionComboBox->addItem("+Y");
+        featureDirectionComboBox->addItem("-Y");
+        featureDirectionLayout->addWidget(featureDirectionLabel);
+        featureDirectionLayout->addWidget(featureDirectionComboBox);
+        configLayout->addLayout(featureDirectionLayout);
+    
+        QHBoxLayout *sphereRadiusLayout = new QHBoxLayout();
+        QLabel *sphereRadiusLabel = new QLabel("Sphere Radius:");
+        QSpinBox *sphereRadiusSpinBox = new QSpinBox();
+        sphereRadiusSpinBox->setRange(1, 100);
+        sphereRadiusSpinBox->setSuffix(" mm");
+        sphereRadiusLayout->addWidget(sphereRadiusLabel);
+        sphereRadiusLayout->addWidget(sphereRadiusSpinBox);
+        configLayout->addLayout(sphereRadiusLayout);
+
+        // Initial UI with calib_map, or set default calib_map value
+        if (calib_map.contains("FeaturePointDirection")) {
+            QString featureDirection = QString::fromStdString(calib_map["FeaturePointDirection"]);
+            if (featureDirection == "+Y") {
+                featureDirectionComboBox->setCurrentIndex(0);
+            } else if (featureDirection == "-Y") {
+                featureDirectionComboBox->setCurrentIndex(1);
+            }
+        }
+        else {
+            calib_map["FeaturePointDirection"] = "+Y";
+            featureDirectionComboBox->setCurrentIndex(0);
+        }
+
+        if (calib_map.contains("SphereRadius")) {
+            sphereRadiusSpinBox->setValue(calib_map["SphereRadius"]);
+        }
+        else {
+            calib_map["SphereRadius"] = 40;
+            sphereRadiusSpinBox->setValue(calib_map["SphereRadius"]);
+        }
+
+        // Connect the featureDirectionComboBox signal to update calibMap_["FeaturePointDirection"]
+        connect(featureDirectionComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            [=](int index) {
+                // Update calibMap_["FeaturePointDirection"] based on the selected item
+                if (index == 0) {
+                    calibMap_["FeaturePointDirection"] = "+Y";
+                } else if (index == 1) {
+                    calibMap_["FeaturePointDirection"] = "-Y";
+                }
+                logWin_->log("Feature Point Direction set to: " + QString::fromStdString(calibMap_["FeaturePointDirection"]));
+        });
+
+        // Connect valueChanged signal to an anonymous lambda function
+        connect(sphereRadiusSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            [=](int value) {
+                calibMap_["SphereRadius"] = value;  // Store value as an integer
+                logWin_->log("Sphere Radius set to: " + QString::number(value) + " mm");
+        });
+    }
+
+    // Add the image label to the image layout
+    modelLayout->addWidget(imageLabel);
+    modelLayout->addLayout(configLayout);
+
+    // Apply the new layout to the group box
+    modelGroupBox->setLayout(modelLayout);
 }
 
 void MainWindow::onPlayToggled(bool ckecked) {

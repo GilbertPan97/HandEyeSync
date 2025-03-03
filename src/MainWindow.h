@@ -87,6 +87,7 @@ private slots:
     void onRunButtonReleased();
     void showScanCameraDialog(QAction *actBtn);
     void updateSeneorInfoGroupBox(QGroupBox *statusGroupBox, const CameraInfo &curCamInfo_);
+    void updateCalibModelGroupBox(QGroupBox *modelGroupBox, nlohmann::json &calibMap);
 
     void onPlayToggled(bool ckecked);
     void onCaptureClicked();

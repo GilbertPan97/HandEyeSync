@@ -42,7 +42,7 @@ foreach(DLL ${Go_SDK_DYNAMIC_LIBS})
     )
 endforeach()
 
-if(ON)
+if(OFF)
     add_executable(GoDriver_test test.c)
     target_link_libraries(GoDriver_test PRIVATE Go_Driver)
     target_include_directories(GoDriver_test PRIVATE 

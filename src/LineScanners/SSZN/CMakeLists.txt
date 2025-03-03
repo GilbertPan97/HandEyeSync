@@ -35,7 +35,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
 
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-if(ON)
+if(OFF)
     add_executable(Sszn_test test.cpp)
     target_link_libraries(Sszn_test PRIVATE ${TARGET_NAME})
     target_include_directories(Sszn_test PRIVATE 

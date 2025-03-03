@@ -23,21 +23,7 @@ bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
     }
 
     // Start measurement (capturing data)
-
     int result;
-    // // SR7IF_StartMeasure(handle->DEVICE_ID, 20000);
-    // if (result != 0) {
-    //     return EXIT_FAILURE; // Measurement start failed
-    // }
-
-    // Bind data reception
-    // unsigned int *pEncoder = NULL;
-    // result = SR7IF_GetSingleProfile(handle->DEVICE_ID, pProfileData, pEncoder);
-    // // result = SR7IF_ReceiveData(handle->DEVICE_ID, handle->DataObject);
-    // if (result != 0) {
-    //     SR7IF_StopMeasure(handle->DEVICE_ID); // Stop measurement in case of failure
-    //     return EXIT_FAILURE; // Data binding failed
-    // }
 
     // Get the profile point count (width of the profile)
     profilePointCount = SR7IF_ProfileDataWidth(handle->DEVICE_ID, handle->DataObject);
@@ -50,6 +36,15 @@ bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
         return EXIT_FAILURE;    // Memory allocation failure
     }
 
+    // Get a single profile
+    unsigned int pEncoder = 0;
+    result = SR7IF_GetSingleProfile(handle->DEVICE_ID, pProfileData, &pEncoder);
+    if (result != 0) {
+        free(pProfileData);     // Free memory
+        SR7IF_StopMeasure(handle->DEVICE_ID);   // Stop measurement in case of failure
+        return EXIT_FAILURE;    // Data retrieval failed
+    }
+
     // Allocate memory for gray intensity data
     grayData = (unsigned char*)malloc(profilePointCount * sizeof(unsigned char));
     if (grayData == NULL) {
@@ -59,17 +54,7 @@ bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
     }
 
     // Get intensity data (gray scale values)
-    // result = SR7IF_GetIntensityData(handle->DEVICE_ID, handle->DataObject, grayData);
-    // if (result != 0) {
-    //     free(pProfileData);     // Free memory
-    //     free(grayData);         // Free memory
-    //     SR7IF_StopMeasure(handle->DEVICE_ID);   // Stop measurement in case of failure
-    //     return EXIT_FAILURE;    // Data retrieval failed
-    // }
-
-    // Get a single profile
-    unsigned int pEncoder = 0;
-    result = SR7IF_GetSingleProfile(handle->DEVICE_ID, pProfileData, &pEncoder);
+    result = SR7IF_GetIntensityData(handle->DEVICE_ID, handle->DataObject, grayData);
     if (result != 0) {
         free(pProfileData);     // Free memory
         free(grayData);         // Free memory
@@ -77,16 +62,8 @@ bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
         return EXIT_FAILURE;    // Data retrieval failed
     }
 
-    // Convert received data to XZ coordinates
-    profileBuffer = (ProfilePoint*)malloc(profilePointCount * sizeof(ProfilePoint));
-    if (profileBuffer == NULL) {
-        free(pProfileData);     // Free memory
-        free(grayData);         // Free memory
-        SR7IF_StopMeasure(handle->DEVICE_ID);   // Stop measurement in case of failure
-        return EXIT_FAILURE;    // Memory allocation failure
-    }
-
     // Initialize data buffer and convert to ProfileXZ
+    profileBuffer = (ProfilePoint*)malloc(profilePointCount * sizeof(ProfilePoint));
     data->profileBuffer = profileBuffer;
     data->totalCount = profilePointCount;
     data->validPoints = profilePointCount;
