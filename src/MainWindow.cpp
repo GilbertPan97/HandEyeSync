@@ -613,10 +613,10 @@ void MainWindow::onAddImgActionTriggered() {
         profilesBuffer_.clear();
         std::vector<cv::Point3f> features;
         std::vector<std::string> files;
+        ProfileParser profileParser(folderPath.toStdString(), dataFormat.toStdString());            // Create profile parser
+        std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };      // TODO: Place progCallback function out of mainwindow
         try { 
             // Attempt to parse the profile files and get the points
-            ProfileParser profileParser(folderPath.toStdString(), dataFormat.toStdString());            // Create profile parser
-            std::function<void(int)> progCallback = [this](int prog) { setWidgetProgress(prog); };      // TODO: Place progCallback function out of mainwindow
             profilesBuffer_ = profileParser.parseProfileFiles("profile", progCallback);
             files = profileParser.getFilePaths();
             features = profileParser.parseFeatureFiles("corner_point");
@@ -632,7 +632,7 @@ void MainWindow::onAddImgActionTriggered() {
         }
 
         // Profile sheets record
-        profileSheets_ = parseProfilePointsToProfileSheets(profilesBuffer_, features, files);
+        profileSheets_ = parseProfilePointsToProfileSheets(profilesBuffer_, features, profileParser.getProfileType(), files);
 
         // Set browserWin_ profile preview
         browserWin_->setContentFromPoints(profilesBuffer_);
@@ -736,12 +736,9 @@ void MainWindow::onSettingButtonReleased() {
         calibModelComboBox->setCurrentIndex(0);
     }
 
-    /* =============================================== */
     // Create a layout for the image (on the top)
     QGroupBox *imageGBox = new QGroupBox("Model Configuration");
     updateCalibModelGroupBox(imageGBox, calibMap_);
-
-    /* =============================================== */
 
     // Create algorithm "configGroutBox".
     QVBoxLayout *propertiesLayout = new QVBoxLayout();
@@ -800,7 +797,7 @@ void MainWindow::onSettingButtonReleased() {
 
             // TODO: Show processing
             std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
-            writeFeaturePointsToProfileSheets(ctr_pnts, profileSheets_);
+            writeFeaturePointsToProfileSheets(ctr_pnts, "Sphere", profileSheets_);
         }
         else {
             QMessageBox::warning(this, "Error", "Profiles dataset has not been uploaded.");
@@ -1348,6 +1345,7 @@ std::vector<Eigen::Vector<float, 6>> MainWindow::convertRobDataBuffer(const std:
 std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(
     const std::vector<RenderData>& pointsSetBuffer, 
     std::vector<cv::Point3f> features,
+    std::string feature_type,
     std::vector<std::string> paths) 
 {
     std::vector<ProfileSheet> featuresSheet;
@@ -1361,6 +1359,7 @@ std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(
         profileSheet.profileIndex = static_cast<int>(i);            // Set the profile index
         profileSheet.pointCount = static_cast<int>(points.size());  // Set the number of points in the profile
         profileSheet.file_path = paths[i];
+        profileSheet.type = feature_type;
         profileSheet.enableFilter = false;                          // Set the filter flag (can be adjusted)
         profileSheet.filterType = "";                               // Set filter type (can be adjusted)
 
@@ -1388,7 +1387,7 @@ std::vector<cv::Point3f> MainWindow::extractFeaturePointsFromProfileSheet(const 
 }
 
 // Function to write cv::Point3f data into ProfileSheet objects
-void MainWindow::writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::vector<ProfileSheet>& profileSheets) {
+void MainWindow::writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::string type, std::vector<ProfileSheet>& profileSheets) {
     // Check if the profileSheets is empty
     if (profileSheets.empty()) {
         // If it's empty, push new ProfileSheet objects for each point in 'points'
@@ -1397,6 +1396,7 @@ void MainWindow::writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f
             profile.profileIndex = static_cast<int>(i);  // Set profile index
             profile.pointCount = 1;                      // Set point count to 1 for each feature point
             profile.featurePoint = points[i];            // Set the feature point
+            profile.filterType = type;                   
             profile.enableFilter = false;                // Set the filter status (can be adjusted based on your logic)
             profile.filterType = "";                     // Set the filter type (can be adjusted based on your logic)
 
@@ -1408,7 +1408,7 @@ void MainWindow::writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f
         if (profileSheets.size() == points.size()) {
             for (size_t i = 0; i < points.size(); ++i) {
                 profileSheets[i].featurePoint = points[i];  // Directly update the feature point
-                // You can also update other fields if needed, such as enabling the filter
+                profileSheets[i].type = type;     
             }
         } else {
             // Handle the case where the sizes don't match (you could choose to clear and rewrite, or handle the mismatch)

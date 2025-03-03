@@ -169,6 +169,14 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
         std::vector<double> values1;            // z coordinates
         keys1.push_back(profile_sheet.featurePoint.x);           // Add x coordinate to keys1
         values1.push_back(profile_sheet.featurePoint.z);         // Add z coordinate to values1
+        if (profile_sheet.type == "Sphere")
+            customPlot_->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 12));
+        else if (profile_sheet.type == "Edge")
+            customPlot_->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 12));
+        else 
+            customPlot_->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 12));
+
+        
         customPlot_->graph(1)->addData(QVector<double>::fromStdVector(keys1), QVector<double>::fromStdVector(values1));
     }
 

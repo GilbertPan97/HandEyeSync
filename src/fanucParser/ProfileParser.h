@@ -17,7 +17,8 @@ namespace fs = std::filesystem;
 class ProfileParser {
 private:
     std::vector<fs::path> filePaths_;
-    std::string normalizedType_;
+    std::string normalizedType_;    // file format
+    std::vector<std::string> profilesType_;
 
 public:
     // Constructor
@@ -37,6 +38,8 @@ public:
     std::vector<cv::Point3f> ProfileParser::parseFeatureFiles( const std::string& scanLineNodeName);
 
     std::vector<std::string> getFilePaths();
+
+    std::string getProfileType();
 
 private:
     // Helper functions can be added here if necessary

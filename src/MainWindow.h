@@ -64,10 +64,11 @@ private:
     std::vector<std::vector<cv::Point3f>> convertPointsSetBuffer(const std::vector<RenderData>& pointsSetBuffer);
     std::vector<Eigen::Vector<float, 6>> convertRobDataBuffer(const std::vector<FanucRobPose>& robDataBuffer);
     std::vector<ProfileSheet> parseProfilePointsToProfileSheets(const std::vector<RenderData>& pointsSetBuffer, 
-                                                                std::vector<cv::Point3f> features, 
+                                                                std::vector<cv::Point3f> features,
+                                                                std::string feature_type,
                                                                 std::vector<std::string> paths);
     std::vector<cv::Point3f> extractFeaturePointsFromProfileSheet(const std::vector<ProfileSheet>& profileSheets);
-    void writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::vector<ProfileSheet>& profileSheets);
+    void writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::string type, std::vector<ProfileSheet>& profileSheets);
     std::pair<double, double> projectToXozPlane(const cv::Point3f& point);
     void replaceProfileSheet(std::vector<ProfileSheet>& profiles, const ProfileSheet& newProfile);
     void saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet);

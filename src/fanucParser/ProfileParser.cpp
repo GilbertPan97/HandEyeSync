@@ -87,6 +87,9 @@ std::vector<std::vector<std::pair<double, double>>> ProfileParser::parseProfileF
             points.emplace_back(x, z);
         }
 
+        // Stack profiles type
+        profilesType_.push_back(fs["type"]);
+
         pointsList.push_back(points);
         fs.release();
     }
@@ -140,5 +143,9 @@ std::vector<std::string> ProfileParser::getFilePaths() {
 
     return filePathsStr; // Return the vector of file paths as strings
 }
+
+std::string ProfileParser::getProfileType() {
+    return profilesType_[0];
+};
 
 
