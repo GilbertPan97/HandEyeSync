@@ -798,6 +798,10 @@ void MainWindow::onSettingButtonReleased() {
             // TODO: Show processing
             std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, calibMap_["FeaturePointDirection"]);
             writeFeaturePointsToProfileSheets(ctr_pnts, "Sphere", profileSheets_);
+            logWin_->log("Using Sphere Calibration Model");
+        }
+        else if (!profilesBuffer_.empty() && calibMap_["CalibrationModel"] == "Edge") {
+            logWin_->log("Using Edge Calibration Model");
         }
         else {
             QMessageBox::warning(this, "Error", "Profiles dataset has not been uploaded.");
@@ -883,7 +887,7 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     layout->addLayout(infoLayout);
     
     // Initial with configured sensor
-    if (curCamInfo_.id !=-1){
+    if (curCamInfo_.id != -1){
         // Check the brand of the current camera info
         if (curCamInfo_.brand == "LMI")
             brandComboBox->setCurrentIndex(1);  // Set the first item (LMI) as the selected item
@@ -929,13 +933,13 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     });
 
     connect(scanButton, &QPushButton::clicked, [=]() {
-        std::vector<CameraInfo> sensorList; // Vector to hold camera info
+        std::vector<CameraInfo> sensorList;
         // Scan the cameras and update the sensor list
         sensorApi_.SetBrand(curCamInfo_.brand);     // Initial set brand
         CameraStatus status = sensorApi_.Scan(sensorList);
         if (status == CameraStatus::DEV_READY) {
             // Populate the combo box with camera info if scan is successful
-            cameraComboBox->clear(); // Clear previous entries
+            cameraComboBox->clear();    // Clear previous entries
             for (const auto& camera : sensorList) {
                 cameraComboBox->addItem(QString("%1 - %2").arg(camera.id)
                     .arg(QString::fromStdString(camera.ipAddress)));

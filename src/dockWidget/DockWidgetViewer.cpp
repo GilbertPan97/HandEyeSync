@@ -394,8 +394,35 @@ void DockWidgetViewer::onRefreshClicked() {
 }
 
 void DockWidgetViewer::onTrashClicked() {
+    // Check if graph(0) or graph(1) is selected
+    bool graph0Selected = customPlot_->graph(0)->selected();
+    bool graph1Selected = customPlot_->graph(1)->selected();
 
+    if (graph0Selected || graph1Selected) {
+        // Remove data from the selected graph(s)
+        if (graph0Selected) {
+            customPlot_->graph(0)->data()->clear();
+        }
+        if (graph1Selected) {
+            customPlot_->graph(1)->data()->clear();
+        }
+    } else {
+        // Show a confirmation dialog if no graph is selected
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Clear Plot", 
+                                      "No selection detected. Do you want to clear the entire plot?",
+                                      QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            // Clear all graphs if the user confirms
+            customPlot_->graph(0)->data()->clear();
+            customPlot_->graph(1)->data()->clear();
+        }
+    }
+
+    // Replot to update the view
+    customPlot_->replot();
 }
+
 
 void DockWidgetViewer::mousePressEvent(QMouseEvent *event) {
     // If mouse tracking is disabled, return early and do nothing
