@@ -30,7 +30,7 @@ enum CalibType {
 
 enum CalibObj {
     SPHERE = 0,
-    BLOCK = 1,
+    EDGE = 1,
     TRIANGLE_BOARD = 2
 };
 

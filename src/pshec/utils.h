@@ -40,7 +40,7 @@ namespace CalibUtils
 
     Eigen::VectorXf toEigenVector(const cv::Mat& vec_cv);
 
-    bool isRotatedMatrix(const Eigen::Matrix3f& R);
+    bool isRotatedMatrix(const Eigen::Matrix3f& R, float tolerance = 1e-4);
 
     bool isInVector(const int idx, std::vector<int> idxVector);
 

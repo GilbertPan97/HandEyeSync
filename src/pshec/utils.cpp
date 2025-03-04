@@ -103,12 +103,24 @@ namespace CalibUtils
         return vec_eigen;
     }
 
-    bool isRotatedMatrix(const Eigen::Matrix3f& R){
-        if ((R * R.transpose()).isIdentity() &&
-        abs(R.determinant() - 1) < 1e-6)
-            return true;
-        else
+    bool isRotatedMatrix(const Eigen::Matrix3f& R, float tolerance) {
+        // Compute R * R^T, which should be the identity matrix if R is a rotation matrix
+        Eigen::Matrix3f shouldBeIdentity = R * R.transpose();
+        
+        // Compute determinant of R
+        float det = R.determinant();
+    
+        // Check if R * R^T is approximately the identity matrix within the given tolerance
+        if (!shouldBeIdentity.isApprox(Eigen::Matrix3f::Identity(), tolerance)) {
             return false;
+        }
+    
+        // Check if determinant is approximately 1
+        if (std::abs(det - 1.0f) > tolerance) {
+            return false;
+        }
+    
+        return true;
     }
 
     bool isInVector(const int idx, std::vector<int> idxVector){

@@ -174,7 +174,7 @@ std::vector<std::vector<cv::Point3f>> DataProc::CalcTriEdgePntsInRobase(Eigen::V
 std::vector<cv::Point3f> DataProc::CalcBlockEdgePnts(int id_corner, float tolerance)
 {
     // check calibrate object
-    if(calib_obj_ != CalibObj::BLOCK){
+    if(calib_obj_ != CalibObj::EDGE){
         std::cout << "ERROR: Calibration object is not set or fault.\n";
         exit(-3);
     }

@@ -842,14 +842,31 @@ void MainWindow::onRunButtonReleased() {
     CalibType type = calibMap_["CalibType"] == "Eye-In-Hand" ? CalibType::EYE_IN_HAND : CalibType::EYE_TO_HAND;
     hec.SetCalibType(type);
 	hec.SetRobPose(xyzwpr_data);
-	hec.SetProfileData(extractFeaturePointsFromProfileSheet(profileSheets_), CalibObj::SPHERE);
-	hec.run(ProfileScanner::SolveMethod::ITERATION);
-    float calib_error = hec.CalcCalibError();
 
-    // Log the results
-    std::ostringstream logStream;
-    logStream << "Calibration Error: " << calib_error;
-    logWin_->log(QString::fromStdString(logStream.str()));
+    if (calibMap_.contains("CalibrationModel")) {
+        std::vector<cv::Point3f> fea_points = extractFeaturePointsFromProfileSheet(profileSheets_);
+
+        CalibObj cal_model;
+        if (calibMap_["CalibrationModel"] == "Sphere")
+            cal_model = CalibObj::SPHERE;
+        else if (calibMap_["CalibrationModel"] == "Edge")
+            cal_model = CalibObj::EDGE;
+
+        hec.SetProfileData(fea_points, cal_model);
+    }        
+    else {
+        QMessageBox::warning(this, "Warning", "Unknown Calibration Model.");
+        logWin_->log("Unknown Calibration Model.");
+        return;
+    }
+    
+	hec.run(ProfileScanner::SolveMethod::ITERATION);
+    // float calib_error = hec.CalcCalibError();
+
+    // // Log the results
+    // std::ostringstream logStream;
+    // logStream << "Calibration Error: " << calib_error;
+    // logWin_->log(QString::fromStdString(logStream.str()));
 
 }
 

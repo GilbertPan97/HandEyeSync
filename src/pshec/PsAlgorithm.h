@@ -59,7 +59,8 @@ namespace ProfileScanner
                             std::vector<Eigen::Matrix4f> htm_end2base1,
                             std::vector<Eigen::Vector3f> p_cam1,
                             Eigen::Matrix3f & R_solution,
-                            Eigen::Vector3f & t_solution);
+                            Eigen::Vector3f & t_solution,
+                            int scale_factor = 500);
 
     private:
         void construct_linear_equation_iter(Eigen::Matrix3f Rx_init, 

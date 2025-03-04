@@ -78,7 +78,7 @@ namespace ProfileScanner
 
         if (obj == CalibObj::SPHERE)
             ctr_pnts_ = pnts_data;
-        else if(obj == CalibObj::BLOCK)
+        else if(obj == CalibObj::EDGE)
             edge_pnts_ = pnts_data;
         else {
             std::cout << "ERROR: calibration objection is false.\n";
@@ -110,7 +110,7 @@ namespace ProfileScanner
                 
             algor.Simultaneous_Calib(mtr_rob, toEigenPoints(ctr_pnts_), Rx, tx);
         } 
-        else if(calib_obj_ == CalibObj::BLOCK) {
+        else if(calib_obj_ == CalibObj::EDGE) {
             // BUG: temp half dataset used for calibrate rotation component
             std::vector<Eigen::Matrix4f> htm_end2base_r;
             std::vector<Eigen::Vector3f> p_cam_r;
