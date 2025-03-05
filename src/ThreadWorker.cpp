@@ -13,10 +13,10 @@ void ThreadWorker::ContinueGrabPlot() {
     while (isTreadGrabing_) {
         if (!isTreadGrabing_)
             break;
-        sensorApi->GrabOnce();  // Perform the grabbing operation
-        emit updatePlot();                    // Emit signal when data is ready
+        sensorApi->GrabOnce();      // Perform the grabbing operation
+        emit updatePlot();          // Emit signal when data is ready
 
-        QThread::msleep(100);   // Simulate delay without blocking the UI thread
+        QThread::msleep(100);       // Simulate delay without blocking the UI thread
     }
     std::cout << "Grab thread stoped.\n";
 }
@@ -24,6 +24,7 @@ void ThreadWorker::ContinueGrabPlot() {
 void ThreadWorker::startGrabbing() {
     std::cout << "Start grabbing.\n";
     isTreadGrabing_ = true;
+
     ContinueGrabPlot();     // Start grabbing frames
 }
 

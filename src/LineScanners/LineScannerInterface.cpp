@@ -173,9 +173,15 @@ CameraStatus LineScannerInterface::GrabOnce() {
             success = EXIT_SUCCESS;
     } else if (curBrand_ == CameraBrand::SSZN) {
         // For SSZN cameras, use the SSZN-specific function (assuming it's named similarly)
-        // FIXME: Sszn_ReceiveProfileData throw a bug when build
-        success = Sszn_ReceiveProfileData(&sszn_, &profile_);
-    } else {
+        if (Sszn_ReceiveProfileData(&sszn_, &profile_) == EXIT_SUCCESS){
+            success = EXIT_SUCCESS;
+        }
+        else {
+            throw std::runtime_error("SSZN grab failed. Please check measurement mode \
+                and whether batch processing are turned off.");
+        }
+    } 
+    else {
         return CameraStatus::DEV_ERROR;  // Unsupported camera brand
     }
 

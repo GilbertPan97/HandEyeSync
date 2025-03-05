@@ -13,17 +13,20 @@ bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
     ProfilePoint* profileBuffer = NULL;
     int* pProfileData = NULL;
     unsigned char* grayData = NULL;
+    int result;
 
     int profilePointCount = 0;      // Single profile points count
     double xPixth = 0.0;            // Gap (mm) of profile point in X-direction
-
-    // TODO: Prevent execution if the sensor is not in 2.5D mode
     if (handle == NULL || data == NULL) {
         return EXIT_FAILURE; // Invalid parameters
     }
 
-    // Start measurement (capturing data)
-    int result;
+    // TODO: Prevent execution if the sensor is not in 2.5D mode
+    // result =  SR7IF_GetSetting(handle->DEVICE_ID, int Type, 
+    //     int Category, int Item, int Target[4], void *pData, int DataSize);
+
+    // // Stop batch measure, SR7IF_GetSingleProfile
+    // result = SR7IF_StopMeasure(handle->DEVICE_ID);
 
     // Get the profile point count (width of the profile)
     profilePointCount = SR7IF_ProfileDataWidth(handle->DEVICE_ID, handle->DataObject);
@@ -53,14 +56,14 @@ bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
         return EXIT_FAILURE;    // Memory allocation failure
     }
 
-    // Get intensity data (gray scale values)
-    result = SR7IF_GetIntensityData(handle->DEVICE_ID, handle->DataObject, grayData);
-    if (result != 0) {
-        free(pProfileData);     // Free memory
-        free(grayData);         // Free memory
-        SR7IF_StopMeasure(handle->DEVICE_ID);   // Stop measurement in case of failure
-        return EXIT_FAILURE;    // Data retrieval failed
-    }
+    // // Get intensity data (gray scale values)
+    // result = SR7IF_GetIntensityData(handle->DEVICE_ID, handle->DataObject, grayData);
+    // if (result != 0) {
+    //     free(pProfileData);     // Free memory
+    //     free(grayData);         // Free memory
+    //     SR7IF_StopMeasure(handle->DEVICE_ID);   // Stop measurement in case of failure
+    //     return EXIT_FAILURE;    // Data retrieval failed
+    // }
 
     // Initialize data buffer and convert to ProfileXZ
     profileBuffer = (ProfilePoint*)malloc(profilePointCount * sizeof(ProfilePoint));
@@ -71,7 +74,7 @@ bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
     for (size_t i = 0; i < profilePointCount; i++) {
         profileBuffer[i].x = i * xPixth;                    // X coordinate
         profileBuffer[i].z = pProfileData[i] / 100000.0;    // Z coordinate (converted from profile data)
-        profileBuffer[i].intensity = grayData[i];           // Intensity data for the profile point
+        // profileBuffer[i].intensity = grayData[i];           // Intensity data for the profile point
     }
 
     // Free the temporary profile data as it's no longer needed
