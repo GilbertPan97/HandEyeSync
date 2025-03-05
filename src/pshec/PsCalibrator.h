@@ -23,6 +23,7 @@ namespace ProfileScanner
         
         std::vector<cv::Point3f> ctr_pnts_;         // sphere center points (camera frame)
         std::vector<cv::Point3f> edge_pnts_;           // block edge points (camera frame) 
+        std::vector<int> data_labels_;
 
         std::vector<cv::Point3f> ctr_pnts_base_;    // sphere center points (robot base frame)
         std::vector<cv::Point3f> edge_pnts_base_;   // block edge points (robot base frame) 
@@ -46,7 +47,7 @@ namespace ProfileScanner
         bool SetRobPose(const std::vector<Eigen::Vector<float, 6>> rob_pose,
                         Eigen::Vector<float, 6> ref_frame);
 
-        bool SetProfileData(std::vector<cv::Point3f> pnts_data, CalibObj obj);
+        bool SetProfileData(std::vector<cv::Point3f> pnts_data, CalibObj obj, std::vector<int> labels = {});
 
         bool run(SolveMethod method);
 

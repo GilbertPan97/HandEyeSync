@@ -67,21 +67,34 @@ namespace ProfileScanner
         return true;
     }
 
-    bool HandEyeCalib::SetProfileData(std::vector<cv::Point3f> pnts_data, CalibObj obj){
-        // check the volume of the dataset
-        if (nbr_data_ != pnts_data.size()){
-            std::cout << "WARNING: Number of lines not match nbr_data_. \n";
+    bool HandEyeCalib::SetProfileData(std::vector<cv::Point3f> pnts_data, CalibObj obj, std::vector<int> labels) {
+        // Check if the input dataset size matches the expected number of data points
+        if (nbr_data_ != pnts_data.size()) {
+            std::cout << "WARNING: Number of points does not match nbr_data_. Updating nbr_data_.\n";
             nbr_data_ = pnts_data.size();
         }
-
+    
+        // Set calibration object type
         calib_obj_ = obj;
-
-        if (obj == CalibObj::SPHERE)
-            ctr_pnts_ = pnts_data;
-        else if(obj == CalibObj::EDGE)
-            edge_pnts_ = pnts_data;
+    
+        if (obj == CalibObj::SPHERE) {
+            // If the calibration object is a sphere, store the center points
+            ctr_pnts_ = std::move(pnts_data);
+        } 
+        else if (obj == CalibObj::EDGE) {
+            // If the calibration object is an edge, store the edge points
+            edge_pnts_ = std::move(pnts_data);
+            
+            // Ensure that valid labels are provided for edge-based calibration
+            if (!labels.empty()) {
+                data_labels_ = std::move(labels);
+            } else {
+                throw std::runtime_error("ERROR: Missing dataset labels for edge calibration algorithm.");
+            }
+        } 
         else {
-            std::cout << "ERROR: calibration objection is false.\n";
+            // Invalid calibration object type
+            std::cerr << "ERROR: Invalid calibration object type.\n";
             return false;
         }
         
@@ -111,7 +124,7 @@ namespace ProfileScanner
             algor.Simultaneous_Calib(mtr_rob, toEigenPoints(ctr_pnts_), Rx, tx);
         } 
         else if(calib_obj_ == CalibObj::EDGE) {
-            // BUG: temp half dataset used for calibrate rotation component
+            // Allocate calibration dataset for rotational and translational components
             std::vector<Eigen::Matrix4f> htm_end2base_r;
             std::vector<Eigen::Vector3f> p_cam_r;
             std::vector<Eigen::Matrix4f> htm_end2base_t;
@@ -119,16 +132,17 @@ namespace ProfileScanner
             for (size_t i = 0; i < mtr_end2base_.size(); i++)
             {
                 Eigen::Matrix4f mtr_end2base_i = mtr_end2base_[i];
-                Eigen::Vector3f p_cam_i = {edge_pnts_[i].x, 
-                                           edge_pnts_[i].y, 
-                                           edge_pnts_[i].z};
-                if (i < mtr_end2base_.size() / 2) {
+                Eigen::Vector3f p_cam_i = {edge_pnts_[i].x, edge_pnts_[i].y, edge_pnts_[i].z};
+                if (data_labels_[i] == 0) {
                     htm_end2base_r.emplace_back(mtr_end2base_i);
                     p_cam_r.emplace_back(p_cam_i);
                 }
-                else {
+                else if (data_labels_[i] == 1) {
                     htm_end2base_t.emplace_back(mtr_end2base_i);
                     p_cam_t.emplace_back(p_cam_i);
+                }
+                else {
+                    throw std::runtime_error("Unknow data label for index:" + std::to_string(i));
                 }
             }
             algorithm algor(Constructor::LINE_PARALLEL, method);

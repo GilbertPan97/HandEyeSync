@@ -73,6 +73,8 @@ private:
     void replaceProfileSheet(std::vector<ProfileSheet>& profiles, const ProfileSheet& newProfile);
     void saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet);
     std::vector<std::pair<double, double>> convertToRenderData(const ProfileData& data);
+    void initialDataIndex(size_t number_dataset);
+    std::pair<int, int> getDataIndexAlloc(std::vector<int> dataIndex);
 
 signals:
     void sensorConnStatue(bool checked);
@@ -117,6 +119,7 @@ private:
     std::vector<RenderData> profilesBuffer_;
     std::vector<FanucRobPose> robDataBuffer_;
     std::vector<ProfileSheet> profileSheets_;
+    std::vector<int> dataIndex_;
 
     // Calibration configuration
     SensorType sensorType_;

@@ -499,6 +499,7 @@ ProfileSheet DockWidgetViewer::parseProfileToProfileSheet(const RenderData& prof
     ProfileSheet profileSheet;
     profileSheet.profileIndex = sheet.profileIndex;                 // Set the profile index
     profileSheet.file_path = sheet.file_path;
+    profileSheet.type = sheet.type;
     profileSheet.pointCount = static_cast<int>(profile.size());     // Set the number of points in the profile
     profileSheet.enableFilter = false;                              // Set the filter flag (can be adjusted)
     profileSheet.filterType = "";                                   // Set filter type (can be adjusted)

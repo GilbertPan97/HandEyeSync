@@ -619,7 +619,7 @@ void MainWindow::onAddImgActionTriggered() {
             // Attempt to parse the profile files and get the points
             profilesBuffer_ = profileParser.parseProfileFiles("profile", progCallback);
             files = profileParser.getFilePaths();
-            features = profileParser.parseFeatureFiles("corner_point");
+            features = profileParser.parseFeatureFiles("feature_point");
         } catch (const std::exception& e) {
             // If any exception is thrown, log the failure message
             QString w_msg = QString("Load Dataset Failed: %1").arg(e.what());
@@ -633,6 +633,10 @@ void MainWindow::onAddImgActionTriggered() {
 
         // Profile sheets record
         profileSheets_ = parseProfilePointsToProfileSheets(profilesBuffer_, features, profileParser.getProfileType(), files);
+
+        // Initial allocate half of dataset for rotational(translational) component
+        if (profileParser.getProfileType() == "Edge")
+            initialDataIndex(profileSheets_.size());
 
         // Set browserWin_ profile preview
         browserWin_->setContentFromPoints(profilesBuffer_);
@@ -740,17 +744,20 @@ void MainWindow::onSettingButtonReleased() {
     QGroupBox *imageGBox = new QGroupBox("Model Configuration");
     updateCalibModelGroupBox(imageGBox, calibMap_);
 
+    QVBoxLayout *modelLayout = new QVBoxLayout();
+    modelLayout->addLayout(calibModelLayout);
+    modelLayout->addWidget(imageGBox);
+
     // Create algorithm "configGroutBox".
     QVBoxLayout *propertiesLayout = new QVBoxLayout();
     QGroupBox *configGroupBox = new QGroupBox("Algorithm Setting"); 
 
     // Add the horizontal layout to the properties layout
-    propertiesLayout->addLayout(calibModelLayout);
     propertiesLayout->addWidget(configGroupBox);
     propertiesLayout->setSpacing(10);
 
     // Add the image layout and properties layout to the main layout
-    mainLayout->addWidget(imageGBox);
+    mainLayout->addLayout(modelLayout);
     mainLayout->addLayout(propertiesLayout);
 
     // Create a layout for the buttons (Confirm and Cancel)
@@ -852,8 +859,8 @@ void MainWindow::onRunButtonReleased() {
         else if (calibMap_["CalibrationModel"] == "Edge")
             cal_model = CalibObj::EDGE;
 
-        hec.SetProfileData(fea_points, cal_model);
-    }        
+        hec.SetProfileData(fea_points, cal_model, dataIndex_);
+    }
     else {
         QMessageBox::warning(this, "Warning", "Unknown Calibration Model.");
         logWin_->log("Unknown Calibration Model.");
@@ -1114,15 +1121,17 @@ void MainWindow::updateCalibModelGroupBox(QGroupBox *modelGroupBox, nlohmann::js
 
     // Load the image and scale it to fit within the fixed square size
     QLabel *imageLabel = new QLabel(); 
-    QPixmap imagePixmap("");    //:/images/icon.png
-    imageLabel->setPixmap(imagePixmap.scaled(300, 300, Qt::KeepAspectRatio));  // Scale image to fit
-    imageLabel->setFixedSize(300, 300);     // Ensure imageLabel is always 300x300px
+    QString qrcImgName = ":/images/" + calibModel + ".png";
+    QPixmap imagePixmap(qrcImgName);
+    imageLabel->setPixmap(imagePixmap.scaledToHeight(300, Qt::SmoothTransformation));  // Scale image to fit
+    // imageLabel->setFixedSize(300, 300);     // Ensure imageLabel is always 300x300px
     imageLabel->setStyleSheet(
         "background-color:rgb(200, 200, 200);"
         "color: #444444;"
         "border: 2px solid #666666;"
     );
     imageLabel->setAlignment(Qt::AlignCenter);
+    
 
     // Create a horizontal layout to place the label and combo box next to each other
     // Feature Point Direction label and ComboBox
@@ -1186,6 +1195,43 @@ void MainWindow::updateCalibModelGroupBox(QGroupBox *modelGroupBox, nlohmann::js
             [=](int value) {
                 calibMap_["SphereRadius"] = value;  // Store value as an integer
                 logWin_->log("Sphere Radius set to: " + QString::number(value) + " mm");
+        });
+    }
+    else if (calibModel == "Edge") {
+        QHBoxLayout *datasetLayout = new QHBoxLayout();
+        QLabel *datasetLabel = new QLabel("Rotational component (Number of dataset):");
+        QSpinBox *datasetSpinBox = new QSpinBox();
+        datasetSpinBox->setRange(0, 100);
+        datasetSpinBox->setSuffix(" set");
+        datasetSpinBox->setValue(getDataIndexAlloc(dataIndex_).first);
+        datasetLayout->addWidget(datasetLabel);
+        datasetLayout->addWidget(datasetSpinBox);
+
+        QHBoxLayout *datasetLayout1 = new QHBoxLayout();
+        QLabel *datasetLabel1 = new QLabel("Translational component (Number of dataset):");
+        QSpinBox *datasetSpinBox1 = new QSpinBox();
+        datasetSpinBox1->setRange(0, 100);
+        datasetSpinBox1->setSuffix(" set");
+        datasetSpinBox1->setValue(getDataIndexAlloc(dataIndex_).second);
+        datasetLayout1->addWidget(datasetLabel1);
+        datasetLayout1->addWidget(datasetSpinBox1);
+
+        configLayout->addLayout(datasetLayout);
+        configLayout->addLayout(datasetLayout1);
+        
+        // Update dataIndex_ for calibrate rotational and translational component
+        connect(datasetSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            [=](int value){
+                std::fill(dataIndex_.begin(), dataIndex_.begin() + value, 0);
+                std::fill(dataIndex_.begin() + value, dataIndex_.end(), 1);
+                datasetSpinBox1->setValue(profileSheets_.size() - value);
+        });
+
+        connect(datasetSpinBox1, QOverload<int>::of(&QSpinBox::valueChanged),
+            [=](int value){
+                std::fill(dataIndex_.end() - value, dataIndex_.end(), 1);
+                std::fill(dataIndex_.begin(), dataIndex_.end() - value, 0);
+                datasetSpinBox->setValue(profileSheets_.size() - value);
         });
     }
 
@@ -1486,9 +1532,11 @@ void MainWindow::saveProfileToFile(const RenderData& profile, const ProfileSheet
     // Write profile data to the YML file
     fs << "profile" << profileData;
 
-    // Write corner point (feature point) to the YML file
-    std::vector<double> cornerPoint = {sheet.featurePoint.x, sheet.featurePoint.y, sheet.featurePoint.z};
-    fs << "corner_point" << cornerPoint;
+    // Write feature point to the YML file
+    std::vector<double> featurePoint = {sheet.featurePoint.x, sheet.featurePoint.y, sheet.featurePoint.z};
+    fs << "feature_point" << featurePoint;
+
+    fs << "type" << "\"" + sheet.type + "\"";
 
     // Close the file after writing
     fs.release();
@@ -1509,4 +1557,22 @@ std::vector<std::pair<double, double>> MainWindow::convertToRenderData(const Pro
     }
 
     return profilePoints;
+}
+
+void MainWindow::initialDataIndex(size_t number_dataset) {
+    dataIndex_.resize(number_dataset);
+    std::fill(dataIndex_.begin(), dataIndex_.begin() + number_dataset/2, 0);
+    std::fill(dataIndex_.begin() + number_dataset/2, dataIndex_.end(), 1);
+}
+
+std::pair<int, int> MainWindow::getDataIndexAlloc(std::vector<int> dataIndex) {
+    std::pair<int, int> number_rt = {0, 0};
+    for (size_t i = 0; i < dataIndex.size(); i++)
+    {
+        if (dataIndex[i] == 0)
+            number_rt.first ++;
+        else if (dataIndex[i] == 1)
+            number_rt.second ++;
+    }
+    return number_rt;
 }

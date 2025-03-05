@@ -282,14 +282,16 @@ namespace ProfileScanner
         }
         Eigen::Vector3f vb_eval = vb / vb_stack.size() * scale_factor;
         
-        while(true) {
+        // Loop for calibtate hand-eye relationship
+        int loops = 10;
+        while(loops--) {
             // Recover translation component
             // Initialize translation guess and large initial value for delRT
             Eigen::Vector3f t_init = Eigen::Vector3f::Constant(100.0f);
             Eigen::VectorXf delRT = Eigen::VectorXf::Constant(6, 10000.0f);
             int n_step_t = 0;
 
-            while (delRT.norm() > 0.0001f && n_step_t < 10000) {
+            while (delRT.norm() > 0.0001f && n_step_t < 1000) {
                 Eigen::MatrixXf Ft(3 * (nbr_calibT - 1), 6);
                 Eigen::VectorXf qt(3 * (nbr_calibT - 1));
 
@@ -340,7 +342,7 @@ namespace ProfileScanner
                 if (i > 0) {
                     vb_stack1[i - 1] = (pb_stack1[i] - pb_stack1[0]).normalized();
                     vb = vb + vb_stack1[i - 1];
-                    std::cout << "Calibrated vb is: " << vb_stack1[i - 1].transpose() << std::endl;
+                    // std::cout << "Calibrated vb is: " << vb_stack1[i - 1].transpose() << std::endl;
                 }
             }
             auto vb_average1 = vb / (nbr_calibT - 1) * scale_factor;
@@ -357,140 +359,7 @@ namespace ProfileScanner
         }
 
         return true;
-    }   
-
-    // bool algorithm::Separate_Calib(std::vector<Eigen::Matrix4f> htm_end2base0, std::vector<Eigen::Vector3f> p_cam0, 
-    //                                std::vector<Eigen::Matrix4f> htm_end2base1, std::vector<Eigen::Vector3f> p_cam1,
-    //                                Eigen::Matrix3f & R_solution, Eigen::Vector3f & t_solution) 
-    // {
-    //     // Process each calibration point
-    //     int nbr_calibR = htm_end2base0.size();
-    //     std::vector<Eigen::Matrix3f> Rb_stack(nbr_calibR);
-    //     std::vector<Eigen::Vector3f> tb_stack(nbr_calibR);
-    //     std::vector<Eigen::Vector3f> vt_stack(nbr_calibR - 1);
-    //     std::vector<Eigen::Vector3f> vs_stack(nbr_calibR - 1);
-
-    //     for (int i = 0; i < nbr_calibR; ++i) {
-    //         Eigen::Matrix3f Rb = htm_end2base0[i].block<3, 3>(0, 0);
-    //         Eigen::Vector3f tb = htm_end2base0[i].block<3, 1>(0, 3);
-    //         Rb_stack[i] = Rb;
-    //         tb_stack[i] = tb;
-
-    //         if (i > 0) {
-    //             vt_stack[i - 1] = tb_stack[i] - tb_stack[0];
-    //             vs_stack[i - 1] = (p_cam0[i] - p_cam0[0]);
-    //         }
-    //     }
-
-    //     // Calculate the constant rotation matrix Rb using the first Rb_stack value
-    //     Eigen::Matrix3f Rb = Rb_stack[0];
-
-    //     // Initialize large initial value for delR for iteration to start
-    //     Eigen::Matrix3f R_init = Eigen::Matrix3f::Identity();
-    //     Eigen::VectorXf delR(3);
-    //     delR.setConstant(10000);
-
-    //     int n_step = 0;
-    //     const float threshold = 0.0001;
-
-    //     // Recover rotation component 
-    //     while (delR.norm() > threshold && n_step < 1000) {
-    //         Eigen::MatrixXf Hr(3 * (vt_stack.size() - 1), 3);
-    //         Eigen::VectorXf br(3 * (vt_stack.size() - 1));
-
-    //         for (size_t i = 0; i < vt_stack.size() - 1; ++i) {
-    //             size_t j = i + 1;
-    //             Eigen::Matrix3f B1 = -Rb * CalibUtils::skew(R_init * vs_stack[i].cross(vs_stack[j]));
-    //             Eigen::Matrix3f B2 = -CalibUtils::skew(vt_stack[j]) * Rb * CalibUtils::skew(R_init * vs_stack[i]);
-    //             Eigen::Matrix3f B3 = CalibUtils::skew(vt_stack[i]) * Rb * CalibUtils::skew(R_init * vs_stack[j]);
-    //             Eigen::Matrix3f Hri = B1 + B2 + B3;
-
-    //             Eigen::Vector3f bri = Rb * R_init * vs_stack[i].cross(vs_stack[j]) +
-    //                                     vs_stack[i].cross(vt_stack[j]) -
-    //                                     vs_stack[j].cross(vt_stack[i]) +
-    //                                     vt_stack[i].cross(vt_stack[j]);
-
-    //             Hr.block<3, 3>(3 * i, 0) = Hri;
-    //             br.segment<3>(3 * i) = bri;
-    //         }
-
-    //         delR = Hr.colPivHouseholderQr().solve(br);
-    //         float theta = delR.norm();
-    //         R_init = CalibUtils::skewexp(delR / theta, theta) * R_init;
-    //         n_step++;
-    //     }
-
-    //     std::cout << "Iterative error is: " << delR.norm() << std::endl;
-
-    //     // Calculate edge vector vb in the robot base frame
-    //     Eigen::Vector3f vb = Eigen::Vector3f::Zero();
-    //     std::vector<Eigen::Vector3f> vb_stack(vt_stack.size());
-    //     for (size_t i = 0; i < vt_stack.size(); ++i) {
-    //         Eigen::Vector3f vb_i = Rb * R_solution * vs_stack[i] + vt_stack[i];
-    //         vb_i.normalize();
-    //         vb += vb_i;
-    //         vb_stack[i] = vb_i;
-    //     }
-
-    //     // Assume vb is the average of vb_stack
-    //     Eigen::Vector3f vb_average = vb / vt_stack.size();
-    //     std::cout << "Average vb is: " << vb_average.transpose() << std::endl;
-        
-    //     int cnt_solve = 0;
-    //     const int max_iter = 100;
-    //     while (cnt_solve < max_iter) {
-    //         cnt_solve++;
-    //         // Recover translation component
-    //         int nbr_calibT = htm_end2base1.size();
-    //         std::vector<Eigen::Matrix3f> Rb_stack1(nbr_calibT);
-    //         std::vector<Eigen::Vector3f> tb_stack1(nbr_calibT);
-    //         for (int i = 0; i < nbr_calibT; ++i) {
-    //             Eigen::Matrix3f Rb = htm_end2base1[i].block<3, 3>(0, 0);
-    //             Eigen::Vector3f tb = htm_end2base1[i].block<3, 1>(0, 3);
-    //             Rb_stack1[i] = Rb;
-    //             tb_stack1[i] = tb;
-    //         }
-    
-    //         Eigen::MatrixXf Ht(3 * (Rb_stack1.size() - 1), 3);
-    //         Eigen::VectorXf bt(3 * (Rb_stack1.size() - 1));
-    
-    //         for (int i = 0; i < Rb_stack1.size() - 1; ++i) {
-    //             int j = i + 1;
-    //             Eigen::Matrix3f Hti = CalibUtils::skew(vb_average).transpose() * (Rb_stack1[j] - Rb_stack1[i]);
-    //             Eigen::Vector3f bti = (Rb_stack1[j] * R_solution * p_cam1[j] -
-    //                                    Rb_stack1[i] * R_solution * p_cam1[i] + tb_stack1[j] - tb_stack1[i]).cross(vb_average);
-    
-    //             Ht.block<3, 3>(3 * i, 0) = Hti;
-    //             bt.segment<3>(3 * i) = bti;
-    //         }
-    
-    //         Eigen::MatrixXf Ht_pinv = Ht.completeOrthogonalDecomposition().pseudoInverse();
-    //         t_solution = Ht_pinv * bt;
-    
-    //         // Verify calibration result
-    //         Eigen::Vector3f vb_average1 = Eigen::Vector3f::Zero();
-    //         for (int i = 0; i < nbr_calibT; ++i) {
-    //             Eigen::Matrix3f Rb = Rb_stack1[i];
-    //             Eigen::Vector3f tb = tb_stack1[i];
-    //             Eigen::Vector3f pb = Rb * (R_solution * p_cam1[i] + t_solution) + tb;
-    //             Eigen::Vector3f vb_i = pb - tb_stack1[0];
-    //             vb_i.normalize();
-    //             vb_average1 += vb_i;
-    //         }
-    //         vb_average1 /= nbr_calibT;
-    
-    //         float err_step = vb_average1.cross(vb_average).norm();
-    //         const float thresh_step_dev = 0.001;
-    //         if (err_step < thresh_step_dev) {
-    //             break;
-    //         } else {
-    //             std::cout << "Falling in local solution for component R, solver run again." << std::endl;
-    //             continue;
-    //         }
-    //     }
-    
-    //     return true;
-    // }
+    }
 
     void algorithm::construct_linear_equation_iter(Eigen::Matrix3f Rx_init, Eigen::Vector3f tx_init,
                                                     Eigen::MatrixXf & F, Eigen::VectorXf & q){
