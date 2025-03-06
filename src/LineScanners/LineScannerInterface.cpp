@@ -158,7 +158,7 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
         /* For SSZN cameras, explicitly open or close has been process when camera connect */
 
         // Check SSZN sensor batch processing mode (batch == 2.5D) and switch
-        // BUG: Not finish Sszn_GetDevSetting debug.
+        // BUG: Not finish Sszn_GetDevSetting debug
         SR7_DEV_SETTING_MAP setting_map;
         Sszn_initSR7DevSettingMap(&setting_map);
 
@@ -195,7 +195,8 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
         }
 
         status = kOK;
-    } else {
+    } 
+    else {
         return CameraStatus::DEV_ERROR;  // Unsupported camera brand
     }
         
@@ -210,7 +211,8 @@ CameraStatus LineScannerInterface::GrabOnce() {
         // For LMI cameras, use the Gocator function to receive profile data
         if (Gocator_ReceiveProfileData(&gocator_, &profile_) == kOK)
             success = EXIT_SUCCESS;
-    } else if (curBrand_ == CameraBrand::SSZN) {
+    } 
+    else if (curBrand_ == CameraBrand::SSZN) {
         // For SSZN cameras, use the SSZN-specific function (assuming it's named similarly)
         if (Sszn_ReceiveProfileData(&sszn_, &profile_) == EXIT_SUCCESS){
             success = EXIT_SUCCESS;
