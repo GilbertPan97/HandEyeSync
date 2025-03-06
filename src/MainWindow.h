@@ -68,7 +68,8 @@ private:
                                                                 std::string feature_type,
                                                                 std::vector<std::string> paths);
     std::vector<cv::Point3f> extractFeaturePointsFromProfileSheet(const std::vector<ProfileSheet>& profileSheets);
-    void writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::string type, std::vector<ProfileSheet>& profileSheets);
+    void writeFeaturePointsToProfileSheets(const std::vector<cv::Point3f>& points, std::string type, 
+                                           std::vector<ProfileSheet>& profileSheets);
     std::pair<double, double> projectToXozPlane(const cv::Point3f& point);
     void replaceProfileSheet(std::vector<ProfileSheet>& profiles, const ProfileSheet& newProfile);
     void saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet);

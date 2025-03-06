@@ -762,7 +762,7 @@ void MainWindow::onSettingButtonReleased() {
 
     // Create a layout for the buttons (Confirm and Cancel)
     QHBoxLayout *buttonLayout = new QHBoxLayout();
-    buttonLayout->addStretch();  // Push the buttons to the right
+    buttonLayout->addStretch();
     QPushButton *confirmButton = new QPushButton("Confirm");
     QPushButton *cancelButton = new QPushButton("Cancel");
     buttonLayout->addWidget(confirmButton);

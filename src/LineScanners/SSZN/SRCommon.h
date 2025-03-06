@@ -14,6 +14,14 @@ extern "C" {
 
 typedef struct {
     int DEVICE_ID;
+    int PROG;
+    int SETTING_PAGE;
+    int PAGE_ITEM;
+    int DEV_TARGET[4];
+} SR7_DEV_SETTING_MAP;
+
+typedef struct {
+    int DEVICE_ID;
     SR7IF_ETHERNET_CONFIG SREthernetConFig;
     SR7IF_Data DataObject;
 } Sszn_Handle;
@@ -30,6 +38,10 @@ bool Sszn_Open(Sszn_Handle* handle, const char* sensorIp, int deviceId);
 bool Sszn_Close(Sszn_Handle* handle);
 
 bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data);
+
+void Sszn_initSR7DevSettingMap(SR7_DEV_SETTING_MAP *map);
+
+bool Sszn_GetDevSetting(SR7_DEV_SETTING_MAP* map, int data_size, int *parameter);
 
 #ifdef __cplusplus
 }

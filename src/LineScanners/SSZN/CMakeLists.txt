@@ -8,6 +8,7 @@ set(SRC_FILES
     Discover.c
     Open.c
     ReceiveProfile.c
+    GetDevSetting.c
     ../CLogger/clog.c
     ../CLogger/logger.c
 )
@@ -16,6 +17,7 @@ set_source_files_properties(Initialize.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(Discover.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(Open.c PROPERTIES LANGUAGE CXX)
 set_source_files_properties(ReceiveProfile.c PROPERTIES LANGUAGE CXX)
+set_source_files_properties(GetDevSetting.c PROPERTIES LANGUAGE CXX)
 
 set(HEADER_FILES
     SRCommon.h

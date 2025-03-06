@@ -153,8 +153,47 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
         }
         status = kOK;
         clog("Info: Set status successfully (status: %s).\n", open ? "true" : "false");
-    } else if (curBrand_ == CameraBrand::SSZN) {
-        // For SSZN cameras, explicitly open or close has been process when camera connect
+    } 
+    else if (curBrand_ == CameraBrand::SSZN) {
+        /* For SSZN cameras, explicitly open or close has been process when camera connect */
+
+        // Check SSZN sensor batch processing mode (batch == 2.5D) and switch
+        // BUG: Not finish Sszn_GetDevSetting debug.
+        SR7_DEV_SETTING_MAP setting_map;
+        Sszn_initSR7DevSettingMap(&setting_map);
+
+        setting_map.DEVICE_ID = sszn_.DEVICE_ID;
+        setting_map.PROG = 1;      // Return Current Using Feature Map
+        memset(setting_map.DEV_TARGET, 0, sizeof(setting_map.DEV_TARGET));    // BUG: How to match sszn_.DEVICE_ID and DEV_TARGET
+        
+        // 1. Check Batch Processing Switch
+        setting_map.SETTING_PAGE = 0x00;
+        setting_map.PAGE_ITEM = 0x03;
+        int p_size = 1;
+        int parameter = 10;
+        if (Sszn_GetDevSetting(&setting_map, p_size, &parameter) == EXIT_FAILURE) {
+            throw std::runtime_error("Get sszn device setting fail.");
+        }
+
+        if (parameter == 1) {
+            throw std::runtime_error("Batch processing switch should \
+                be closed bofore open sszn sensor.");
+        }
+
+        // 2. Check Batch Processing Mode
+        setting_map.SETTING_PAGE = 0x30;
+        setting_map.PAGE_ITEM = 0x03;
+        int p_size1 = 1;
+        int parameter1 = 10;
+        if (Sszn_GetDevSetting(&setting_map, p_size1, &parameter1) == EXIT_FAILURE) {
+            throw std::runtime_error("Get sszn device setting fail.");
+        }
+
+        if (parameter1 == 0) {
+            throw std::runtime_error("Batch processing mode should \
+                be set as 2.5D.");
+        }
+
         status = kOK;
     } else {
         return CameraStatus::DEV_ERROR;  // Unsupported camera brand
