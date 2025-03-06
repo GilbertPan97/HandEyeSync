@@ -1252,15 +1252,26 @@ void MainWindow::onPlayToggled(bool ckecked) {
 
     // Check the current icon and toggle between play and pause icons
     if (ckecked) {
+        // Start the thread, triggering ContinueGrabPlot, sensor shouble open first
+        try
+        {
+            sensorApi_.SetStatus(true);
+        }
+        catch(const std::exception& e){
+            // BUG: 
+            QString msg = QString("Open Sensor Fail: %1").arg(e.what());
+            QMessageBox::warning(this, "Error", msg);
+            return;
+        }
+        
+        grabThread_->start();
+
         // Switch to pause icon
         viewerWin_->getButtonList()[0]->setIcon(QIcon(":/icons/pause.png"));
         viewerWin_->getButtonList()[0]->setToolTip("Pause camera grab");
         isGrabing_ = true;
-
-        // Start the thread, triggering ContinueGrabPlot, sensor shouble open first
-        sensorApi_.SetStatus(true);
-        grabThread_->start();
-    } else {
+    } 
+    else {
         // Switch to play icon
         viewerWin_->getButtonList()[0]->setIcon(QIcon(":/icons/play.png"));
         viewerWin_->getButtonList()[0]->setToolTip("Run camera grab");

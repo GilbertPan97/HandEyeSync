@@ -163,7 +163,7 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
         Sszn_initSR7DevSettingMap(&setting_map);
 
         setting_map.DEVICE_ID = sszn_.DEVICE_ID;
-        setting_map.PROG = 1;      // Return Current Using Feature Map
+        setting_map.PROG = -1;      // Return Current Using Feature Map
         memset(setting_map.DEV_TARGET, 0, sizeof(setting_map.DEV_TARGET));    // BUG: How to match sszn_.DEVICE_ID and DEV_TARGET
         
         // 1. Check Batch Processing Switch
@@ -176,8 +176,7 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
         }
 
         if (parameter == 1) {
-            throw std::runtime_error("Batch processing switch should \
-                be closed bofore open sszn sensor.");
+            throw std::runtime_error("Batch processing switch should be closed bofore open sszn sensor.");
         }
 
         // 2. Check Batch Processing Mode
@@ -190,8 +189,7 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
         }
 
         if (parameter1 == 0) {
-            throw std::runtime_error("Batch processing mode should \
-                be set as 2.5D.");
+            throw std::runtime_error("Batch processing mode should be set as 2.5D.");
         }
 
         status = kOK;
