@@ -63,6 +63,7 @@ private:
 
     std::vector<std::vector<cv::Point3f>> convertPointsSetBuffer(const std::vector<RenderData>& pointsSetBuffer);
     std::vector<Eigen::Vector<float, 6>> convertRobDataBuffer(const std::vector<FanucRobPose>& robDataBuffer);
+    ProfileSheet parseProfilePointToProfileSheet(RenderData data, int index, std::string feature_type, std::string path);
     std::vector<ProfileSheet> parseProfilePointsToProfileSheets(const std::vector<RenderData>& pointsSetBuffer, 
                                                                 std::vector<cv::Point3f> features,
                                                                 std::string feature_type,

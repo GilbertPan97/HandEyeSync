@@ -237,6 +237,10 @@ void DockWidgetViewer::keepDisplayAspectRatio(QCustomPlot *customPlot) {
     customPlot->replot();
 }
 
+RenderData DockWidgetViewer::getCurrentPlotData() {
+    return *curPlotData_;
+}
+
 QList<QPushButton*> DockWidgetViewer::getButtonList() {
     // Check if the button list is empty
     if (buttonList_.isEmpty()) {

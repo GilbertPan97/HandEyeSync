@@ -241,20 +241,31 @@ void MainWindow::createToolBar()
     onlineCollectBtn->setCheckable(true);
     
     QHBoxLayout *collectLayout = new QHBoxLayout(this);
+    QLabel *typeLabel = new QLabel("Model", this);
+    QComboBox *typeComboBox = new QComboBox(this);
+    typeComboBox->addItem("Edge");
+    typeComboBox->addItem("Sphere");
+
     QLabel *indexLabel = new QLabel("Index", this);
-    QComboBox *comboBox = new QComboBox(this);
-    comboBox->addItem("0");
+    QComboBox *idxComboBox = new QComboBox(this);
+    idxComboBox->addItem("new");
+
     QPushButton *downloadButton = new QPushButton(this);
     downloadButton->setIcon(QIcon(":/icons/download.png"));
     downloadButton->setToolTip("Collect");
-    indexLabel->setEnabled(false);
-    comboBox->setEnabled(false);
+
+    typeComboBox->setEnabled(false);
+    idxComboBox->setEnabled(false);
     downloadButton->setEnabled(false);
+
+    collectLayout->addWidget(typeLabel, 0, Qt::AlignVCenter);
+    collectLayout->addWidget(typeComboBox, 0, Qt::AlignVCenter);
     collectLayout->addWidget(indexLabel, 0, Qt::AlignVCenter);
-    collectLayout->addWidget(comboBox, 0, Qt::AlignVCenter);
+    collectLayout->addWidget(idxComboBox, 0, Qt::AlignVCenter);
     collectLayout->addWidget(downloadButton, 0, Qt::AlignVCenter);
 
-    // Widgets indexLabel, comboBox and downloadButton only editable when onlineCollectBtn toggled
+    // Widgets indexLabel, idxComboBox and downloadButton only editable when onlineCollectBtn toggled
+    static QString workSpace;
     connect(onlineCollectBtn, &QPushButton::toggled, [=](bool checked) {
         if (checked) {
             // Check devices connect status
@@ -262,21 +273,64 @@ void MainWindow::createToolBar()
                 logWin_->log("Warning: No sensor connected.");
                 return;
             }
+            workSpace = QFileDialog::getExistingDirectory(this, "Select Data Folder", QDir::homePath());
+
             // If the button is pressed (checked), enable the controls and remove gray appearance
-            indexLabel->setEnabled(true);
-            comboBox->setEnabled(true);
+            typeComboBox->setEnabled(true);
+            idxComboBox->setEnabled(true);
             downloadButton->setEnabled(true);
             onlineCollectBtn->setText("Collecting... ");
             onlineCollectBtn->setStyleSheet("background-color: #4CAF50; color: white;");
         } 
         else {
             // If the button is released (unchecked), disable the controls and apply gray appearance
-            indexLabel->setEnabled(false);
-            comboBox->setEnabled(false);
+            typeComboBox->setEnabled(false);
+            idxComboBox->setEnabled(false);
             downloadButton->setEnabled(false);
             onlineCollectBtn->setText("Online Collect");  // Reset to the original text
             onlineCollectBtn->setStyleSheet("background-color: #444444; color: white;");
         }
+    });
+
+    connect(downloadButton, &QPushButton::released, [=](){
+        // Retrive RenderData from current viewerWin_
+        RenderData curPlotData = viewerWin_->getCurrentPlotData();
+
+        QString name = idxComboBox->currentText();
+        size_t idx;
+        if (name == "new") {
+            // Push back a new RenderData to buffer
+            profilesBuffer_.push_back(curPlotData);
+
+            // Get Current Data Index
+            idx = profilesBuffer_.size();
+            idxComboBox->addItem(QString::number(idx));
+
+            // TODO: Retrive robot data from fanuc_robot_interface
+
+        }
+        else {
+            idx = name.toInt();
+            // Replace RenderData of idx - 1
+            profilesBuffer_[idx - 1] = curPlotData;
+        }
+
+        // Create path and save profile file
+        std::string file_path = workSpace.toStdString() + "/p" + std::to_string(idx) + ".yml";
+        std::string type = typeComboBox->currentText().toStdString();
+        auto profileSheet = parseProfilePointToProfileSheet(curPlotData, idx - 1, type, file_path);
+        saveProfileToFile(curPlotData, profileSheet);
+
+        profileSheets_.push_back(profileSheet);
+        browserWin_->setContentFromPoints(profilesBuffer_); 
+        propertyWin_->writeProfileSheetToProperties(profileSheet, true);
+    });
+
+    connect(browserWin_, &DockWidgetBrowser::itemSelected, [this](int index, const QString& text) {
+        viewerWin_->plotPoints(profilesBuffer_[index], false, profileSheets_[index]);
+        propertyWin_->writeProfileSheetToProperties(profileSheets_[index], true);
+        // Index is the number of listwidget sequence (begin from 0). Dataset item = index + 1 = featuresSheet.index + 1
+        logWin_->log(QString("Dataset item selected - Index: %1, Pose: %2").arg(index + 1).arg(text));
     });
 
     onlineCollectLayout->addWidget(onlineCollectBtn);
@@ -1450,6 +1504,25 @@ std::vector<Eigen::Vector<float, 6>> MainWindow::convertRobDataBuffer(const std:
 }
 
 // Function to RenderData to ProfileSheet
+ProfileSheet MainWindow::parseProfilePointToProfileSheet(
+    RenderData data, 
+    int index, 
+    std::string feature_type, 
+    std::string path) 
+{
+    // Create a ProfileSheet for each RenderData
+    ProfileSheet profileSheet;
+    profileSheet.profileIndex = static_cast<int>(index);            // Set the profile index
+    profileSheet.pointCount = static_cast<int>(data.size());  // Set the number of points in the profile
+    profileSheet.file_path = path;
+    profileSheet.type = feature_type;
+    profileSheet.enableFilter = false;                          // Set the filter flag (can be adjusted)
+    profileSheet.filterType = "";                               // Set filter type (can be adjusted)
+    profileSheet.featurePoint = {0, 0, 0};
+
+    return profileSheet;
+}
+
 std::vector<ProfileSheet> MainWindow::parseProfilePointsToProfileSheets(
     const std::vector<RenderData>& pointsSetBuffer, 
     std::vector<cv::Point3f> features,

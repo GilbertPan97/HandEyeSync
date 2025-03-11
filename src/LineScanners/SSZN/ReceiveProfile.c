@@ -4,8 +4,24 @@
 #include <stdlib.h>
 
 void RemoveInvalidPoints(ProfileData* data) {
+    // Check for null pointers or zero valid points
+    if (!data || !data->profileBuffer || data->validPoints == 0) {
+        return; // Invalid data, return immediately
+    }
 
+    size_t validCount = 0;
+    for (size_t i = 0; i < data->validPoints; ++i) {
+        // Keep points where z is not -10000
+        if (data->profileBuffer[i].z != -10000) {
+            // Move valid points to the front of the buffer
+            data->profileBuffer[validCount++] = data->profileBuffer[i];
+        }
+    }
+
+    // Update the count of valid points
+    data->validPoints = validCount;
 }
+
 
 // Receives profile data from the Sszn sensor.
 bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
@@ -88,6 +104,7 @@ bool Sszn_ReceiveProfileData(Sszn_Handle* handle, ProfileData* data) {
     }
 
     // FIXME: How to remove all invalid points and update data->validPoints.
+    RemoveInvalidPoints(data);
 
     return EXIT_SUCCESS;        // Success
 }

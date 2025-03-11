@@ -240,7 +240,7 @@ CameraStatus LineScannerInterface::GrabOnce() {
 
 ProfileData LineScannerInterface::RetriveData() {
     if (profile_.validPoints > 0){
-        clog("Info: Valid points - %d", profile_.validPoints);
+        // clog("Info: Valid points - %d", profile_.validPoints);
         return profile_;
     } 
     else {

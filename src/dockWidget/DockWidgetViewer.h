@@ -79,6 +79,8 @@ public:
      */
     void keepDisplayAspectRatio(QCustomPlot *customPlot);
 
+    RenderData getCurrentPlotData();
+
     QList<QPushButton*> getButtonList();
 
 signals:
