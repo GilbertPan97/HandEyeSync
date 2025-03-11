@@ -42,11 +42,15 @@ bool Sszn_GetDevSetting(SR7_DEV_SETTING_MAP *map, int data_size, int* parameter)
     if (Sszn_isValidSR7DevSettingMap(map) == EXIT_FAILURE)
         return EXIT_FAILURE;
 
+    if (!parameter) {
+        clog("parameter pointer is null!");
+        return EXIT_FAILURE;
+    }
+
     int result;
     if (data_size > 0) { 
         result =  SR7IF_GetSetting(map->DEVICE_ID, map->PROG, map->SETTING_PAGE, 
             map->PAGE_ITEM, map->DEV_TARGET, parameter, data_size);
-        printf("Get Device Parameter is: %d", *parameter);
     }
     else {
         clog("Unknown data size for Sszn_GetDevSetting.");

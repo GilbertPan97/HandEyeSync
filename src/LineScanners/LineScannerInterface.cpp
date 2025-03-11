@@ -176,6 +176,7 @@ CameraStatus LineScannerInterface::SetStatus(bool open) {
         }
 
         if (parameter == 1) {
+            // BUG: throw will get memory error.
             throw std::runtime_error("Batch processing switch should be closed bofore open sszn sensor.");
         }
 

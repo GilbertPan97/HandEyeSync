@@ -20,7 +20,8 @@
 #include <regex>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : grabWorker_(nullptr), grabThread_(nullptr),
+      QMainWindow(parent)
 {
     // Load the external QSS file for dark theme (use style.qss)
     QFile file(":styles/style.qss");
@@ -110,6 +111,34 @@ MainWindow::~MainWindow()
 {
     // Save window settings before closing
     saveSettings();
+
+    if (grabWorker_) {
+        // Stop the tasks running in grabWorker_ and safely delete
+        grabWorker_->stopGrabbing();
+        grabWorker_->deleteLater();
+        grabWorker_ = nullptr;
+    }
+
+    if (grabThread_) {
+        // Stop the thread and wait for it to finish
+        grabThread_->quit();    // Request the thread to exit
+        grabThread_->wait();    // Wait for the thread to fully finish
+
+        // Safely delete the thread object
+        grabThread_->deleteLater();
+        grabThread_ = nullptr;
+    }
+
+    // Delete all dock widgets
+    for (auto dockWidget : dockWidgets_) {
+        delete dockWidget;
+    }
+    delete dockManager_;
+    dockWidgets_.clear();
+
+    delete topToolBar_;
+    delete progressWidget_;
+    delete progressBar_;
 }
 
 // Function to create the menu bar
@@ -1280,16 +1309,17 @@ void MainWindow::onPlayToggled(bool ckecked) {
         isGrabing_ = false;
         grabWorker_->stopGrabbing();
         grabThread_->quit();
+        
         sensorApi_.SetStatus(false);  // Stop the camera
     }
 }
 
 void MainWindow::onCaptureClicked() {
-    // sensorApi_.SetStatus(true);
-    // sensorApi_.GrabOnce();
-    // RenderData profile = convertToRenderData(sensorApi_.RetriveData());
-    // ProfileSheet sheet;
-    // viewerWin_->plotPoints(profile, false, sheet);
+    sensorApi_.SetStatus(true);
+    sensorApi_.GrabOnce();
+    RenderData profile = convertToRenderData(sensorApi_.RetriveData());
+    ProfileSheet sheet;
+    viewerWin_->plotPoints(profile, false, sheet);
 }
 
 void MainWindow::replotSensorData() {
