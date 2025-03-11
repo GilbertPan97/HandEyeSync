@@ -51,18 +51,24 @@ namespace ProfileScanner
 
         bool run(SolveMethod method);
 
-        Eigen::Matrix4f GetCalcResult();
+        Eigen::Matrix4f GetCalcResult() const;
+
+        Eigen::Vector<float, 6> GetCalcResultVec() const;
 
         float CalcCalibError(std::vector<cv::Point3f> featurePnts_camera,
                                 std::vector<Eigen::Matrix4f> robPoses);
 
-        float CalcCalibError();
+        float CalcCalibError(std::string type);
 
     private:
         void drawClusters(cv::Mat& img, std::vector<cv::Point2f>& centers, 
                           std::vector<std::vector<cv::Point2f>>& points);
 
         float CalcPntStandDeviation(std::vector<Eigen::Vector3f> pntSet3d);
+
+        float calcCollinearityError(const std::vector<Eigen::Vector3f>& points);
+
+        std::vector<cv::Point3f> convertToCvPoint3f(const std::vector<Eigen::Vector3f>& eigenVec);
     };
 }
 

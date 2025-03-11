@@ -77,6 +77,9 @@ private:
     std::vector<std::pair<double, double>> convertToRenderData(const ProfileData& data);
     void initialDataIndex(size_t number_dataset);
     std::pair<int, int> getDataIndexAlloc(std::vector<int> dataIndex);
+    void showCalibrationResult(const Eigen::Matrix4f& matrix, const Eigen::Vector<float, 6>& vec, float calibError);
+    QString matrixToQString(const Eigen::Matrix4f& matrix);
+    QString vectorToQString(const Eigen::Vector<float, 6>& vec);
 
 signals:
     void sensorConnStatue(bool checked);

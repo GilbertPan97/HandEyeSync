@@ -108,19 +108,20 @@ namespace ProfileScanner
             return false;
         }
 
+        // Reconstruct calibration data for EYE_IN_HAND and EYE_TO_HAND
+        std::vector<Eigen::Matrix4f> mtr_rob;
+        if (type_ == CalibType::EYE_IN_HAND)
+            mtr_rob = mtr_end2base_;
+        else if (type_ == CalibType::EYE_TO_HAND){
+            for (const auto & htm: mtr_end2base_)
+                mtr_rob.push_back(htm.inverse());
+        }
+
         // construct algorithm parser and calculate result
         Eigen::Matrix3f Rx;
         Eigen::Vector3f tx;
         if (calib_obj_ == CalibObj::SPHERE) {
-            algorithm algor(Constructor::PNT_CONSTANT, method);
-            std::vector<Eigen::Matrix4f> mtr_rob;
-            if (type_ == CalibType::EYE_IN_HAND)
-                mtr_rob = mtr_end2base_;
-            else if (type_ == CalibType::EYE_TO_HAND){
-                for (const auto & htm: mtr_end2base_)
-                    mtr_rob.push_back(htm.inverse());
-            }
-                
+            algorithm algor(Constructor::PNT_CONSTANT, method);    
             algor.Simultaneous_Calib(mtr_rob, toEigenPoints(ctr_pnts_), Rx, tx);
         } 
         else if(calib_obj_ == CalibObj::EDGE) {
@@ -153,29 +154,31 @@ namespace ProfileScanner
         mtr_cam2rob_ = CalibUtils::RT2HomogeneousMatrix(Rx, tx);
         vec_cam2rob_ = CalibUtils::HTMToXYZWPRVec(mtr_cam2rob_);
 
-        std::cout << "INFO: Calibration result in matrix format: \n"
-                    << mtr_cam2rob_ << std::endl;
-        std::cout << "INFO: Calibration result in XYZWPR format: \n"
-                    << vec_cam2rob_.transpose() << std::endl;
-
         return true;
     }
-
-    Eigen::Matrix4f HandEyeCalib::GetCalcResult(){
+    Eigen::Matrix4f HandEyeCalib::GetCalcResult() const {
+        if (mtr_cam2rob_.isZero()) {
+            // Return identity matrix if uninitialized
+            return Eigen::Matrix4f::Identity();
+        }
         return mtr_cam2rob_;
     }
+    
+    Eigen::Vector<float, 6> HandEyeCalib::GetCalcResultVec() const {
+        if (vec_cam2rob_.isZero()) {
+            // Return zero vector if uninitialized
+            return Eigen::Vector<float, 6>::Zero();
+        }
+        return vec_cam2rob_;
+    }
 
-    float HandEyeCalib::CalcCalibError(){
+    float HandEyeCalib::CalcCalibError(std::string type){
         // check calibration restlt
         if (mtr_cam2rob_.hasNaN()){
             std::cout << "ERROR: Calib result is empty." << std::endl;
-            exit(-3);
+            throw std::runtime_error("Calibration result is empty");
         }
 
-        // calculate sphere center points (in rob base frame)
-        Eigen::Vector3f ctrPnt_cam;
-        Eigen::Vector3f aveCtrPntBase = {0.0f, 0.0f, 0.0f};
-        std::vector<Eigen::Vector3f> ctrPnts_base;
         std::vector<Eigen::Matrix4f> mtr_rob;
         if (type_ == CalibType::EYE_IN_HAND){
             mtr_rob = mtr_end2base_;
@@ -190,23 +193,49 @@ namespace ProfileScanner
             std::cerr << "ERROR: Calibration type not defined.\n";
         }
 
-        for (size_t i = 0; i < mtr_rob.size(); i++)
-        {
-            ctrPnt_cam << ctr_pnts_[i].x, ctr_pnts_[i].y, ctr_pnts_[i].z;
+        if (type == "Sphere") {
+            // calculate sphere center points (in rob base frame)
+            Eigen::Vector3f ctrPnt_cam;
+            Eigen::Vector3f aveCtrPntBase = {0.0f, 0.0f, 0.0f};
+            std::vector<Eigen::Vector3f> ctrPnts_base;
 
-            auto ctrPnt_base = (mtr_rob[i] * mtr_cam2rob_ * 
-                (Eigen::Vector4f() << ctrPnt_cam, 1.0f).finished()).segment<3>(0);
+            for (size_t i = 0; i < mtr_rob.size(); i++){
+                ctrPnt_cam << ctr_pnts_[i].x, ctr_pnts_[i].y, ctr_pnts_[i].z;
 
-            aveCtrPntBase += ctrPnt_base;
-            std::cout << "  " << ctrPnt_base.transpose() << std::endl;
-            ctrPnts_base.push_back(ctrPnt_base);
+                auto ctrPnt_base = (mtr_rob[i] * mtr_cam2rob_ * 
+                    (Eigen::Vector4f() << ctrPnt_cam, 1.0f).finished()).segment<3>(0);
+
+                aveCtrPntBase += ctrPnt_base;
+                ctrPnts_base.push_back(ctrPnt_base);
+            }
+            ctr_pnts_base_ = convertToCvPoint3f(ctrPnts_base);
+
+            aveCtrPntBase /= mtr_rob.size();
+            std::cout << "INFO: The sphere center average coordination is:"
+                        << aveCtrPntBase.transpose() << std::endl;
+
+            // calculate the standard deviation of the distance from robot base to sphere center
+            calib_error_ = CalcPntStandDeviation(ctrPnts_base);
         }
-        aveCtrPntBase /= mtr_rob.size();
-        std::cout << "INFO: The sphere center average coordination is:"
-                    << aveCtrPntBase.transpose() << std::endl;
+        else if (type == "Edge") {
+            Eigen::Vector3f edgePnt_cam;
+            std::vector<Eigen::Vector3f> edgePnts_base;
 
-        // calculate the standard deviation of the distance from robot base to sphere center
-        float calib_error_ = CalcPntStandDeviation(ctrPnts_base);
+            for (size_t i = 0; i < mtr_rob.size(); i++) {
+                edgePnt_cam << edge_pnts_[i].x, edge_pnts_[i].y, edge_pnts_[i].z;
+
+                auto edgePnt_base = (mtr_rob[i] * mtr_cam2rob_ * 
+                    (Eigen::Vector4f() << edgePnt_cam, 1.0f).finished()).segment<3>(0);
+
+                edgePnts_base.push_back(edgePnt_base);
+            }
+
+            edge_pnts_base_ = convertToCvPoint3f(edgePnts_base);
+            calib_error_ = calcCollinearityError(edgePnts_base);  
+        }
+        else {
+            throw std::runtime_error("Unknown Calibration Model.");
+        }
 
         return calib_error_;
     }
@@ -268,4 +297,50 @@ namespace ProfileScanner
 
         return error;
     }
+
+    float HandEyeCalib::calcCollinearityError(const std::vector<Eigen::Vector3f>& points) {
+        if (points.size() < 2) {
+            return 0.0f; // Less than two points, no error to compute
+        }
+    
+        // Compute centroid of the points
+        Eigen::Vector3f centroid(0, 0, 0);
+        for (const auto& pt : points) {
+            centroid += pt;
+        }
+        centroid /= static_cast<float>(points.size());
+    
+        // Assemble the covariance matrix
+        Eigen::MatrixXf centered(points.size(), 3);
+        for (size_t i = 0; i < points.size(); ++i) {
+            centered.row(i) = points[i] - centroid;
+        }
+    
+        // Perform SVD to find the direction vector of the best-fit line
+        Eigen::JacobiSVD<Eigen::MatrixXf> svd(centered, Eigen::ComputeThinU | Eigen::ComputeThinV);
+        Eigen::Vector3f direction = svd.matrixV().col(0).normalized();
+    
+        // Calculate the distance of each point to the fitted line
+        float sumSquaredError = 0.0f;
+        for (const auto& pt : points) {
+            Eigen::Vector3f diff = pt - centroid;
+            float distance = (diff - diff.dot(direction) * direction).norm();
+            sumSquaredError += distance * distance;
+        }
+    
+        // Compute RMSE
+        return std::sqrt(sumSquaredError / static_cast<float>(points.size()));
+    }
+
+    std::vector<cv::Point3f> HandEyeCalib::convertToCvPoint3f(const std::vector<Eigen::Vector3f>& eigenVec) {
+        std::vector<cv::Point3f> cvVec;
+        cvVec.reserve(eigenVec.size());
+    
+        for (const auto& vec : eigenVec) {
+            cvVec.emplace_back(vec.x(), vec.y(), vec.z());
+        }
+    
+        return cvVec;
+    }
+
 } // namespace ProfileScanner

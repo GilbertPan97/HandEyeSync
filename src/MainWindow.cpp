@@ -21,6 +21,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : grabWorker_(nullptr), grabThread_(nullptr),
+      topToolBar_(nullptr), progressWidget_(nullptr), progressBar_(nullptr),
       QMainWindow(parent)
 {
     // Load the external QSS file for dark theme (use style.qss)
@@ -404,18 +405,18 @@ void MainWindow::createToolBar()
     calibTypeLayout->addWidget(eyeInHandRadioButton);
     calibTypeLayout->addWidget(eyeToHandRadioButton);
     eyeInHandRadioButton->setChecked(true);
-    calibMap_["CalibrType"] = "Eye-In-Hand";
+    calibMap_["CalibType"] = "Eye-In-Hand";
 
     // Connect a single lambda function to handle both buttons
     connect(eyeInHandRadioButton, &QRadioButton::toggled, [this](bool checked) {
         if (checked) {
-            calibMap_["CalibrType"] = "Eye-In-Hand";
+            calibMap_["CalibType"] = "Eye-In-Hand";
             logWin_->log("Calibration Type set to: Eye-In-Hand");
         }
     });
     connect(eyeToHandRadioButton, &QRadioButton::toggled, [this](bool checked) {
         if (checked) {
-            calibMap_["CalibrType"] = "Eye-To-Hand";
+            calibMap_["CalibType"] = "Eye-To-Hand";
             logWin_->log("Calibration Type set to: Eye-To-Hand");
         }
     });
@@ -929,6 +930,7 @@ void MainWindow::onRunButtonReleased() {
 
     // Execute calibration
 	ProfileScanner::HandEyeCalib hec;
+    // logWin_->log("Info: Calibration type is: " + calibMap_["CalibType"]);
     CalibType type = calibMap_["CalibType"] == "Eye-In-Hand" ? CalibType::EYE_IN_HAND : CalibType::EYE_TO_HAND;
     hec.SetCalibType(type);
 	hec.SetRobPose(xyzwpr_data);
@@ -950,13 +952,14 @@ void MainWindow::onRunButtonReleased() {
         return;
     }
     
-	hec.run(ProfileScanner::SolveMethod::ITERATION);
-    // float calib_error = hec.CalcCalibError();
+	bool sta = hec.run(ProfileScanner::SolveMethod::ITERATION);
+    if (sta) {
+        Eigen::Matrix4f mtr = hec.GetCalcResult();
+        Eigen::Vector<float, 6> xyzwpr = hec.GetCalcResultVec();
+        float calib_error = hec.CalcCalibError(calibMap_["CalibrationModel"]);
 
-    // // Log the results
-    // std::ostringstream logStream;
-    // logStream << "Calibration Error: " << calib_error;
-    // logWin_->log(QString::fromStdString(logStream.str()));
+        showCalibrationResult(mtr, xyzwpr, calib_error);
+    }
 
 }
 
@@ -1689,4 +1692,64 @@ std::pair<int, int> MainWindow::getDataIndexAlloc(std::vector<int> dataIndex) {
             number_rt.second ++;
     }
     return number_rt;
+}
+
+void MainWindow::showCalibrationResult(const Eigen::Matrix4f& matrix, const Eigen::Vector<float, 6>& vec, float calibError) 
+{
+    QDialog resultDialog(this);
+    resultDialog.setWindowTitle("Calibration Result");
+    resultDialog.setMinimumSize(400, 300);
+
+    QVBoxLayout* layout = new QVBoxLayout(&resultDialog);
+
+    // Display the transformation matrix
+    QLabel* matrixLabel = new QLabel("Transformation Matrix (4x4):");
+    layout->addWidget(matrixLabel);
+
+    QLabel* matrixValueLabel = new QLabel(matrixToQString(matrix));
+    matrixValueLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    layout->addWidget(matrixValueLabel);
+
+    // Display the pose vector
+    QLabel* vecLabel = new QLabel("Pose Vector (X, Y, Z, W, P, R):");
+    layout->addWidget(vecLabel);
+
+    QLabel* vecValueLabel = new QLabel(vectorToQString(vec));
+    vecValueLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    layout->addWidget(vecValueLabel);
+
+    // Display the calibration error
+    QLabel* errorLabel = new QLabel(QString("Calibration Error: %1").arg(calibError, 0, 'f', 6));
+    layout->addWidget(errorLabel);
+
+    // Close button
+    QPushButton* closeButton = new QPushButton("Close");
+    layout->addWidget(closeButton);
+    connect(closeButton, &QPushButton::clicked, &resultDialog, &QDialog::accept);
+
+    resultDialog.exec();
+}
+
+// Helper function to convert Eigen matrix to QString
+QString MainWindow::matrixToQString(const Eigen::Matrix4f& matrix) {
+    std::ostringstream oss;
+    oss.precision(6);
+    oss << std::fixed;
+    for (int i = 0; i < 4; ++i) {
+        oss << matrix(i, 0) << "\t" << matrix(i, 1) << "\t"
+        << matrix(i, 2) << "\t" << matrix(i, 3) << "\n";
+    }
+    return QString::fromStdString(oss.str());
+}
+
+// Helper function to convert Eigen vector to QString
+QString MainWindow::vectorToQString(const Eigen::Vector<float, 6>& vec) {
+    std::ostringstream oss;
+    oss.precision(6);
+    oss << std::fixed;
+    for (int i = 0; i < 6; ++i) {
+        oss << vec(i);
+        if (i < 5) oss << ", ";
+    }
+    return QString::fromStdString(oss.str());
 }
