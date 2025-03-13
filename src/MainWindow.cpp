@@ -1113,6 +1113,12 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
 
             // Emit signal to enable DockWidgetViewer buttons and connect sensor slot
             emit sensorConnStatue(true);
+
+            // Retrive sensor roi and render range box on viewerWin_
+            std::array<double, 4> roi = sensorApi_.GetSensorROI();
+            viewerWin_->setROI(roi);
+            viewerWin_->renderROI(roi, false);
+
             connect(viewerWin_->getButtonList()[0], &QPushButton::toggled, this, &MainWindow::onPlayToggled);
             connect(viewerWin_->getButtonList()[1], &QPushButton::clicked, this, &MainWindow::onCaptureClicked);
         } else {
@@ -1339,8 +1345,7 @@ void MainWindow::onPlayToggled(bool ckecked) {
     // Check the current icon and toggle between play and pause icons
     if (ckecked) {
         // Start the thread, triggering ContinueGrabPlot, sensor shouble open first
-        try
-        {
+        try {
             sensorApi_.SetStatus(true);
         }
         catch(const std::exception& e){

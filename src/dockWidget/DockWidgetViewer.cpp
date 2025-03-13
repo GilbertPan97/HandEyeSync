@@ -2,6 +2,7 @@
 
 DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     : ads::CDockWidget(title, parent),
+      renderXZRange_(false),
       customPlot_(nullptr),
       curPlotData_(nullptr),
       curProfileSheet_(nullptr)
@@ -68,6 +69,10 @@ DockWidgetViewer::DockWidgetViewer(const QString& title, QWidget* parent)
     customPlot_->graph(1)->setPen(QPen(QColor("#FF0000"), 2)); 
     customPlot_->graph(1)->setLineStyle(QCPGraph::lsNone);
 
+    // Add a graph to the custom plot: ROI
+    customPlot_->addGraph();
+    customPlot_->graph(2)->setPen(QPen(Qt::red, 2, Qt::DashLine));
+
     // Create a QWidget to hold the main layout
     QWidget *widget = new QWidget(this);
     widget->setStyleSheet("background: #444444;");
@@ -132,6 +137,16 @@ DockWidgetViewer::~DockWidgetViewer() {
     }
 }
 
+void DockWidgetViewer::setROI(const std::array<double, 4>& roi_bounds) {
+    if (roi_bounds.empty())
+    {
+        throw std::runtime_error("Invalid ROI bounds.");
+    }
+    
+    xzRange_ = roi_bounds;
+    renderXZRange_ = true;
+}
+
 void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet, bool autoFitRange) {
     // Cache current plot data
     if (curPlotData_ == nullptr) {
@@ -191,6 +206,62 @@ void DockWidgetViewer::plotPoints(const RenderData& points, bool connectPoints, 
     keepDisplayAspectRatio(customPlot_);
 }
 
+void DockWidgetViewer::renderROI(const std::array<double, 4>& roi_bounds, bool dynamic) {
+    if (!customPlot_) return;
+
+    double left = roi_bounds[0];
+    double right = roi_bounds[1];
+    double bottom = roi_bounds[2];
+    double top = roi_bounds[3];
+
+    // Clear existing ROI lines and items
+    customPlot_->clearItems();
+
+    double width = right - left;
+    double height = top - bottom;
+
+    // Draw vertical lines for ROI
+    for (int i = 0; i < 2; ++i) {
+        QCPItemLine *verticalLine = new QCPItemLine(customPlot_);
+        double x = left + i * width;
+
+        if (dynamic) {
+            // Create a semi-transparent overlay mask outside of the ROI
+            // createMaskOutsideROI(customPlot_, left, right, top, bottom);
+            verticalLine->start->setCoords(x, customPlot_->yAxis->range().lower);
+            verticalLine->end->setCoords(x, customPlot_->yAxis->range().upper);
+        }
+        else {
+            verticalLine->start->setCoords(x, bottom);
+            verticalLine->end->setCoords(x, top);
+        }
+
+        verticalLine->setPen(QPen(Qt::red, 2, Qt::DashLine));
+    }
+
+    // Draw horizontal lines for ROI
+    for (int i = 0; i < 2; ++i) {
+        QCPItemLine *horizontalLine = new QCPItemLine(customPlot_);
+        double y = bottom + i * height;
+
+        if (dynamic) {
+            // Create a semi-transparent overlay mask outside of the ROI
+            // createMaskOutsideROI(customPlot_, left, right, top, bottom);
+            horizontalLine->start->setCoords(customPlot_->xAxis->range().lower, y);
+            horizontalLine->end->setCoords(customPlot_->xAxis->range().upper, y);
+        }
+        else {
+            horizontalLine->start->setCoords(left, y);
+            horizontalLine->end->setCoords(right, y);
+        }
+
+        horizontalLine->setPen(QPen(Qt::red, 2, Qt::DashLine));
+    }
+
+    customPlot_->replot();
+}
+
+
 void DockWidgetViewer::resizeEvent(QResizeEvent *event) {
     // Call the base class's resizeEvent to handle any parent class behavior
     // (This ensures that any default actions, such as resizing the dock widget, are executed)
@@ -231,6 +302,11 @@ void DockWidgetViewer::keepDisplayAspectRatio(QCustomPlot *customPlot) {
         // If the height is greater than the width, adjust the y-axis range
         double newYRangeSize = xRange.size() * (height / width);
         customPlot->yAxis->setRange(yCenter - newYRangeSize / 2.0, yCenter + newYRangeSize / 2.0);
+    }
+
+    // Dynamic render ROI if xzRange_ exist
+    if (renderXZRange_) {
+        renderROI(xzRange_, true);
     }
 
     // Replot the graph
@@ -576,4 +652,25 @@ void DockWidgetViewer::saveProfileToFile(const RenderData& profile, const Profil
 
     // Close the file after writing
     fs.release();
+}
+
+void DockWidgetViewer::createMaskOutsideROI(QCustomPlot *customPlot_, double left, double right, double top, double bottom)
+{
+    // Create a semi-transparent overlay mask outside of the ROI
+    QCPItemRect *maskRect = new QCPItemRect(customPlot_);
+    maskRect->setPen(Qt::NoPen);  // No border for the mask
+    maskRect->setBrush(QBrush(QColor(0, 0, 0, 179)));  // Semi-transparent black (opacity 0.7)
+    
+    // Set mask rectangle coordinates for the entire plot
+    maskRect->topLeft->setCoords(customPlot_->xAxis->range().lower, customPlot_->yAxis->range().upper);
+    maskRect->bottomRight->setCoords(customPlot_->xAxis->range().upper, customPlot_->yAxis->range().lower);
+
+    // Adjust the mask so that the ROI area is not covered
+    double maskLeft = std::min(customPlot_->xAxis->range().lower, left);
+    double maskRight = std::max(customPlot_->xAxis->range().upper, right);
+    double maskTop = std::max(customPlot_->yAxis->range().upper, top);
+    double maskBottom = std::min(customPlot_->yAxis->range().lower, bottom);
+    
+    maskRect->topLeft->setCoords(maskLeft, maskTop);
+    maskRect->bottomRight->setCoords(maskRight, maskBottom);
 }

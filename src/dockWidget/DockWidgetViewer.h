@@ -26,6 +26,8 @@ class DockWidgetViewer : public ads::CDockWidget {
 
 private:
     QList<QPushButton*> buttonList_;
+    std::array<double, 4> xzRange_;
+    bool renderXZRange_;
     QCustomPlot *customPlot_;
     RenderData *curPlotData_;
     ProfileSheet *curProfileSheet_;
@@ -43,6 +45,8 @@ public:
     explicit DockWidgetViewer(const QString& title, QWidget* parent = nullptr);
     ~DockWidgetViewer();
 
+    void setROI(const std::array<double, 4>& roi_bounds);
+
     /**
      * @brief Plots a set of points on the QCustomPlot object.
      * 
@@ -56,6 +60,16 @@ public:
      *                      be displayed as discrete points without any connecting lines.
      */
     void plotPoints(const RenderData& points, bool connectPoints, const ProfileSheet& profile_sheet, bool autoFitRange=true);
+
+    /**
+     * @brief Renders a rectangular ROI using two horizontal and two vertical red lines.
+     *
+     * This function adds four red lines to the QCustomPlot object to visualize the ROI.
+     * The ROI is defined by its left, right, bottom, and top boundaries.
+     *
+     * @param roi_bounds A std::array of four doubles representing {left, right, bottom, top}.
+     */
+    void renderROI(const std::array<double, 4>& roi_bounds, bool dynamic = false);
 
     /**
      * @brief Handles resize events for the DockWidgetViewer.
@@ -169,6 +183,7 @@ private:
     bool isMouseInsidePlot(const QPoint& pos) const;
     void updateGraph1Point(double x, double y);
     void saveProfileToFile(const RenderData& profile, const ProfileSheet& sheet);
+    void createMaskOutsideROI(QCustomPlot *customPlot_, double left, double right, double top, double bottom);
 };
 
 #endif // DOCK_WIDGET_VIEWER_H
