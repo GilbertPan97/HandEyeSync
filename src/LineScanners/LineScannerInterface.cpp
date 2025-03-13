@@ -140,6 +140,15 @@ CameraStatus LineScannerInterface::Disconnect(const std::string& cameraIp) {
     return (status == kOK) ? CameraStatus::DEV_NOT_CONNECTED : CameraStatus::DEV_ERROR;
 }
 
+// std::array<double, 4> GetSensorROI() {
+//     double xzRange;
+//     // auto sta = Sszn_GetROI(&sszn_, &xzRange);
+
+//     std::array<double, 4> xzRangeArr = {0.0, 100, -23, 23};
+
+//     return xzRangeArr;
+// }
+
 CameraStatus LineScannerInterface::SetStatus(bool open) {
     kStatus status;     // For LMI, we expect a kStatus return value
 

@@ -64,3 +64,31 @@ bool Sszn_GetDevSetting(SR7_DEV_SETTING_MAP *map, int data_size, int* parameter)
 
     return EXIT_SUCCESS;
 }
+
+bool Sszn_GetROI(Sszn_Handle* handle, double* xzRange) {
+    // Validate input parameters
+    if (handle == NULL) {
+        return false;
+    }
+
+    // Initialize data object
+    SR7IF_Data DataObject = {0};
+
+    // Get the profile point count
+    int profilePointCount = SR7IF_ProfileDataWidth(handle->DEVICE_ID, DataObject);
+    // Get the X-axis pitch value
+    double xPitch = SR7IF_ProfileData_XPitch(handle->DEVICE_ID, DataObject);
+
+    // Validate profile data
+    if (profilePointCount <= 0 || xPitch <= 0) {
+        return false;
+    }
+
+    // Calculate ROI range: [x_start, x_end, y_start, y_end]
+    xzRange[0] = 0.0;
+    xzRange[1] = xPitch * profilePointCount;
+    xzRange[2] = -23.0;     // TODO: Get z-direction range from sensor
+    xzRange[3] = 23.0;
+
+    return true;
+}

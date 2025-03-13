@@ -43,6 +43,8 @@ void Sszn_initSR7DevSettingMap(SR7_DEV_SETTING_MAP *map);
 
 bool Sszn_GetDevSetting(SR7_DEV_SETTING_MAP* map, int data_size, int *parameter);
 
+bool Sszn_GetROI(Sszn_Handle* handle, double* xzRange);
+
 #ifdef __cplusplus
 }
 #endif

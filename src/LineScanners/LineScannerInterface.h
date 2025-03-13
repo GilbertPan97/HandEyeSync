@@ -95,6 +95,8 @@ public:
      */
     CameraStatus Disconnect(const std::string& cameraIp);
 
+    std::array<double, 4> GetSensorROI();
+
     /**
      * @brief Turns the camera laser on or off.
      * 
