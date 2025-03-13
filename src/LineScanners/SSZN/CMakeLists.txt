@@ -37,6 +37,14 @@ target_include_directories(${TARGET_NAME} PUBLIC
 
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
+# Copy SR7Link DLLs to the target output directory
+file(GLOB SR7Link_DLLS "${SR7Link_EXECUTABLE_DIRS}/*.dll")
+add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${SR7Link_DLLS}
+    $<TARGET_FILE_DIR:${TARGET_NAME}>
+)
+
 if(OFF)
     add_executable(Sszn_test test.cpp)
     target_link_libraries(Sszn_test PRIVATE ${TARGET_NAME})
