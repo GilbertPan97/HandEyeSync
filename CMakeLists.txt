@@ -27,10 +27,11 @@ find_package(Eigen3 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 # Build source code
-subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/dockWidget)
-subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/fanucParser)
-subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/psHEC)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/DockWidget)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/FanucParser)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/PsHEC)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LineScanners)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/FrRobotIfLib)
 
 # Add source files
 set(SRC_FILES
