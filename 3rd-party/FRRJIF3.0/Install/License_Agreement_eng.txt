@@ -1,0 +1,31 @@
+This License Agreement certifies that you have the license to use the Software legally. Please keep this Agreement with the Software carefully.
+
+LICENSE AGREEMENT
+
+This is an Agreement between you and FANUC LTD ("FANUC") regarding the Software Product ("the Software") which you receive with this Agreement.
+
+1.GRANT OF LICENSE
+FANUC grants you the following right regarding the Software:
+1) You may use the Software on a single computer.
+2) In case you will use the Software upon the plural number of
+   computers, the same number of license to use the Software as that
+   of the computers on which you will use the Software shall be
+   required even though you will not use the Software simultaneously.
+3) In case you will use the Software by loading it into temporary
+   memories of plural number of computers through the network, the
+   same number of license to use the Software as that of the computers
+   on which you will use the Software shall be required.
+4) You may make one copy of the Software solely for backup or archival
+   purposes.
+
+2.COPYRIGHT
+Copyright of the Software is owned by FANUC. Therefore, you may not copy the Software except for the usage granted in Article 1 (GRANT OF LICENSE).
+
+3.RESTRICTIONS
+You may not transfer, lend, sell, distribute, lease or rent the Software to a third party.
+
+4.WARRANTY
+If there is a material defect in the media or manuals of the Software and such defect arises within a period of 90 days from your receipt of the Software, FANUC will replace them at no change.
+
+5.NO LIABILITY
+EXCEPT FOR THE WARRANTY UNDER ARTICLE 4 (WARRANTY), FANUC MAKES NO WARRANTY, EXPRESS OR IMPLIED, ABOUT THE SOFTWARE, INCLUDING, WITHOUT LIMITATION, WARRANTIES AS TO MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. FANUC SHALL NOT BE LIABLE FOR ANY DAMAGE WHATSOEVER (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS INTERRUPTION, LOSS OF BUSINESS INFORMATION, OR ANY OTHER PECUNIARY LOSS) RESULTING FROM THE USAGE OF THE SOFTWARE DIRECTLY OR INDIRCTLY.

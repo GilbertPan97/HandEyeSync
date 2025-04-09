@@ -40,6 +40,8 @@
 #define	TASK_IGNORE_MACRO_KAREL		35
 #define	POSREGMG		36
 
+#include "StdAfx.h"
+
 class _Core : public COleDispatchDriver
 {
 public:
