@@ -22,7 +22,7 @@ add_definitions(-DUNICODE -D_UNICODE)
 
 # Source files
 set(ROBOTCOMM_SOURCES
-    RobotComm_Version.cpp
+    RobotComm/RobotComm_Version.cpp
     RobotComm/RobotComm_Core.cpp
     RobotComm/RobotComm_DataTable.cpp
     RobotComm/RobotComm_DataNumReg.cpp
@@ -35,12 +35,12 @@ set(ROBOTCOMM_SOURCES
     RobotComm/RobotComm_DataSysVarPos.cpp
     RobotComm/RobotComm_DataAlarm.cpp
     RobotComm/RobotComm_DataString.cpp
-    libCore/RobotComm_LibCore.cpp
+    RobotComm/libCore/RobotComm_LibCore.cpp
 )
 
 # Header files
 set(ROBOTCOMM_HEADERS
-    RobotComm.h
+    RobotComm/RobotComm.h
     RobotComm/RobotComm_Constants.h
     RobotComm/RobotComm_Core.h
     RobotComm/RobotComm_DataTable.h
@@ -54,7 +54,7 @@ set(ROBOTCOMM_HEADERS
     RobotComm/RobotComm_DataSysVarPos.h
     RobotComm/RobotComm_DataAlarm.h
     RobotComm/RobotComm_DataString.h
-    libCore/RobotComm_LibCore.h
+    RobotComm/libCore/RobotComm_LibCore.h
 )
 
 # Create static library
@@ -72,6 +72,8 @@ target_link_libraries(RobotComm PRIVATE
 
 # Build sample program
 option(BUILD_SAMPLE "Build sample application" ON)
+
+add_subdirectory(RobotCommCOM)
 
 if(BUILD_SAMPLE)
     add_executable(SampleUsage SampleUsage.cpp)

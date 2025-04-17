@@ -43,19 +43,19 @@ class DataString;
 } // namespace RobotComm
 
 // Constants
-#include "RobotComm/RobotComm_Constants.h"
+#include "RobotComm_Constants.h"
 
 // Include all component headers
-#include "RobotComm/RobotComm_Core.h"
-#include "RobotComm/RobotComm_DataTable.h"
 #include "libCore/RobotComm_LibCore.h"
-#include "RobotComm/RobotComm_DataNumReg.h"
-#include "RobotComm/RobotComm_DataPosReg.h"
-#include "RobotComm/RobotComm_DataPosRegXyzwpr.h"
-#include "RobotComm/RobotComm_DataPosRegMG.h"
-#include "RobotComm/RobotComm_DataCurPos.h"
-#include "RobotComm/RobotComm_DataTask.h"
-#include "RobotComm/RobotComm_DataSysVar.h"
-#include "RobotComm/RobotComm_DataSysVarPos.h"
-#include "RobotComm/RobotComm_DataAlarm.h"
-#include "RobotComm/RobotComm_DataString.h" 
+#include "RobotComm_Core.h"
+#include "RobotComm_DataTable.h"
+#include "RobotComm_DataNumReg.h"
+#include "RobotComm_DataPosReg.h"
+#include "RobotComm_DataPosRegXyzwpr.h"
+#include "RobotComm_DataPosRegMG.h"
+#include "RobotComm_DataCurPos.h"
+#include "RobotComm_DataTask.h"
+#include "RobotComm_DataSysVar.h"
+#include "RobotComm_DataSysVarPos.h"
+#include "RobotComm_DataAlarm.h"
+#include "RobotComm_DataString.h" 

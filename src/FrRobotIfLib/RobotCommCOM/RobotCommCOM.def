@@ -1,0 +1,6 @@
+LIBRARY "RobotCommCOM"
+EXPORTS
+    DllGetClassObject
+    DllCanUnloadNow
+    DllRegisterServer
+    DllUnregisterServer

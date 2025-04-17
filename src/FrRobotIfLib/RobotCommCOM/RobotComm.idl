@@ -1,0 +1,20 @@
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+    object,
+    uuid(5D362593-4C2F-4B4A-AE52-16AAE0AD6E56), // IRobotComm 接口 ID
+    dual,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IRobotComm : IDispatch {
+    [id(1)] HRESULT GetVersion([out, retval] BSTR* version);
+};
+
+[
+    uuid(6BCA7E7C-847A-4F58-9823-3E2BEB2E8309) // RobotComm COM 类 CLSID
+]
+coclass RobotComm {
+    [default] interface IRobotComm;
+};

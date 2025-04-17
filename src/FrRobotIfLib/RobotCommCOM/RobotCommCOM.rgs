@@ -1,0 +1,21 @@
+HKCR
+{
+    RobotCommCOM.RobotComm.1 = s 'RobotComm COM Object'
+    {
+        CLSID = s '{6BCA7E7C-847A-4F58-9823-3E2BEB2E8309}'
+        CurVer = s 'RobotCommCOM.RobotComm.1'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {6BCA7E7C-847A-4F58-9823-3E2BEB2E8309} = s 'RobotComm COM Object'
+        {
+            ProgID = s 'RobotCommCOM.RobotComm.1'
+            VersionIndependentProgID = s 'RobotCommCOM.RobotComm'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            TypeLib = s '{...}'  // 可选，安装后由TLB注册
+        }
+    }
+}
