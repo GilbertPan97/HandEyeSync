@@ -1,0 +1,79 @@
+# C++ 编译生成的文件
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+*.app
+
+# 预编译头文件
+*.gch
+*.pch
+
+# 库文件
+*.lib
+*.a
+*.la
+*.lo
+
+# 依赖文件
+*.d
+
+# 调试文件
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# 编译输出目录
+Debug/
+Release/
+x64/
+x86/
+build/
+build*/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio文件
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+*.vcxproj.filters
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# 编辑器临时文件
+*~
+*.swp
+.DS_Store
+Thumbs.db
+
+# CMake生成文件
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# 自定义忽略文件
+# 添加项目特定的忽略规则 、
+frrjiftest
+
+sample/
+old/

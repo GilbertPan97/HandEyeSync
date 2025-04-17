@@ -1,60 +1,99 @@
-# Set the minimum required version of CMake
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
-# Define the project and its language
-project(FrRobotIfLibProject LANGUAGES CXX)
+# Project information
+project(RobotComm
+    VERSION 2.0.0
+    DESCRIPTION "Robot communication library based on direct dispid calls"
+    LANGUAGES CXX)
 
-# Enable C++17
+# Use a more reliable method to set 32-bit architecture
+if(MSVC)
+    set(CMAKE_VS_PLATFORM_NAME "Win32")
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()
+
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Enable MFC and set runtime flags for MSVC
-if(MSVC)
-    # Enable MFC (use shared DLL version)
-    add_definitions(-D_AFXDLL)
-    set(CMAKE_MFC_FLAG 2)  # 0: off, 1: static, 2: shared DLL
+# Set output directory
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-    # Force use of multithreaded DLL runtime library
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MD")
-endif()
+# Add compilation options
+add_definitions(-DUNICODE -D_UNICODE)
 
-# Source files for the static library
-set(LIB_SOURCES
-    frrjif.cpp
-    frrobotiflib.cpp
-    StdAfx.cpp
-    # frrjiftestDlg.cpp
-    # frrjiftest.cpp
-    # DlgProxy.cpp
-    # InputBox.cpp
-    FrRobotInterface.cpp
+# Source files
+set(ROBOTCOMM_SOURCES
+    RobotComm_Version.cpp
+    RobotComm/RobotComm_Core.cpp
+    RobotComm/RobotComm_DataTable.cpp
+    RobotComm/RobotComm_DataNumReg.cpp
+    RobotComm/RobotComm_DataPosReg.cpp
+    RobotComm/RobotComm_DataPosRegXyzwpr.cpp
+    RobotComm/RobotComm_DataPosRegMG.cpp
+    RobotComm/RobotComm_DataCurPos.cpp
+    RobotComm/RobotComm_DataTask.cpp
+    RobotComm/RobotComm_DataSysVar.cpp
+    RobotComm/RobotComm_DataSysVarPos.cpp
+    RobotComm/RobotComm_DataAlarm.cpp
+    RobotComm/RobotComm_DataString.cpp
+    libCore/RobotComm_LibCore.cpp
 )
 
-# Define the static library target
-add_library(FrRobotInterface STATIC ${LIB_SOURCES})
-# add_executable(FrRobotIfLib WIN32 ${LIB_SOURCES} ${LIB_HEADERS})
+# Header files
+set(ROBOTCOMM_HEADERS
+    RobotComm.h
+    RobotComm/RobotComm_Constants.h
+    RobotComm/RobotComm_Core.h
+    RobotComm/RobotComm_DataTable.h
+    RobotComm/RobotComm_DataNumReg.h
+    RobotComm/RobotComm_DataPosReg.h
+    RobotComm/RobotComm_DataPosRegXyzwpr.h
+    RobotComm/RobotComm_DataPosRegMG.h
+    RobotComm/RobotComm_DataCurPos.h
+    RobotComm/RobotComm_DataTask.h
+    RobotComm/RobotComm_DataSysVar.h
+    RobotComm/RobotComm_DataSysVarPos.h
+    RobotComm/RobotComm_DataAlarm.h
+    RobotComm/RobotComm_DataString.h
+    libCore/RobotComm_LibCore.h
+)
 
-# Include current directory for header search paths
-target_include_directories(FrRobotInterface PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+# Create static library
+add_library(RobotComm STATIC ${ROBOTCOMM_SOURCES} ${ROBOTCOMM_HEADERS})
 
-# Set MSVC-specific properties to support MFC
-if(MSVC)
-    set_target_properties(FrRobotInterface PROPERTIES
-        COMPILE_FLAGS "/Zm500"                  # Increase precompiled header memory
-        VS_GLOBAL_KEYWORD "MFCProj"             # Identify as MFC project in MSVC
-        VS_GLOBAL_RuntimeLibrary "MultiThreadedDLL" # Use /MD runtime
-        MFC_FLAG 2                               # Use MFC shared DLL
-    )
+# Set include directories
+target_include_directories(RobotComm PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Link necessary Windows libraries
+target_link_libraries(RobotComm PRIVATE
+    ole32
+    oleaut32
+    uuid
+)
+
+# Build sample program
+option(BUILD_SAMPLE "Build sample application" ON)
+
+if(BUILD_SAMPLE)
+    add_executable(SampleUsage SampleUsage.cpp)
+    target_link_libraries(SampleUsage PRIVATE RobotComm)
 endif()
 
-# Optional: build a test executable for the library
-option(BUILD_FRRJIF_TEST "Build the frrjifTest executable" ON)
-if(BUILD_FRRJIF_TEST)
-    add_executable(frrjifTest Test.cpp)
-    target_link_libraries(frrjifTest PRIVATE FrRobotInterface)
+# Installation rules
+install(TARGETS RobotComm
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
 
-    if(MSVC)
-        # Ensure MFC is enabled for the test application as well
-        set_target_properties(frrjifTest PROPERTIES MFC_FLAG 2)
-    endif()
-endif()
+install(FILES ${ROBOTCOMM_HEADERS} DESTINATION include/RobotComm)
+
+# Output configuration information
+message(STATUS "Configuring RobotComm project:")
+message(STATUS "  C++ standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "  Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "  Platform: 32-bit (Win32)")
+message(STATUS "  Sample program: ${BUILD_SAMPLE}") 
