@@ -207,111 +207,111 @@ bool ReadNumericRegisters(RobotComm::DataTable& dataTable, std::vector<RobotComm
 }
 
 // 添加读取并打印报警信息的函数
-void ReadAlarms(RobotComm::DataAlarm& alarmList, RobotComm::DataAlarm& alarmCurrent) {
-    short alarmID, alarmNumber, causeID, causeAlarmNumber, severity;
-    short year, month, day, hour, minute, second;
-    BSTR alarmMessage, causeAlarmMessage, severityMessage;
-    CString strTemp = _T("                                                                                                   ");
+// void ReadAlarms(RobotComm::DataAlarm& alarmList, RobotComm::DataAlarm& alarmCurrent) {
+//     short alarmID, alarmNumber, causeID, causeAlarmNumber, severity;
+//     short year, month, day, hour, minute, second;
+//     BSTR alarmMessage, causeAlarmMessage, severityMessage;
+//     CString strTemp = _T("                                                                                                   ");
     
-    std::wcout << L"\n========== Alarm Information ==========\n" << std::endl;
+//     std::wcout << L"\n========== Alarm Information ==========\n" << std::endl;
     
-    // 读取报警列表 (最多5个)
-    std::wcout << L"--- Alarm History ---" << std::endl;
-    for (int i = 1; i <= 5; i++) {
-        // 初始化BSTR
-        alarmMessage = strTemp.AllocSysString();
-        causeAlarmMessage = strTemp.AllocSysString();
-        severityMessage = strTemp.AllocSysString();
+//     // 读取报警列表 (最多5个)
+//     std::wcout << L"--- Alarm History ---" << std::endl;
+//     for (int i = 1; i <= 5; i++) {
+//         // 初始化BSTR
+//         alarmMessage = strTemp.AllocSysString();
+//         causeAlarmMessage = strTemp.AllocSysString();
+//         severityMessage = strTemp.AllocSysString();
         
-        std::wcout << L"Alarm " << i << L": ";
+//         std::wcout << L"Alarm " << i << L": ";
         
-        // 获取报警信息
-        if (alarmList.GetValue(i, &alarmID, &alarmNumber, &causeID, &causeAlarmNumber, 
-                              &severity, &year, &month, &day, &hour, &minute, &second,
-                              &alarmMessage, &causeAlarmMessage, &severityMessage)) {
+//         // 获取报警信息
+//         if (alarmList.GetValue(i, &alarmID, &alarmNumber, &causeID, &causeAlarmNumber, 
+//                               &severity, &year, &month, &day, &hour, &minute, &second,
+//                               &alarmMessage, &causeAlarmMessage, &severityMessage)) {
             
-            // 打印基本信息
-            std::wcout << L"ID=" << alarmID << L", Number=" << alarmNumber 
-                      << L", CauseID=" << causeID << L", CauseNumber=" << causeAlarmNumber 
-                      << L", Severity=" << severity << std::endl;
+//             // 打印基本信息
+//             std::wcout << L"ID=" << alarmID << L", Number=" << alarmNumber 
+//                       << L", CauseID=" << causeID << L", CauseNumber=" << causeAlarmNumber 
+//                       << L", Severity=" << severity << std::endl;
             
-            // 打印时间
-            std::wcout << L"Time: " << year << L"/" << month << L"/" << day << L" " 
-                      << hour << L":" << minute << L":" << second << std::endl;
+//             // 打印时间
+//             std::wcout << L"Time: " << year << L"/" << month << L"/" << day << L" " 
+//                       << hour << L":" << minute << L":" << second << std::endl;
             
-            // 打印报警信息
-            if (alarmMessage && SysStringLen(alarmMessage) > 0) {
-                std::wcout << L"Message: " << alarmMessage << std::endl;
-            }
+//             // 打印报警信息
+//             if (alarmMessage && SysStringLen(alarmMessage) > 0) {
+//                 std::wcout << L"Message: " << alarmMessage << std::endl;
+//             }
             
-            // 打印报警原因
-            if (causeAlarmMessage && SysStringLen(causeAlarmMessage) > 0) {
-                std::wcout << L"Cause: " << causeAlarmMessage << std::endl;
-            }
+//             // 打印报警原因
+//             if (causeAlarmMessage && SysStringLen(causeAlarmMessage) > 0) {
+//                 std::wcout << L"Cause: " << causeAlarmMessage << std::endl;
+//             }
             
-            // 打印严重性信息
-            if (severityMessage && SysStringLen(severityMessage) > 0) {
-                std::wcout << L"Severity: " << severityMessage << std::endl;
-            }
-        } else {
-            std::wcout << L"No alarm or error reading alarm" << std::endl;
-        }
+//             // 打印严重性信息
+//             if (severityMessage && SysStringLen(severityMessage) > 0) {
+//                 std::wcout << L"Severity: " << severityMessage << std::endl;
+//             }
+//         } else {
+//             std::wcout << L"No alarm or error reading alarm" << std::endl;
+//         }
         
-        std::wcout << std::endl;
+//         std::wcout << std::endl;
         
-        // 释放BSTR资源
-        if (alarmMessage) ::SysFreeString(alarmMessage);
-        if (causeAlarmMessage) ::SysFreeString(causeAlarmMessage);
-        if (severityMessage) ::SysFreeString(severityMessage);
-    }
+//         // 释放BSTR资源
+//         if (alarmMessage) ::SysFreeString(alarmMessage);
+//         if (causeAlarmMessage) ::SysFreeString(causeAlarmMessage);
+//         if (severityMessage) ::SysFreeString(severityMessage);
+//     }
     
-    // 读取当前报警
-    std::wcout << L"--- Current Alarm ---" << std::endl;
+//     // 读取当前报警
+//     std::wcout << L"--- Current Alarm ---" << std::endl;
     
-    // 初始化BSTR
-    alarmMessage = strTemp.AllocSysString();
-    causeAlarmMessage = strTemp.AllocSysString();
-    severityMessage = strTemp.AllocSysString();
+//     // 初始化BSTR
+//     alarmMessage = strTemp.AllocSysString();
+//     causeAlarmMessage = strTemp.AllocSysString();
+//     severityMessage = strTemp.AllocSysString();
     
-    // 获取当前报警信息
-    if (alarmCurrent.GetValue(1, &alarmID, &alarmNumber, &causeID, &causeAlarmNumber, 
-                           &severity, &year, &month, &day, &hour, &minute, &second,
-                           &alarmMessage, &causeAlarmMessage, &severityMessage)) {
+//     // 获取当前报警信息
+//     if (alarmCurrent.GetValue(1, &alarmID, &alarmNumber, &causeID, &causeAlarmNumber, 
+//                            &severity, &year, &month, &day, &hour, &minute, &second,
+//                            &alarmMessage, &causeAlarmMessage, &severityMessage)) {
         
-        // 打印基本信息
-        std::wcout << L"ID=" << alarmID << L", Number=" << alarmNumber 
-                  << L", CauseID=" << causeID << L", CauseNumber=" << causeAlarmNumber 
-                  << L", Severity=" << severity << std::endl;
+//         // 打印基本信息
+//         std::wcout << L"ID=" << alarmID << L", Number=" << alarmNumber 
+//                   << L", CauseID=" << causeID << L", CauseNumber=" << causeAlarmNumber 
+//                   << L", Severity=" << severity << std::endl;
         
-        // 打印时间
-        std::wcout << L"Time: " << year << L"/" << month << L"/" << day << L" " 
-                  << hour << L":" << minute << L":" << second << std::endl;
+//         // 打印时间
+//         std::wcout << L"Time: " << year << L"/" << month << L"/" << day << L" " 
+//                   << hour << L":" << minute << L":" << second << std::endl;
         
-        // 打印报警信息
-        if (alarmMessage && SysStringLen(alarmMessage) > 0) {
-            std::wcout << L"Message: " << alarmMessage << std::endl;
-        }
+//         // 打印报警信息
+//         if (alarmMessage && SysStringLen(alarmMessage) > 0) {
+//             std::wcout << L"Message: " << alarmMessage << std::endl;
+//         }
         
-        // 打印报警原因
-        if (causeAlarmMessage && SysStringLen(causeAlarmMessage) > 0) {
-            std::wcout << L"Cause: " << causeAlarmMessage << std::endl;
-        }
+//         // 打印报警原因
+//         if (causeAlarmMessage && SysStringLen(causeAlarmMessage) > 0) {
+//             std::wcout << L"Cause: " << causeAlarmMessage << std::endl;
+//         }
         
-        // 打印严重性信息
-        if (severityMessage && SysStringLen(severityMessage) > 0) {
-            std::wcout << L"Severity: " << severityMessage << std::endl;
-        }
-    } else {
-        std::wcout << L"No current alarm or error reading alarm" << std::endl;
-    }
+//         // 打印严重性信息
+//         if (severityMessage && SysStringLen(severityMessage) > 0) {
+//             std::wcout << L"Severity: " << severityMessage << std::endl;
+//         }
+//     } else {
+//         std::wcout << L"No current alarm or error reading alarm" << std::endl;
+//     }
     
-    // 释放BSTR资源
-    if (alarmMessage) ::SysFreeString(alarmMessage);
-    if (causeAlarmMessage) ::SysFreeString(causeAlarmMessage);
-    if (severityMessage) ::SysFreeString(severityMessage);
+//     // 释放BSTR资源
+//     if (alarmMessage) ::SysFreeString(alarmMessage);
+//     if (causeAlarmMessage) ::SysFreeString(causeAlarmMessage);
+//     if (severityMessage) ::SysFreeString(severityMessage);
     
-    std::wcout << L"\n======================================\n" << std::endl;
-}
+//     std::wcout << L"\n======================================\n" << std::endl;
+// }
 
 int main(int argc, char* argv[]) {
     // 默认IP地址
@@ -512,7 +512,7 @@ int main(int argc, char* argv[]) {
         // 读取并显示报警信息
         RobotComm::DataAlarm alarmList(pAlarmList);
         RobotComm::DataAlarm alarmCurrent(pAlarmCurrent);
-        ReadAlarms(alarmList, alarmCurrent);
+        // ReadAlarms(alarmList, alarmCurrent);
         
         std::wcout << L"Alarm information read successfully" << std::endl;
         
