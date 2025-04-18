@@ -70,11 +70,10 @@ target_link_libraries(RobotComm PRIVATE
     uuid
 )
 
-# Build sample program
-option(BUILD_SAMPLE "Build sample application" ON)
-
 add_subdirectory(RobotCommCOM)
 
+# Build sample program
+option(BUILD_SAMPLE "Build sample application" ON)
 if(BUILD_SAMPLE)
     add_executable(SampleUsage SampleUsage.cpp)
     target_link_libraries(SampleUsage PRIVATE RobotComm)
