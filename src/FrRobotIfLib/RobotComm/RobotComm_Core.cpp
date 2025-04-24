@@ -31,14 +31,31 @@ void Core::Initialize(LPDISPATCH pDispatch) {
 }
 
 BOOL Core::Initialize() {
+    if(m_pDispatch) {
+        m_pDispatch->Release();
+        m_pDispatch = NULL;
+    }
 
-    bridgeCommon::setEncode("Shift-Jis");
-
-    // pCore = gcnew bridgeCore(gcnew Core(bridgeCommon::getEncode()));
-
-    // pLibCore = gcnew bridgeLibCore(pCore->get_Snpx());
-
-    return TRUE;
+    // 初始化COM库（设置STA线程模型）
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr)) {
+        return FALSE;  // COM库初始化失败
+    }
+    
+    // 创建FRRJIF.Core COM对象实例
+    CComPtr<IDispatch> pDispatch;
+    hr = pDispatch.CoCreateInstance(L"FRRJIF.Core");
+    if (FAILED(hr)) {
+        _com_error err(hr);
+        // 输出或记录详细错误: err.ErrorMessage()
+        CoUninitialize();  // 只有在我们自己初始化了COM时才清理
+        return FALSE;
+    }
+    
+    // 使用成功创建的对象初始化
+    m_pDispatch = pDispatch.Detach();  // Detach转移所有权，不需要AddRef
+    
+    return (m_pDispatch != NULL);
 }
 
 long Core::GetObjectID() {
@@ -77,7 +94,7 @@ BOOL Core::Connect(LPCTSTR HostName) {
 
     // 参数按照倒序传递
     args[0].vt = VT_BSTR;
-    args[0].bstrVal = SysAllocString(reinterpret_cast<LPCOLESTR>(HostName));
+    args[0].bstrVal = SysAllocString(HostName);
 
     dp.rgvarg = args;
     dp.cArgs = 1;
@@ -339,7 +356,7 @@ BOOL Core::ProtectSetPassword(LPCTSTR strPassword) {
 
     // 参数按照倒序传递
     args[0].vt = VT_BSTR;
-    args[0].bstrVal = SysAllocString(reinterpret_cast<LPCOLESTR>(strPassword));
+    args[0].bstrVal = SysAllocString(strPassword);
 
     dp.rgvarg = args;
     dp.cArgs = 1;
@@ -663,7 +680,7 @@ void Core::AddUserMessage(LPCTSTR vstrMessage) {
 
     // 参数按照倒序传递
     args[0].vt = VT_BSTR;
-    args[0].bstrVal = SysAllocString(reinterpret_cast<LPCOLESTR>(vstrMessage));
+    args[0].bstrVal = SysAllocString(vstrMessage);
 
     dp.rgvarg = args;
     dp.cArgs = 1;
