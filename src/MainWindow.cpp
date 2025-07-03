@@ -20,9 +20,7 @@
 #include <regex>
 
 MainWindow::MainWindow(QWidget *parent)
-    : grabWorker_(nullptr), grabThread_(nullptr),
-      topToolBar_(nullptr), progressWidget_(nullptr), progressBar_(nullptr),
-      QMainWindow(parent)
+    : QMainWindow(parent)
 {
     // Load the external QSS file for dark theme (use style.qss)
     QFile file(":styles/style.qss");
@@ -59,7 +57,10 @@ MainWindow::MainWindow(QWidget *parent)
     dockManager_->setSplitterSizes(rightDockWidgetArea, {static_cast<int>(width * 0.85 * 0.7), static_cast<int>(width * 0.85 * 0.3)});
     centralLayout->addWidget(dockManager_);
 
-    dockWidgets_ << viewerWin_ << logWin_ << browserWin_ << propertyWin_;
+    dockWidgets_ << QPointer<ads::CDockWidget>(viewerWin_)
+                 << QPointer<ads::CDockWidget>(logWin_)
+                 << QPointer<ads::CDockWidget>(browserWin_)
+                 << QPointer<ads::CDockWidget>(propertyWin_);
 
     // Connect propertyWin_ and viewerWin_, feature point in viewerWin_ will editable when pick button trigered
     connect(propertyWin_, &DockWidgetProperty::pickFeatureStatus, viewerWin_, &DockWidgetViewer::onFeaturePickEnable);
@@ -112,34 +113,6 @@ MainWindow::~MainWindow()
 {
     // Save window settings before closing
     saveSettings();
-
-    if (grabWorker_) {
-        // Stop the tasks running in grabWorker_ and safely delete
-        grabWorker_->stopGrabbing();
-        grabWorker_->deleteLater();
-        grabWorker_ = nullptr;
-    }
-
-    if (grabThread_) {
-        // Stop the thread and wait for it to finish
-        grabThread_->quit();    // Request the thread to exit
-        grabThread_->wait();    // Wait for the thread to fully finish
-
-        // Safely delete the thread object
-        grabThread_->deleteLater();
-        grabThread_ = nullptr;
-    }
-
-    // Delete all dock widgets
-    for (auto dockWidget : dockWidgets_) {
-        delete dockWidget;
-    }
-    delete dockManager_;
-    dockWidgets_.clear();
-
-    delete topToolBar_;
-    delete progressWidget_;
-    delete progressBar_;
 }
 
 // Function to create the menu bar
@@ -1149,8 +1122,8 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
             grabThread_->wait();  // Blocks until the thread finishes
 
             // Stop and destroy grab thread
-            delete grabThread_;
-            delete grabWorker_;
+            // delete grabThread_;
+            // delete grabWorker_;
         } else {
             // Show error message if connection fails
             QMessageBox::critical(this, "Error", "Failed to disconnect to the camera.");

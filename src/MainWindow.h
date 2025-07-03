@@ -29,6 +29,7 @@
 #include <QList>
 #include <QHBoxLayout>
 #include <QThread>
+#include <QPointer>
 #include <nlohmann/json.hpp>
 
 // Alias for a point that includes x, y, z, w, p, r
@@ -102,23 +103,23 @@ private slots:
     void replotSensorData();
 
 private:
-    QToolBar *topToolBar_;              // Top toolbar
-    QDialog *progressWidget_;
-    QProgressBar *progressBar_;
+    QPointer<QToolBar> topToolBar_;              // Top toolbar
+    QPointer<QDialog> progressWidget_;
+    QPointer<QProgressBar> progressBar_;
 
     CameraInfo curCamInfo_;             // Store current selected sensor information
     LineScannerInterface sensorApi_;    // Make sensorApi a member variable
-    ThreadWorker *grabWorker_;
-    QThread *grabThread_;
+    QPointer<ThreadWorker> grabWorker_;
+    QPointer<QThread> grabThread_;
     bool isGrabing_;
 
     // DockWidgets
-    ads::CDockManager* dockManager_;
-    QList<ads::CDockWidget*> dockWidgets_;
-    DockWidgetViewer* viewerWin_;
-    DockWidgetLogger* logWin_;
-    DockWidgetBrowser* browserWin_;
-    DockWidgetProperty* propertyWin_;
+    QPointer<ads::CDockManager> dockManager_;
+    QList<QPointer<ads::CDockWidget>> dockWidgets_;
+    QPointer<DockWidgetViewer> viewerWin_;
+    QPointer<DockWidgetLogger> logWin_;
+    QPointer<DockWidgetBrowser> browserWin_;
+    QPointer<DockWidgetProperty> propertyWin_;
 
     // Calibration dataset
     std::vector<RenderData> profilesBuffer_;
