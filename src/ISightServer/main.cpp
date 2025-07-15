@@ -1,4 +1,4 @@
-#include "tcp_server.h"
+#include "ISightServer.h"
 
 #include <iostream>
 #include <iomanip>      // for std::put_time
@@ -6,7 +6,7 @@
 #include <ctime>        // for std::localtime
 
 int main() {
-    TcpServer server(12345); // Listen on port 12345
+    ISightServer server(12345); // Listen on port 12345
 
     // Set callback function to retrive message from listening loop
     server.setMessageCallback([](const Message& msg){

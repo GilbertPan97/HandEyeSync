@@ -1,5 +1,5 @@
-// tcp_server.cpp
-#include "tcp_server.h"
+// ISightServer.cpp
+#include "ISightServer.h"
 #include <iostream>
 #include <cstring>
 #include <thread>
@@ -16,7 +16,7 @@
 #include <unistd.h>
 #endif
 
-TcpServer::TcpServer(unsigned short port, const std::string& ip)
+ISightServer::ISightServer(unsigned short port, const std::string& ip)
     : server_port_(port)
     , server_ip_(ip)
     , is_running_(false)
@@ -24,15 +24,15 @@ TcpServer::TcpServer(unsigned short port, const std::string& ip)
     , client_socket_(-1)
 {}
 
-TcpServer::~TcpServer() {
+ISightServer::~ISightServer() {
     stop();
 }
 
-void TcpServer::setMessageCallback(MessageCallback cb) {
+void ISightServer::setMessageCallback(MessageCallback cb) {
     messageCallback_ = cb;
 }
 
-bool TcpServer::start() {
+bool ISightServer::start() {
 #ifdef _WIN32
     WSADATA wsaData;
     int wsaerr = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -78,11 +78,11 @@ bool TcpServer::start() {
     std::cout << "Server listening on " << server_ip_ << ":" << server_port_ << std::endl;
 
     is_running_ = true;
-    listener_thread_ = std::thread(&TcpServer::acceptLoop, this);
+    listener_thread_ = std::thread(&ISightServer::acceptLoop, this);
     return true;
 }
 
-void TcpServer::stop() {
+void ISightServer::stop() {
     is_running_ = false;
     if (listener_thread_.joinable()) listener_thread_.join();
 #ifdef _WIN32
@@ -95,7 +95,7 @@ void TcpServer::stop() {
 #endif
 }
 
-void TcpServer::acceptLoop() {
+void ISightServer::acceptLoop() {
     sockaddr_in client_addr;
 #ifdef _WIN32
     int client_len = sizeof(client_addr);
@@ -142,7 +142,7 @@ void TcpServer::acceptLoop() {
     }
 }
 
-void TcpServer::EchoMsgSender(const Message& message) {
+void ISightServer::EchoMsgSender(const Message& message) {
     Message echo_msg;
 
     echo_msg.header = message.header;
@@ -160,7 +160,7 @@ void TcpServer::EchoMsgSender(const Message& message) {
     sendMessage(echo_msg.pack());
 }
 
-void TcpServer::sendMessage(const std::vector<uint8_t>& data) {
+void ISightServer::sendMessage(const std::vector<uint8_t>& data) {
     if (client_socket_ != -1) {
         send(client_socket_, reinterpret_cast<const char*>(data.data()), static_cast<int>(data.size()), 0);
     }

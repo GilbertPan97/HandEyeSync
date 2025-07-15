@@ -1,6 +1,6 @@
 // tcp_server.h
 #pragma once
-#include "message_parser.h"
+#include "MessageParser.h"
 
 #include <vector>
 #include <thread>
@@ -15,10 +15,10 @@
 #include <netinet/in.h>
 #endif
 
-class TcpServer {
+class ISightServer {
 public:
-    explicit TcpServer(unsigned short port, const std::string& ip = "0.0.0.0");
-    ~TcpServer();
+    explicit ISightServer(unsigned short port, const std::string& ip = "0.0.0.0");
+    ~ISightServer();
 
     using MessageCallback = std::function<void(const Message&)>;
     void setMessageCallback(MessageCallback cb);

@@ -13,14 +13,14 @@ endif()
 
 # Add the source and header files for the library
 set(LIB_SOURCES
-    tcp_server.cpp
-    message_parser.cpp
+    ISightServer.cpp
+    MessageParser.cpp
     message.cpp
 )
 
 set(LIB_HEADERS
-    tcp_server.h
-    message_parser.h
+    ISightServer.h
+    MessageParser.h
     message.h
 )
 
