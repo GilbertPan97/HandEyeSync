@@ -1,0 +1,14 @@
+ISIGHT软件安装步骤：
+
+1. ISIGHT软件内所有文件解压缩至优盘或MC卡，并插入机器人。
+
+2. 运行 isight_uninstall.cm ，完成老版本软件的卸载。
+（卸载前，请确认示教器光标没有选中机器人程序列表中的isight.pc，send_pos_off.pc，send_pos_on.pc）
+
+3. 重启机器人。
+
+4.运行 isight_install.cm， 完成新版本软件的安装。
+
+5. 重启机器人（必须重启）。
+
+如果机器人上没有安装过ISIGHT软件，则跳过步骤2和3，直接执行步骤4和5。 

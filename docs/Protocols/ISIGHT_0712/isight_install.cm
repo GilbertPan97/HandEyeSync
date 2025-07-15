@@ -1,0 +1,15 @@
+PRINT "Installing Isight..."
+
+SETVAR $KAREL_ENB 1
+PCLOAD isight
+PCLOAD send_pos_on
+PCLOAD send_pos_off
+FRCOPY ARGDISPEG01.DT  FR:ARGDISPEG01.DT    OVERWRITE
+FRCOPY ARGDISPCH01.DT  FR:ARGDISPCH01.DT    OVERWRITE
+
+PRINT "Isight software install successfully."
+PRINT "                                       "
+PRINT "***********************"
+PRINT "  Please Cycle Power"
+PRINT "  FCTN - 0 - 8 - Yes"
+PRINT "***********************"

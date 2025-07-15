@@ -28,10 +28,10 @@ find_package(nlohmann_json REQUIRED)
 
 # Build source code
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/DockWidget)
-subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/FanucParser)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/ISightServer)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LsParser)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/PsHEC)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LineScanners)
-subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/FrRobotIfLib)
 
 # Add source files
 set(SRC_FILES

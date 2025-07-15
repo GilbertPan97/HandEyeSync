@@ -1,0 +1,26 @@
+[PROGRAM]
+    NAME = "ISIGHT"
+[ARGUMENT]
+V01 = "Config":'0',
+      "Connect":'1',
+      "Disconnect":'2',
+      "Communication":'3'
+[V01,'0']
+    I02 = "Is_Simulate":(0~1):'0'
+    S03 = "Client_Tag"
+    I04 = "Timeout-ms":'5000'
+    I05 = "Task_Status":(1~1024):'1'
+    I06 = "Connect_Status":(1~200):'1'
+[V01,'1']
+[V01,'2']
+[V01,'3']
+    I02 = "Action_ID":(0~200):'0'
+[V01,'3',V02,'36']
+		I03 = "PR_No" :(1~100): '1'
+[V01,'3',V02,'37']
+		I03 = "Reg_No" :(1~200): '1'
+[V01,'3',V02,'38']
+		I03 = "Prog_Idx" :(0~999): '0'
+[V01,'3',V02,'39']
+		I03 = "Reg_No" :(1~200): '1'
+[ENDPROGRAM]

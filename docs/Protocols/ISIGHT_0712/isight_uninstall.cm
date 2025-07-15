@@ -1,0 +1,16 @@
+PRINT "Uninstalling Isight..."
+
+DELPC isight
+DELPC send_pos_on
+DELPC send_pos_off
+
+VRCLEAR send_pos_off
+VRCLEAR send_pos_on
+VRCLEAR isight
+
+PRINT "Isight software uninstall successfully."
+PRINT "                                       "
+PRINT "***********************"
+PRINT "  Please Cycle Power"
+PRINT "  FCTN - 0 - 8 - Yes"
+PRINT "***********************"
