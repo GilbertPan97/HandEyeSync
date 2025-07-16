@@ -1,5 +1,6 @@
-// tcp_server.h
-#pragma once
+#ifndef ISIGHTSERVER_H
+#define ISIGHTSERVER_H
+
 #include "MessageParser.h"
 
 #include <vector>
@@ -51,3 +52,5 @@ private:
     std::thread listener_thread_;
     MessageCallback messageCallback_;
 };
+
+#endif

@@ -34,11 +34,26 @@
 
 // Alias for a point that includes x, y, z, w, p, r
 using FanucRobPose = std::vector<double>;
-// using ProfilePoints = std::vector<std::pair<double, double>>;
 
 enum class SensorType {
     ProfileScanner,
     ImageCamera
+};
+
+// Define a struct to hold adapter information
+struct AdapterInfo {
+    std::string name;           // Adapter name
+    std::string description;    // Adapter description
+    std::string ipAddress;      // IP address
+    std::string subnetMask;     // Subnet mask
+    std::string defaultGateway;  // Default gateway
+
+    // Constructor to initialize adapter information
+    AdapterInfo(const std::string &name, const std::string &description,
+                const std::string &ipAddress, const std::string &subnetMask,
+                const std::string &defaultGateway)
+        : name(name), description(description), ipAddress(ipAddress),
+          subnetMask(subnetMask), defaultGateway(defaultGateway) {}
 };
 
 class MainWindow : public QMainWindow
@@ -59,6 +74,8 @@ private:
     
     void loadSettings();
     void saveSettings();
+
+    std::vector<AdapterInfo> getNetworkAdapters();
 
     QString sensorTypeToString(SensorType sensorType);
 
@@ -95,6 +112,7 @@ private slots:
     void onSettingButtonReleased();
     void onRunButtonReleased();
     void showScanCameraDialog(QAction *actBtn);
+    void onIpConnTriggered();
     void updateSeneorInfoGroupBox(QGroupBox *statusGroupBox, const CameraInfo &curCamInfo_);
     void updateCalibModelGroupBox(QGroupBox *modelGroupBox, nlohmann::json &calibMap);
 

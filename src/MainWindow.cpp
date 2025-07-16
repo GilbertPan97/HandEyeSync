@@ -19,6 +19,18 @@
 
 #include <regex>
 
+#ifdef _WIN32
+    #include <windows.h>
+    #include <iphlpapi.h>
+    #pragma comment(lib, "iphlpapi.lib")
+#else
+    #include <ifaddrs.h>
+    #include <net/if.h>
+    #include <arpa/inet.h>
+    #include <netinet/in.h>
+    #include <sys/socket.h>
+#endif
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -136,6 +148,8 @@ void MainWindow::createMenuBar()
 
     QAction *fanucRobotAction = deviceMenu->addAction("FanucRobot");
     fanucRobotAction->setCheckable(true);
+    // TODO:
+    connect(fanucRobotAction, &QAction::triggered, this, &MainWindow::onIpConnTriggered);
 
     QMenu *editMenu = menuBar()->addMenu("Edit");
     QAction *copyAction = editMenu->addAction("Copy");
@@ -1133,6 +1147,140 @@ void MainWindow::showScanCameraDialog(QAction *actBtn) {
     dialog.exec();
 }
 
+// Slot function to trigger the IP connection dialog
+void MainWindow::onIpConnTriggered() {
+    QDialog dialog(this);
+    dialog.setWindowTitle("System IP Address");
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(&dialog);
+
+    // Get the list of adapters
+    std::vector<AdapterInfo> adapters = getNetworkAdapters();
+
+    // ComboBox to select an adapter
+    QComboBox *adapterComboBox = new QComboBox;
+    // Iterate through the adapters and add them to the ComboBox
+    for (const auto &adapter : adapters) {
+        QString adapterDesc = QString::fromStdString(adapter.description);
+        QString displayText = adapterDesc + " (IP: " + QString::fromStdString(adapter.ipAddress) + ")";
+        adapterComboBox->addItem(displayText);
+    }
+
+    // Replace QFormLayout with QGridLayout for better control over spacing and height
+    QGridLayout *gridLayout = new QGridLayout;
+
+    // Create labels and line edits
+    QLabel *ipLabel = new QLabel("IP Address:");
+    QLabel *subnetLabel = new QLabel("Subnet Mask:");
+    QLabel *gatewayLabel = new QLabel("Default Gateway:");
+
+    QLineEdit *ipLineEdit = new QLineEdit;
+    QLineEdit *subnetLineEdit = new QLineEdit;
+    QLineEdit *gatewayLineEdit = new QLineEdit;
+
+    // Validator for IP addresses
+    QRegExp ipRegex("^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
+                    "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
+                    "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
+                    "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+    QRegExpValidator *ipValidator = new QRegExpValidator(ipRegex, this);
+
+    ipLineEdit->setValidator(ipValidator);
+    subnetLineEdit->setValidator(ipValidator);
+    gatewayLineEdit->setValidator(ipValidator);
+
+    // Set fixed height for line edits to make height compact
+    constexpr int fieldHeight = 24;
+    ipLineEdit->setFixedHeight(fieldHeight);
+    subnetLineEdit->setFixedHeight(fieldHeight);
+    gatewayLineEdit->setFixedHeight(fieldHeight);
+
+    // Set font size smaller for compactness (optional)
+    // QFont font;
+    // font.setPointSize(9);
+    // ipLabel->setFont(font);
+    // subnetLabel->setFont(font);
+    // gatewayLabel->setFont(font);
+    // ipLineEdit->setFont(font);
+    // subnetLineEdit->setFont(font);
+    // gatewayLineEdit->setFont(font);
+
+    // Add widgets to grid layout (2 columns: label and input)
+    gridLayout->addWidget(ipLabel, 0, 0, Qt::AlignRight);
+    gridLayout->addWidget(ipLineEdit, 0, 1);
+    gridLayout->addWidget(subnetLabel, 1, 0, Qt::AlignRight);
+    gridLayout->addWidget(subnetLineEdit, 1, 1);
+    gridLayout->addWidget(gatewayLabel, 2, 0, Qt::AlignRight);
+    gridLayout->addWidget(gatewayLineEdit, 2, 1);
+
+    // Adjust spacing and margins for a compact layout
+    gridLayout->setHorizontalSpacing(10);
+    gridLayout->setVerticalSpacing(6);
+    gridLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setSpacing(8);
+
+    // Initialize with the selected adapter's IP address if available
+    if (!adapters.empty()) {
+        ipLineEdit->setText(QString::fromStdString(adapters[0].ipAddress));
+        subnetLineEdit->setText(QString::fromStdString(adapters[0].subnetMask));
+        gatewayLineEdit->setText(QString::fromStdString(adapters[0].defaultGateway));
+    }
+
+    // Update fields when adapter selection changes
+    connect(adapterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+        [=](int index) {
+            if (index >= 0 && index < static_cast<int>(adapters.size())) {
+                ipLineEdit->setText(QString::fromStdString(adapters[index].ipAddress));
+                subnetLineEdit->setText(QString::fromStdString(adapters[index].subnetMask));
+                gatewayLineEdit->setText(QString::fromStdString(adapters[index].defaultGateway));
+            }
+        });
+
+    // OK and Cancel buttons
+    QPushButton *okButton = new QPushButton("OK");
+    QPushButton *cancelButton = new QPushButton("Cancel");
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout;
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(okButton);
+    buttonLayout->addWidget(cancelButton);
+
+    // Add widgets and layouts to main layout
+    mainLayout->addWidget(adapterComboBox);
+    mainLayout->addLayout(gridLayout);
+    mainLayout->addLayout(buttonLayout);
+
+    // Connect buttons
+    connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+    connect(okButton, &QPushButton::clicked, [&]() {
+        QString ip = ipLineEdit->text();
+        QString subnet = subnetLineEdit->text();
+        QString gateway = gatewayLineEdit->text();
+
+        if (ipLineEdit->hasAcceptableInput() && subnetLineEdit->hasAcceptableInput() && gatewayLineEdit->hasAcceptableInput()) {
+            QString selectedAdapterName = QString::fromStdString(adapters[adapterComboBox->currentIndex()].name).trimmed();
+
+            QStringList logList;
+            logList << "\n========= Listening At System Ip Address... ========="
+                    << "Selected Adapter Name: " + selectedAdapterName
+                    << "IP Address: " + ip
+                    << "Subnet Mask: " + subnet
+                    << "Default Gateway: " + gateway;
+            QString log_str = logList.join("\n");
+            logWin_->log(log_str);
+
+            dialog.accept();
+        } else {
+            QMessageBox::warning(this, "Input Error", "Please enter valid IP address, subnet mask, and gateway.");
+            logWin_->log("Input Error: Invalid IP Address");
+        }
+    });
+
+    dialog.exec();
+}
+
+
 void MainWindow::updateSeneorInfoGroupBox(QGroupBox *statusGroupBox, const CameraInfo &curCamInfo_) {
     // Clear all items in the old layout
     QLayout *oldLayout = statusGroupBox->layout();
@@ -1432,6 +1580,74 @@ void MainWindow::loadSettings()
     // if (!dockState.isEmpty()) {
     //     dockManager_->restoreState(dockState);
     // }
+}
+
+// Private member function to get the list of network adapters and their IP addresses
+std::vector<AdapterInfo> MainWindow::getNetworkAdapters() {
+    std::vector<AdapterInfo> adapters; // Vector to hold adapter information
+
+#ifdef _WIN32
+    ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+    PIP_ADAPTER_INFO pAdapterInfo = (IP_ADAPTER_INFO *)malloc(ulOutBufLen);
+
+    // Handle buffer overflow
+    if (GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW) {
+        free(pAdapterInfo);
+        pAdapterInfo = (IP_ADAPTER_INFO *)malloc(ulOutBufLen);
+    }
+
+    // Get adapter information
+    if (pAdapterInfo && GetAdaptersInfo(pAdapterInfo, &ulOutBufLen) == NO_ERROR) {
+        PIP_ADAPTER_INFO pAdapter = pAdapterInfo;
+        while (pAdapter) {
+            AdapterInfo info(pAdapter->AdapterName,                          // Adapter name
+                             pAdapter->Description,                          // Adapter description
+                             pAdapter->IpAddressList.IpAddress.String,       // IP address
+                             pAdapter->IpAddressList.IpMask.String,          // Subnet mask
+                             pAdapter->GatewayList.IpAddress.String);        // Default gateway
+
+            adapters.push_back(info); // Add the adapter info to the vector
+            pAdapter = pAdapter->Next; // Move to the next adapter
+        }
+    }
+
+    if (pAdapterInfo) {
+        free(pAdapterInfo);
+    }
+
+#else
+    struct ifaddrs* ifaddr = nullptr;
+    if (getifaddrs(&ifaddr) == -1) {
+        return adapters;
+    }
+
+    for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
+            continue;
+
+        char ip[INET_ADDRSTRLEN] = {};
+        char netmask[INET_ADDRSTRLEN] = {};
+
+        void* addr_ptr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
+        void* mask_ptr = &((struct sockaddr_in*)ifa->ifa_netmask)->sin_addr;
+
+        inet_ntop(AF_INET, addr_ptr, ip, sizeof(ip));
+        inet_ntop(AF_INET, mask_ptr, netmask, sizeof(netmask));
+
+        AdapterInfo info(ifa->ifa_name,        // Use interface name as name
+                         ifa->ifa_name,        // No description on Unix
+                         ip,                   // IP address
+                         netmask,              // Subnet mask
+                         ""                    // Default gateway not fetched
+        );
+
+        adapters.push_back(info);
+    }
+
+    freeifaddrs(ifaddr);
+#endif
+
+    return adapters; // Return the vector of adapter information
 }
 
 // Function to convert SensorType to string

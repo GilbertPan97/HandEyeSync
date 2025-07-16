@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
 #include <vector>
 #include <cstdint>
@@ -34,3 +35,5 @@ struct Message {
     std::vector<uint8_t> pack() const;
     static Message unpack(const std::vector<uint8_t>& bytes);
 };
+
+#endif

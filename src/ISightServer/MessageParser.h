@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MESSAGEPARSER_H
+#define MESSAGEPARSER_H
 
 #include "Message.h"
 #include <vector>
@@ -14,3 +15,5 @@ private:
     void printHexBuffer(const std::vector<uint8_t>& buffer);
     std::vector<uint8_t> buffer_;
 };
+
+#endif
