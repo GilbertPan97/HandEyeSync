@@ -4,17 +4,26 @@
 #include <cstring>
 #include <thread>
 #include <chrono>
+#include <regex>
 
 #ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #pragma comment(lib, "Ws2_32.lib")
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <unistd.h>
 #endif
+
+ISightServer::ISightServer()
+    : server_port_(0)
+    , server_ip_("0.0.0.0")
+    , is_running_(false)
+    , server_socket_(-1)
+    , client_socket_(-1)
+{}
 
 ISightServer::ISightServer(unsigned short port, const std::string& ip)
     : server_port_(port)
@@ -26,6 +35,31 @@ ISightServer::ISightServer(unsigned short port, const std::string& ip)
 
 ISightServer::~ISightServer() {
     stop();
+}
+
+bool ISightServer::SetPortIP(unsigned short port, const std::string& ip /* = "0.0.0.0" */) {
+    // Reject port 0 if not allowed
+    if (port == 0) {
+        return false;
+    }
+
+    // Validate IP format using inet_pton (strict IPv4)
+    sockaddr_in sa {};
+    int result =
+#ifdef _WIN32
+        InetPtonA(AF_INET, ip.c_str(), &(sa.sin_addr));
+#else
+        inet_pton(AF_INET, ip.c_str(), &(sa.sin_addr));
+#endif
+
+    if (result != 1) {
+        return false; // Invalid IP format
+    }
+
+    // Assign values if both are valid
+    server_port_ = port;
+    server_ip_ = ip;
+    return true;
 }
 
 void ISightServer::setMessageCallback(MessageCallback cb) {
@@ -103,17 +137,20 @@ void ISightServer::acceptLoop() {
     socklen_t client_len = sizeof(client_addr);
 #endif
 
-    std::cout << "Waiting for connection on " << server_ip_ << ":" << server_port_ << "...\n";
-    client_socket_ = accept(server_socket_, (sockaddr*)&client_addr, &client_len);
-
-    if (client_socket_ < 0) {
-        std::cerr << "[Error] Client connection failed!" << std::endl;
-        return;
-    }
-
-    std::cout << "[Info] Client connected." << std::endl;
-
     while (is_running_) {
+        // Waiting for connection again after disconnected.
+        if (client_socket_ == INVALID_SOCKET) {
+            std::cout << "Waiting for connection on " << server_ip_ << ":" << server_port_ << "...\n";
+
+            client_socket_ = accept(server_socket_, (sockaddr*)&client_addr, &client_len);
+
+            if (client_socket_ == INVALID_SOCKET) {
+                std::cerr << "[Error] Client connection failed!" << std::endl;
+                continue;
+            }
+            std::cout << "[Info] Client connected." << std::endl;
+        }
+
         // Receive data from the client socket into the buffer
         int bytes_received = recv(client_socket_, buffer_, sizeof(buffer_), 0);
 
@@ -134,7 +171,9 @@ void ISightServer::acceptLoop() {
             }
         } else if (bytes_received == 0) {
             std::cout << "[Info] Client disconnected." << std::endl;
-            break;
+            // Reset client_socket_ for next client connect
+            client_socket_ = INVALID_SOCKET;
+            continue;
         } else {
             std::cerr << "[Error] Receive failed." << std::endl;
             break;
