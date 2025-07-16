@@ -1,6 +1,21 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN // Prevent windows.h from including winsock.h
+    #include <windows.h>
+    #include <iphlpapi.h>
+    #pragma comment(lib, "iphlpapi.lib")
+#else
+    #include <ifaddrs.h>
+    #include <net/if.h>
+    #include <arpa/inet.h>
+    #include <netinet/in.h>
+    #include <sys/socket.h>
+#endif
+#endif
+
 #include "DockManager.h"
 #include "DockWidget.h"
 #include "DockAreaWidget.h"
@@ -14,6 +29,7 @@
 #include "PsAlgorithm.h"
 #include "DataProcessor.h"
 #include "LineScannerInterface.h"
+#include "ISightServer.h"
 #include "ThreadWorker.h"
 
 #include <QMainWindow>
@@ -130,6 +146,8 @@ private:
     QPointer<ThreadWorker> grabWorker_;
     QPointer<QThread> grabThread_;
     bool isGrabing_;
+
+    ISightServer robConnServer_;
 
     // DockWidgets
     QPointer<ads::CDockManager> dockManager_;

@@ -19,18 +19,6 @@
 
 #include <regex>
 
-#ifdef _WIN32
-    #include <windows.h>
-    #include <iphlpapi.h>
-    #pragma comment(lib, "iphlpapi.lib")
-#else
-    #include <ifaddrs.h>
-    #include <net/if.h>
-    #include <arpa/inet.h>
-    #include <netinet/in.h>
-    #include <sys/socket.h>
-#endif
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -1173,10 +1161,16 @@ void MainWindow::onIpConnTriggered() {
     QLabel *ipLabel = new QLabel("IP Address:");
     QLabel *subnetLabel = new QLabel("Subnet Mask:");
     QLabel *gatewayLabel = new QLabel("Default Gateway:");
+    QLabel *portLabel = new QLabel("Listening Port");
 
     QLineEdit *ipLineEdit = new QLineEdit;
     QLineEdit *subnetLineEdit = new QLineEdit;
     QLineEdit *gatewayLineEdit = new QLineEdit;
+    QLineEdit *portLineEdit = new QLineEdit;
+
+    ipLineEdit->setReadOnly(true);
+    subnetLineEdit->setReadOnly(true);
+    gatewayLineEdit->setReadOnly(true);
 
     // Validator for IP addresses
     QRegExp ipRegex("^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\."
@@ -1188,22 +1182,14 @@ void MainWindow::onIpConnTriggered() {
     ipLineEdit->setValidator(ipValidator);
     subnetLineEdit->setValidator(ipValidator);
     gatewayLineEdit->setValidator(ipValidator);
+    portLineEdit->setValidator(new QIntValidator(0, 65535, portLineEdit));
 
     // Set fixed height for line edits to make height compact
     constexpr int fieldHeight = 24;
     ipLineEdit->setFixedHeight(fieldHeight);
     subnetLineEdit->setFixedHeight(fieldHeight);
     gatewayLineEdit->setFixedHeight(fieldHeight);
-
-    // Set font size smaller for compactness (optional)
-    // QFont font;
-    // font.setPointSize(9);
-    // ipLabel->setFont(font);
-    // subnetLabel->setFont(font);
-    // gatewayLabel->setFont(font);
-    // ipLineEdit->setFont(font);
-    // subnetLineEdit->setFont(font);
-    // gatewayLineEdit->setFont(font);
+    portLineEdit->setFixedHeight(fieldHeight);
 
     // Add widgets to grid layout (2 columns: label and input)
     gridLayout->addWidget(ipLabel, 0, 0, Qt::AlignRight);
@@ -1212,6 +1198,8 @@ void MainWindow::onIpConnTriggered() {
     gridLayout->addWidget(subnetLineEdit, 1, 1);
     gridLayout->addWidget(gatewayLabel, 2, 0, Qt::AlignRight);
     gridLayout->addWidget(gatewayLineEdit, 2, 1);
+    gridLayout->addWidget(portLabel, 3, 0);
+    gridLayout->addWidget(portLineEdit, 3, 1);
 
     // Adjust spacing and margins for a compact layout
     gridLayout->setHorizontalSpacing(10);
@@ -1238,13 +1226,13 @@ void MainWindow::onIpConnTriggered() {
         });
 
     // OK and Cancel buttons
-    QPushButton *okButton = new QPushButton("OK");
-    QPushButton *cancelButton = new QPushButton("Cancel");
+    QPushButton *startButton = new QPushButton("Start");
+    QPushButton *stopButton = new QPushButton("Stop");
 
     QHBoxLayout *buttonLayout = new QHBoxLayout;
     buttonLayout->addStretch();
-    buttonLayout->addWidget(okButton);
-    buttonLayout->addWidget(cancelButton);
+    buttonLayout->addWidget(startButton);
+    buttonLayout->addWidget(stopButton);
 
     // Add widgets and layouts to main layout
     mainLayout->addWidget(adapterComboBox);
@@ -1252,28 +1240,36 @@ void MainWindow::onIpConnTriggered() {
     mainLayout->addLayout(buttonLayout);
 
     // Connect buttons
-    connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
-    connect(okButton, &QPushButton::clicked, [&]() {
+    connect(stopButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+    connect(startButton, &QPushButton::clicked, [&]() {
         QString ip = ipLineEdit->text();
         QString subnet = subnetLineEdit->text();
         QString gateway = gatewayLineEdit->text();
+        QString port = portLineEdit->text();
 
-        if (ipLineEdit->hasAcceptableInput() && subnetLineEdit->hasAcceptableInput() && gatewayLineEdit->hasAcceptableInput()) {
+        if (ipLineEdit->hasAcceptableInput() && subnetLineEdit->hasAcceptableInput() && 
+            gatewayLineEdit->hasAcceptableInput() && portLineEdit->hasAcceptableInput()) {
+            // TODO: Fix bug when connect again
+            bool sta = robConnServer_.SetPortIP(portLineEdit->text().toUShort(), ip.toStdString());
             QString selectedAdapterName = QString::fromStdString(adapters[adapterComboBox->currentIndex()].name).trimmed();
-
+            
             QStringList logList;
-            logList << "\n========= Listening At System Ip Address... ========="
+            logList << "Runing ISightServer..."
+                    << "========= Listening At System Ip Address... ========="
                     << "Selected Adapter Name: " + selectedAdapterName
                     << "IP Address: " + ip
                     << "Subnet Mask: " + subnet
-                    << "Default Gateway: " + gateway;
+                    << "Default Gateway: " + gateway
+                    << "Port: " + port;
             QString log_str = logList.join("\n");
-            logWin_->log(log_str);
+
+            if(sta && robConnServer_.start()) logWin_->log(log_str);
+            else logWin_->log("Run ISightServer fail at " + ip + ": " + port);
 
             dialog.accept();
         } else {
-            QMessageBox::warning(this, "Input Error", "Please enter valid IP address, subnet mask, and gateway.");
-            logWin_->log("Input Error: Invalid IP Address");
+            QMessageBox::warning(this, "Input Error", "Please enter valid IP address, subnet mask, gateway, and port.");
+            logWin_->log("Input Error: Invalid IP Address or port.");
         }
     });
 
