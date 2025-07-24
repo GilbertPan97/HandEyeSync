@@ -1,0 +1,17 @@
+This material is joint property of SHANGHAI-FANUC Robotics Co., Ltd. (hereinafter referred to as "SHANGHAI-FANUC"),
+and must be returned to SHANGHAI-FANUC immediately upon request, without exception.
+
+This material and all related documentation, specifications, software, technical data, or information illustrated or contained herein (collectively referred to as the "Materials") are proprietary and confidential to SHANGHAI-FANUC. The Materials are provided under the terms of the GNU General Public License (GPL), version 3 or later, and may be used, modified, and redistributed according to the conditions set forth by the GPL.
+
+The recipient of these Materials acknowledges and agrees that:
+(1) All intellectual property rights, including but not limited to patents, trademarks, copyrights, and trade secrets embodied in or related to the Materials shall remain the sole and exclusive property of SHANGHAI-FANUC;
+(2) The Materials are provided under the terms of the GPL, which allows the recipient to use, modify, and distribute the Materials, including creating derivative works, provided that the terms of the GPL are followed;
+(3) Any modifications to the Materials must be made available under the same GPL license, and the source code for any modified versions must be provided or made available upon request;
+(4) The recipient must include a copy of this license with any distribution of the Materials or modified versions;
+(5) Any unauthorized use, disclosure, or distribution of the Materials outside of the terms of the GPL may result in legal action and the payment of damages to SHANGHAI-FANUC;
+(6) Upon SHANGHAI-FANUC’s written request, all Materials shall be promptly returned or destroyed, and certification of such destruction shall be provided if requested.
+
+These terms shall be governed and interpreted in accordance with the laws of the People’s Republic of China. Any dispute arising out of or in connection with this license shall be submitted to the exclusive jurisdiction of the courts of Shanghai.
+
+Copyright © 2021–2022 SHANGHAI-FANUC Robotics Co., Ltd.
+All rights reserved.
