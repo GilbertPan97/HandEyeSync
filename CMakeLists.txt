@@ -15,11 +15,12 @@ subdirs(${CMAKE_CURRENT_SOURCE_DIR}/3rd-party)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
 # Find Qt5 libraries (automatically selects the correct version)
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.4/lib")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.5/lib")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/eigen-3.4.0")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/json-3.11.3")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/GO_SDK")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/SR7Link")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/qt5.12.0-vc15-64")
 
 find_package(OpenCV REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
@@ -46,6 +47,7 @@ set(QRC_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources.qrc")
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${QRC_FILE})
 
 # Link the required Qt5 libraries
+message(STATUS )
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets ${OpenCV_LIBS} Eigen3::Eigen nlohmann_json::nlohmann_json)
 target_link_libraries(${PROJECT_NAME} PRIVATE DockWidgetLibs FanucParserLibs ProfScanCalibrator LineScannerInterface ISightServer)
 
@@ -57,8 +59,16 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 if(WIN32)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+    add_custom_command(TARGET HandEyeSync POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "Current build config: $<CONFIG>"
+    )
     # add window platform resource config macro definition
     include(cmake/WinResource.cmake)
+    include(cmake/CopyImportedDLLs.cmake)
+
+    copy_imported_dlls(HandEyeSync "${CMAKE_SOURCE_DIR}/dlls.json")
+    
     # Set the path to the ICO file for the application icon
     set(ICON_FILE ${CMAKE_CURRENT_SOURCE_DIR}/icons/app-logo.ico)  
 

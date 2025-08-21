@@ -9,6 +9,9 @@ build
 /!**/bin/
 /!**/lib/
 
+# Ignore Qt dependency files
+/3rd-party/qt5.12.0-vc15-64
+
 # platform cache file (mac os)
 .DS_Store
 

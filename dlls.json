@@ -1,0 +1,46 @@
+{
+  "debug": {
+    "files": [
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_core455d.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_imgproc455d.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_highgui455d.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_videoio455d.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_imgcodecs455d.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_flann455d.dll",
+
+      "3rd-party/qt5.12.0-vc15-64/bin/Qt5Cored.dll",
+      "3rd-party/qt5.12.0-vc15-64/bin/Qt5Guid.dll",
+      "3rd-party/qt5.12.0-vc15-64/bin/Qt5Widgetsd.dll",
+      "3rd-party/qt5.12.0-vc15-64/bin/Qt5PrintSupportd.dll",
+
+      "3rd-party/GO_SDK/bin/win64d/kApi.dll",
+      "3rd-party/GO_SDK/bin/win64d/GoSdk.dll",
+      "3rd-party/SR7Link/bin/SR7Link.dll"
+    ],
+    "folders": [
+      "3rd-party/qt5.12.0-vc15-64/plugins/platforms"
+    ]
+  },
+  "release": {
+    "files": [
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_core455.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_imgproc455.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_highgui455.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_videoio455.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_imgcodecs455.dll",
+      "3rd-party/opencv-4.5.5/x64/vc16/bin/opencv_flann455.dll",
+
+      "3rd-party/qt5.12.0-vc15-64/bin/Qt5Core.dll",
+      "3rd-party/qt5.12.0-vc15-64/bin/Qt5Gui.dll",
+      "3rd-party/qt5.12.0-vc15-64/bin/Qt5Widgets.dll",
+      "3rd-party/qt5.12.0-vc15-64/bin/Qt5PrintSupport.dll",
+
+      "3rd-party/GO_SDK/bin/win64/kApi.dll",
+      "3rd-party/GO_SDK/bin/win64/GoSdk.dll",
+      "3rd-party/SR7Link/bin/SR7Link.dll"
+    ],
+    "folders": [
+      "3rd-party/qt5.12.0-vc15-64/plugins/platforms"
+    ]
+  }
+}
