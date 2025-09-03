@@ -37,6 +37,7 @@ subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/ISightServer)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LsParser)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/PsHEC)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LineScanners)
+# subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/QtDataViewer)
 
 # Add source files
 set(SRC_FILES
