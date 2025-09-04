@@ -8,7 +8,8 @@
 # {
 #   "debug": {
 #     "files": [
-#       "3rd-party/opencv/bin/opencv_core454d.dll"
+#       "3rd-party/opencv/bin/opencv_core454d.dll",
+#       "3rd-party/opencv/bin/*d.dll"
 #     ],
 #     "folders": [
 #       "3rd-party/qt5.12.0-vc15-64/plugins/platforms"
@@ -16,7 +17,8 @@
 #   },
 #   "release": {
 #     "files": [
-#       "3rd-party/opencv/bin/opencv_core454.dll"
+#       "3rd-party/opencv/bin/opencv_core454.dll",
+#       "3rd-party/opencv/bin/*.dll"
 #     ],
 #     "folders": [
 #       "3rd-party/qt5.12.0-vc15-64/plugins/platforms"
@@ -47,18 +49,37 @@ macro(copy_imported_dlls target json_file)
             string(JSON FILE_REL_PATH GET ${JSON_CONTENT} ${JSON_KEY} files ${i})
             # Convert relative path to absolute path
             get_filename_component(FILE_PATH "${CMAKE_SOURCE_DIR}/${FILE_REL_PATH}" ABSOLUTE)
+            get_filename_component(FILE_NAME "${FILE_PATH}" NAME)       # Extract the file name (leaf name)
 
-            # Before calling add_custom_command
-            if(NOT EXISTS "${FILE_PATH}")
-                message(WARNING "File not found: ${FILE_PATH}, skipping copy")
+            if(FILE_NAME MATCHES "\\*")  # Check if the file name contains a wildcard
+                # Get all files matching the wildcard in the same directory
+                get_filename_component(FILE_DIR "${FILE_PATH}" DIRECTORY)
+                file(GLOB MATCHED_FILES "${FILE_DIR}/${FILE_NAME}")
+                if(MATCHED_FILES)
+                    foreach(MATCHED_FILE IN LISTS MATCHED_FILES)
+                        add_custom_command(
+                            TARGET ${target} POST_BUILD
+                            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                    "${MATCHED_FILE}" "$<TARGET_FILE_DIR:${target}>"
+                            COMMENT "Copying file ${MATCHED_FILE} to $<TARGET_FILE_DIR:${target}>"
+                        )
+                    endforeach()
+                else()
+                    message(WARNING "No files matched: ${FILE_PATH}, skipping copy")
+                endif()
             else()
-                add_custom_command(
-                    TARGET ${target} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${FILE_PATH}" "$<TARGET_FILE_DIR:${target}>"
-                    COMMENT "Copying file ${FILE_PATH} to $<TARGET_FILE_DIR:${target}>"
-                )
+                # Single file copy
+                if(NOT EXISTS "${FILE_PATH}")
+                    message(WARNING "File not found: ${FILE_PATH}, skipping copy")
+                else()
+                    add_custom_command(
+                        TARGET ${target} POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                "${FILE_PATH}" "$<TARGET_FILE_DIR:${target}>"
+                        COMMENT "Copying file ${FILE_PATH} to $<TARGET_FILE_DIR:${target}>"
+                    )
+                endif()
             endif()
-
         endforeach()
     endif()
 
