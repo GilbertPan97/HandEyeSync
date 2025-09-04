@@ -2,7 +2,7 @@
 # Usage: copy_imported_dlls(<target> <json_file>)
 #
 # This macro reads a JSON file listing DLLs and folders to copy.
-# The JSON file should list relative paths from the project source directory.
+# The JSON file should list relative paths from the ${CMAKE_SOURCE_DIR} directory.
 #
 # Example JSON:
 # {
@@ -73,10 +73,15 @@ macro(copy_imported_dlls target json_file)
             if(NOT EXISTS "${FOLDER_PATH}")
                 message(WARNING "Folder not found: ${FOLDER_PATH}, skipping copy")
             else()
+                string(REGEX REPLACE "[/\\]$" "" FOLDER_PATH_STRIPPED "${FOLDER_PATH}")
+                get_filename_component(FOLDER_NAME "${FOLDER_PATH_STRIPPED}" NAME)
+
                 add_custom_command(
                     TARGET ${target} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory "${FOLDER_PATH}" "$<TARGET_FILE_DIR:${target}>"
-                    COMMENT "Copying folder ${FOLDER_PATH} to $<TARGET_FILE_DIR:${target}>"
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory 
+                            "${FOLDER_PATH}" 
+                            "$<TARGET_FILE_DIR:${target}>/${FOLDER_NAME}"
+                    COMMENT "Copying folder ${FOLDER_PATH} to $<TARGET_FILE_DIR:${target}>/${FOLDER_NAME}"
                 )
             endif()
         endforeach()
