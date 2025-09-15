@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 
     // Create the MainWindow instance
     MainWindow window;
-    window.show();  // Show the window
+    window.showMaximized();
 
     // Enter the application's event loop
     return app.exec();
