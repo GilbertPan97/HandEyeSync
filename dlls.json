@@ -13,6 +13,11 @@
       "3rd-party/qt5.12.0-vc15-64/bin/Qt5Widgetsd.dll",
       "3rd-party/qt5.12.0-vc15-64/bin/Qt5PrintSupportd.dll",
 
+      "3rd-party/vtk-9.4.1-x64/bin/vtkRenderingAnnotation-9.4.dll",
+      "3rd-party/vtk-9.4.1-x64/bin/vtkRenderingCore-9.4.dll",
+      "3rd-party/vtk-9.4.1-x64/bin/vtkFiltersGeneral-9.4.dll",
+      "3rd-party/vtk-9.4.1-x64/bin/vtkCommonExecutionModel-9.4.dll",
+
       "3rd-party/GO_SDK/bin/win64d/kApi.dll",
       "3rd-party/GO_SDK/bin/win64d/GoSdk.dll",
       "3rd-party/SR7Link/bin/SR7Link.dll"

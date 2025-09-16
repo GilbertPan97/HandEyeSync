@@ -1,10 +1,3 @@
-/**
-@file : common.h
-@package : common library
-@brief CPP common example functionality.
-@copyright (c) 2023, Shanghai Fanuc Ltd.
-@version 16.03.2023, SFR: initial version
-*/
 #include "data_processor.h"
 #include "calibrator.h"
 #include "algorithm.h"

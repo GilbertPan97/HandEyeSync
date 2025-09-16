@@ -28,6 +28,27 @@ target_include_directories(ProfScanCalibrator PUBLIC ${EIGEN3_INCLUDE_DIRS} ${CM
 
 target_compile_options(ProfScanCalibrator PRIVATE /bigobj)
 
+if (ON)
+    find_package(VTK REQUIRED)
+
+    add_executable(ProfScanCalibratorTest demo/demo_ball.cpp)
+    add_dependencies(ProfScanCalibratorTest FanucParserLibs)
+
+    target_link_libraries(ProfScanCalibratorTest PRIVATE 
+        ProfScanCalibrator 
+        FanucParserLibs
+        VTK::CommonCore 
+        VTK::CommonDataModel 
+        VTK::IOImage 
+        VTK::RenderingCore
+        VTK::CommonCore
+        VTK::FiltersCore
+        VTK::RenderingOpenGL2
+        VTK::InteractionStyle
+        VTK::RenderingAnnotation
+    )
+endif()
+
 install(TARGETS ProfScanCalibrator
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib

@@ -110,11 +110,16 @@ namespace ProfileScanner
 
         // Reconstruct calibration data for EYE_IN_HAND and EYE_TO_HAND
         std::vector<Eigen::Matrix4f> mtr_rob;
-        if (type_ == CalibType::EYE_IN_HAND)
+        if (type_ == CalibType::EYE_IN_HAND) {
             mtr_rob = mtr_end2base_;
+        }
         else if (type_ == CalibType::EYE_TO_HAND){
             for (const auto & htm: mtr_end2base_)
                 mtr_rob.push_back(htm.inverse());
+        }
+        else {
+            std::cerr << "ERROR: Calibration type not defined.\n";
+            return false;
         }
 
         // construct algorithm parser and calculate result
