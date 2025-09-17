@@ -16,7 +16,7 @@ set(SRC_FILES
     ../CLogger/logger.c
 )
 
-add_library(Go_Driver ${SRC_FILES})
+add_library(Go_Driver STATIC ${SRC_FILES})
 
 # # CLogger shoule be build before Go_Driver
 # add_dependencies(Go_Driver clogger)

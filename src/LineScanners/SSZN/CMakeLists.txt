@@ -24,7 +24,7 @@ set(HEADER_FILES
 )
 
 # Build driver lib
-add_library(${TARGET_NAME} ${SRC_FILES})
+add_library(${TARGET_NAME} STATIC ${SRC_FILES})
 
 target_link_libraries(${TARGET_NAME} PUBLIC ${SR7Link_LIBRARIES})
 message(STATUS "SR7Link libs is: ${SR7Link_LIBRARIES}")

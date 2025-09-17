@@ -16,7 +16,7 @@ set(HEADER_FILES
 source_group("Header Files" FILES ${HEADER_FILES})
 source_group("Source Files" FILES ${SRC_FILES})
 
-add_library(ProfScanCalibrator ${HEADER_FILES} ${SRC_FILES})
+add_library(ProfScanCalibrator STATIC ${HEADER_FILES} ${SRC_FILES})
 
 # find opencv package: used for ProfScanCalibrator
 find_package(OpenCV REQUIRED)
