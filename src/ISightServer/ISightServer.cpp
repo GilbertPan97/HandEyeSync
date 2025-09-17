@@ -118,7 +118,6 @@ bool ISightServer::start() {
 
 void ISightServer::stop() {
     is_running_ = false;
-    if (listener_thread_.joinable()) listener_thread_.join();
 #ifdef _WIN32
     if (client_socket_ != -1) closesocket(client_socket_);
     if (server_socket_ != -1) closesocket(server_socket_);
@@ -127,6 +126,7 @@ void ISightServer::stop() {
     if (client_socket_ != -1) close(client_socket_);
     if (server_socket_ != -1) close(server_socket_);
 #endif
+    if (listener_thread_.joinable()) listener_thread_.join();
 }
 
 void ISightServer::acceptLoop() {
