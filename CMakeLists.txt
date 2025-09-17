@@ -18,7 +18,7 @@ message(STATUS "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/3rd-party)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
-# Find Qt5 libraries (automatically selects the correct version)
+# Find libraries (automatically selects the correct version)
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/opencv-4.5.5/lib")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/eigen-3.4.0")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/json-3.11.3")
@@ -27,8 +27,13 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/SR7Link")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/qt5.12.0-vc15-64")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/vtk-9.4.1-x64") 
 
+# Check required packages
 find_package(OpenCV REQUIRED)
-find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 COMPONENTS Core Gui Widgets QUIET)
+find_package(Qt5 COMPONENTS Core Gui Widgets QUIET)
+if(NOT Qt6_FOUND AND NOT Qt5_FOUND)
+    message(STATUS "No invalid Qt version found, please ensure Qt5 or Qt6 is installed.")
+endif()
 find_package(Eigen3 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
@@ -53,7 +58,6 @@ set(QRC_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources.qrc")
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${QRC_FILE})
 
 # Link the required Qt5 libraries
-message(STATUS )
 target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets ${OpenCV_LIBS} Eigen3::Eigen nlohmann_json::nlohmann_json)
 target_link_libraries(${PROJECT_NAME} PRIVATE DockWidgetLibs FanucParserLibs ProfScanCalibrator LineScannerInterface ISightServer)
 
