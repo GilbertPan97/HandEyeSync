@@ -31,6 +31,7 @@
 #include <QVTKInteractor.h>
 #include <QVTKInteractorAdapter.h>
 #include <QVTKRenderWindowAdapter.h>
+#include <QVTKOpenGLNativeWidget.h>
 #include <vtkCommand.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkNew.h>
@@ -315,11 +316,11 @@ void QVtkViewer::setAxesSystem(vtkRenderWindowInteractor* iren)
         cube->GetTextEdgesProperty()->SetColor(0.2400, 0.2400, 0.2400);
         vtkMapper::SetResolveCoincidentTopologyToPolygonOffset();
 
-        cube->SetXPlusFaceText("L");//����
+        cube->SetXPlusFaceText("L");
         cube->SetXMinusFaceText("R");
-        cube->SetYPlusFaceText("P");//ǰ����
+        cube->SetYPlusFaceText("P");
         cube->SetYMinusFaceText("A");
-        cube->SetZPlusFaceText("S");//�µ���
+        cube->SetZPlusFaceText("S");
         cube->SetZMinusFaceText("I");
 
         cube->GetXPlusFaceProperty()->SetColor(1, 0, 0);
@@ -644,76 +645,21 @@ bool QVtkViewer::event(QEvent* evt)
 }
 
 //-----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-void QVtkViewer::SetRenderWindow(vtkRenderWindow* win)
-{
-    VTK_LEGACY_REPLACED_BODY(
-        QVTKOpenGLNativeWidget::SetRenderWindow, "VTK 9.0", QVTKOpenGLNativeWidget::setRenderWindow);
-    vtkGenericOpenGLRenderWindow* gwin = vtkGenericOpenGLRenderWindow::SafeDownCast(win);
-    if (gwin == nullptr && win != nullptr)
-    {
-        qDebug() << "QVTKOpenGLNativeWidget requires a `vtkGenericOpenGLRenderWindow`. `"
-            << win->GetClassName() << "` is not supported.";
-    }
-    this->setRenderWindow(gwin);
-}
-#endif
-
-//-----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-void QVtkViewer::SetRenderWindow(vtkGenericOpenGLRenderWindow* win)
-{
-    VTK_LEGACY_REPLACED_BODY(
-        QVTKOpenGLNativeWidget::SetRenderWindow, "VTK 9.0", QVTKOpenGLNativeWidget::setRenderWindow);
-    this->setRenderWindow(win);
-}
-#endif
-
-//-----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
 vtkRenderWindow* QVtkViewer::GetRenderWindow()
 {
-    VTK_LEGACY_REPLACED_BODY(
-        QVTKOpenGLNativeWidget::GetRenderWindow, "VTK 9.0", QVTKOpenGLNativeWidget::renderWindow);
     return this->renderWindow();
 }
-#endif
 
 //-----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-QVTKInteractorAdapter* QVtkViewer::GetInteractorAdapter()
+vtkRenderWindowInteractor* QVtkViewer::GetInteractor()
 {
-    VTK_LEGACY_BODY(QVTKOpenGLNativeWidget::GetInteractorAdapter, "VTK 9.0");
+    if (this->renderWindow())
+        return this->renderWindow()->GetInteractor();
     return nullptr;
 }
-#endif
 
 //-----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-QVTKInteractor* QVtkViewer::GetInteractor()
-{
-    VTK_LEGACY_REPLACED_BODY(
-        QVTKOpenGLNativeWidget::GetInteractor, "VTK 9.0", QVTKOpenGLNativeWidget::interactor);
-    return this->interactor();
-}
-#endif
-
-//-----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
 void QVtkViewer::setQVTKCursor(const QCursor& cursor)
 {
-    VTK_LEGACY_REPLACED_BODY(
-        QVTKOpenGLNativeWidget::setQVTKCursor, "VTK 9.0", QVTKOpenGLNativeWidget::setCursor);
     this->setCursor(cursor);
 }
-#endif
-
-//-----------------------------------------------------------------------------
-#if !defined(VTK_LEGACY_REMOVE)
-void QVtkViewer::setDefaultQVTKCursor(const QCursor& cursor)
-{
-    VTK_LEGACY_REPLACED_BODY(QVTKOpenGLNativeWidget::setDefaultQVTKCursor, "VTK 9.0",
-        QVTKOpenGLNativeWidget::setDefaultCursor);
-    this->setDefaultCursor(cursor);
-}
-#endif

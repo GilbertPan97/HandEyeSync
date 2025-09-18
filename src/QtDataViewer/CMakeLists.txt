@@ -17,7 +17,7 @@ source_group("Header Files" FILES ${HEADER_FILES})
 source_group("Source Files" FILES ${SRC_FILES})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-add_library(QtDataViewer ${HEADER_FILES} ${SRC_FILES} ${QRC_FILES})
+add_library(QtDataViewer STATIC ${HEADER_FILES} ${SRC_FILES} ${QRC_FILES})
 
 # find qt package: for all component
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
@@ -40,7 +40,9 @@ find_package(VTK REQUIRED COMPONENTS
              RenderingCore
              RenderingAnnotation
              GUISupportQt
-             IOGeometry)
+             InteractionStyle
+             IOGeometry
+             IOPLY)
 
 option(VTK_USE_QVTK_OPENGL_NATIVE "Use QVTKOpenGLNativeWidget for rendering" ON)
 if (VTK_USE_QVTK_OPENGL_NATIVE)
@@ -62,8 +64,12 @@ set_target_properties(QtDataViewer PROPERTIES
     AUTOMOC ON
     AUTOUIC ON
     AUTORCC ON
-    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
 )
+
+if (ON)
+    add_executable(QtDataViewerTest Samples/main1.cpp)
+    target_link_libraries(QtDataViewerTest QtDataViewer)
+endif()
 
 set(library_name "QtDataViewer")
 
@@ -72,11 +78,11 @@ include(CMakePackageConfigHelpers)
 #                               ${CMAKE_CURRENT_BINARY_DIR}/${library_name}Config.cmake
 #                               INSTALL_DESTINATION lib/cmake/${library_name})
 
-write_basic_package_version_file(
-    "${library_name}ConfigVersion.cmake"
-    VERSION ${VERSION_SHORT}
-    COMPATIBILITY SameMajorVersion
-)
+# write_basic_package_version_file(
+#     "${library_name}ConfigVersion.cmake"
+#     VERSION ${VERSION_SHORT}
+#     COMPATIBILITY SameMajorVersion
+# )
 
 install(TARGETS QtDataViewer
     RUNTIME DESTINATION bin

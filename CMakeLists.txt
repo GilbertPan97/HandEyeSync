@@ -25,14 +25,16 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/json-3.11.3
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/GO_SDK")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/SR7Link")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/qt5.12.0-vc15-64")
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/vtk-9.4.1-x64") 
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party/vtk-9.4.2-x64") 
 
 # Check required packages
 find_package(OpenCV REQUIRED)
-find_package(Qt6 COMPONENTS Core Gui Widgets QUIET)
-find_package(Qt5 COMPONENTS Core Gui Widgets QUIET)
-if(NOT Qt6_FOUND AND NOT Qt5_FOUND)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} 5.7 COMPONENTS Core Gui Widgets REQUIRED)
+if(NOT QT_VERSION_MAJOR)
     message(STATUS "No invalid Qt version found, please ensure Qt5 or Qt6 is installed.")
+else()
+    message(STATUS "Current using Qt${QT_VERSION_MAJOR}")
 endif()
 find_package(Eigen3 REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -43,7 +45,7 @@ subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/ISightServer)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LsParser)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/PsHEC)
 subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/LineScanners)
-# subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/QtDataViewer)
+subdirs(${CMAKE_CURRENT_SOURCE_DIR}/src/QtDataViewer)
 
 # Add source files
 set(SRC_FILES

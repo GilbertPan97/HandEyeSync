@@ -68,6 +68,10 @@ public:
     void setRenderWindow(vtkRenderWindow* win);
     //@}
 
+    vtkRenderWindow* GetRenderWindow();
+    vtkRenderWindowInteractor* GetInteractor();
+    void setQVTKCursor(const QCursor& cursor);
+
     /**
      * Returns the render window that is being shown in this widget.
      */
@@ -134,42 +138,6 @@ public:
      */
     void setViewerType(zxViewerType type);
     //@}
-
-
-    //@{
-    /**
-     * @deprecated in VTK 9.0
-     */
-    VTK_LEGACY(void SetRenderWindow(vtkGenericOpenGLRenderWindow* win));
-    VTK_LEGACY(void SetRenderWindow(vtkRenderWindow* win));
-    //@}
-
-    //@{
-    /**
-     * These methods have be deprecated to fix naming style. Since
-     * QVTKOpenGLNativeWidget is QObject subclass, we follow Qt naming conventions
-     * rather than VTK's.
-     */
-    VTK_LEGACY(vtkRenderWindow* GetRenderWindow());
-    VTK_LEGACY(QVTKInteractor* GetInteractor());
-    //@}
-
-    /**
-     * @deprecated in VTK 9.0
-     * QVTKInteractorAdapter is an internal helper. Hence the API was removed.
-     */
-    VTK_LEGACY(QVTKInteractorAdapter* GetInteractorAdapter());
-
-    /**
-     * @deprecated in VTK 9.0. Simply use `QWidget::setCursor` API to change
-     * cursor.
-     */
-    VTK_LEGACY(void setQVTKCursor(const QCursor& cursor));
-
-    /**
-     * @deprecated in VTK 9.0. Use `setDefaultCursor` instead.
-     */
-    VTK_LEGACY(void setDefaultQVTKCursor(const QCursor& cursor));
 
 protected slots:
     /**
