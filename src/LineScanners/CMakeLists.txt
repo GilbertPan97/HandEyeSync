@@ -16,7 +16,7 @@ set(HEADER_FILES
 )
 
 # Specify the library target
-add_library(LineScannerInterface ${SRC_FILES})  # Use STATIC for static library
+add_library(LineScannerInterface STATIC ${SRC_FILES})  # Use STATIC for static library
 
 # Include Go_SDK headers and current directory for header files
 target_include_directories(LineScannerInterface PUBLIC 

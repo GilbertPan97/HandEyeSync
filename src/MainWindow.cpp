@@ -311,6 +311,10 @@ void MainWindow::createToolBar()
 
     onlineCollectLayout->addWidget(onlineCollectBtn);
     onlineCollectLayout->addLayout(collectLayout);
+    QHBoxLayout *onlineDatasetLayout = new QHBoxLayout(this);
+    onlineDatasetLayout->addLayout(onlineCollectLayout);
+    setToolBarGroup(onlineDatasetLayout, "ONLINE DATASET");
+    topToolBar_->addSeparator();
 
     // ~~~ Widget 1: Sensor type.
     QMenu *addSensorMenu = new QMenu(this);
@@ -352,15 +356,14 @@ void MainWindow::createToolBar()
     addRobButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     connect(addRobButton, &QToolButton::released, this, &MainWindow::onAddRobActionTriggered);
 
-    QHBoxLayout *datasetLayout = new QHBoxLayout(this);
-    datasetLayout->addLayout(onlineCollectLayout);
-    datasetLayout->addWidget(sensorSelButton);
-    datasetLayout->addWidget(addImgButton);
-    datasetLayout->addWidget(addRobButton);
+    QHBoxLayout *offlineDatasetLayout = new QHBoxLayout(this);
+    offlineDatasetLayout->addWidget(sensorSelButton);
+    offlineDatasetLayout->addWidget(addImgButton);
+    offlineDatasetLayout->addWidget(addRobButton);
 
     // Group the buttons using setToolBarGroup
     QList<QToolButton*> data_btnList = { sensorSelButton, addImgButton, addRobButton };
-    setToolBarGroup(datasetLayout, "DATASET");
+    setToolBarGroup(offlineDatasetLayout, "OFFLINE DATASET");
     topToolBar_->addSeparator();
 
     /* ========================= Calibrate Page ========================= */

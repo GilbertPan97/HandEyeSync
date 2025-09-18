@@ -5,7 +5,7 @@ set(SRC_FILES
     logger.c
 )
 
-add_library(clogger ${SRC_FILES})
+add_library(clogger STATIC ${SRC_FILES})
 
 target_include_directories(clogger PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
