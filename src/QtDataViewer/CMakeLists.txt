@@ -60,6 +60,8 @@ target_link_libraries(QtDataViewer PUBLIC
                       ${VTK_LIBRARIES} 
                       opencv_core)
 
+target_include_directories(QtDataViewer PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+
 set_target_properties(QtDataViewer PROPERTIES 
     AUTOMOC ON
     AUTOUIC ON
@@ -67,7 +69,7 @@ set_target_properties(QtDataViewer PROPERTIES
 )
 
 if (ON)
-    add_executable(QtDataViewerTest Samples/main1.cpp)
+    add_executable(QtDataViewerTest Samples/main.cpp)
     target_link_libraries(QtDataViewerTest QtDataViewer)
 endif()
 

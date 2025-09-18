@@ -20,6 +20,7 @@
 #include "DockWidget.h"
 #include "DockAreaWidget.h"
 #include "DockWidgetViewer.h"
+#include "DockWidgetViewer3D.h"
 #include "DockWidgetLogger.h"
 #include "DockWidgetBrowser.h"
 #include "DockWidgetProperty.h"
@@ -152,7 +153,9 @@ private:
     // DockWidgets
     QPointer<ads::CDockManager> dockManager_;
     QList<QPointer<ads::CDockWidget>> dockWidgets_;
+
     QPointer<DockWidgetViewer> viewerWin_;
+    QPointer<DockWidgetViewer3D> viewer3DWin_;
     QPointer<DockWidgetLogger> logWin_;
     QPointer<DockWidgetBrowser> browserWin_;
     QPointer<DockWidgetProperty> propertyWin_;

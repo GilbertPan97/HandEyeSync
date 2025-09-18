@@ -36,32 +36,34 @@ int main(int argc, char** argv)
     QVtkViewer* viewer = new QVtkViewer(renderWindow, centralWidget);
     layout->addWidget(viewer);
 
-    // 创建 VTK 渲染器
-    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-    renderWindow->AddRenderer(renderer);
+    viewer->RenderWinReset();
 
-    // 创建一个简单立方体 Actor
-    vtkSmartPointer<vtkCubeSource> cubeSource = vtkSmartPointer<vtkCubeSource>::New();
-    cubeSource->Update();
+    // // 创建 VTK 渲染器
+    // vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+    // renderWindow->AddRenderer(renderer);
 
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputData(cubeSource->GetOutput());
+    // // 创建一个简单立方体 Actor
+    // vtkSmartPointer<vtkCubeSource> cubeSource = vtkSmartPointer<vtkCubeSource>::New();
+    // cubeSource->Update();
 
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(mapper);
+    // vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    // mapper->SetInputData(cubeSource->GetOutput());
 
-    // 设置颜色
-    vtkSmartPointer<vtkNamedColors> colors = vtkSmartPointer<vtkNamedColors>::New();
-    actor->GetProperty()->SetColor(colors->GetColor3d("Tomato").GetData());
+    // vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    // actor->SetMapper(mapper);
 
-    // 添加 Actor 到渲染器
-    renderer->AddActor(actor);
-    renderer->SetBackground(colors->GetColor3d("Wheat").GetData());
+    // // 设置颜色
+    // vtkSmartPointer<vtkNamedColors> colors = vtkSmartPointer<vtkNamedColors>::New();
+    // actor->GetProperty()->SetColor(colors->GetColor3d("Tomato").GetData());
 
-    vtkInteractorStyleTrackballCamera *style = vtkInteractorStyleTrackballCamera::New();
-    auto iren = renderWidget->renderWindow()->GetInteractor();
-    iren->SetInteractorStyle(style);
-    setAxesSystem(iren);
+    // // 添加 Actor 到渲染器
+    // renderer->AddActor(actor);
+    // renderer->SetBackground(colors->GetColor3d("Wheat").GetData());
+
+    // vtkInteractorStyleTrackballCamera *style = vtkInteractorStyleTrackballCamera::New();
+    // auto iren = viewer->renderWindow()->GetInteractor();
+    // iren->SetInteractorStyle(style);
+    // viewer->setAxesSystem(iren);
 
     // 显示窗口
     mainWindow.show();

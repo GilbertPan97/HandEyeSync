@@ -34,9 +34,18 @@
 #include <QVTKOpenGLNativeWidget.h>
 #include <vtkCommand.h>
 #include <vtkGenericOpenGLRenderWindow.h>
+#include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 #include <vtkOpenGLState.h>
+#include <vtkSphereSource.h>
+
+#include <vtkGUISupportQtModule.h> // for export macro 
+#include <vtkSmartPointer.h>
+#include <vtkOrientationMarkerWidget.h> 
+#include <vtkNamedColors.h> 
+#include <vtkTransformPolyDataFilter.h> 
+#include <vtkActor.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -70,9 +79,7 @@ QVtkViewer::QVtkViewer(vtkGenericOpenGLRenderWindow* renderWin, QWidget* parentW
 
     vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkNamedColors> colors = vtkSmartPointer<vtkNamedColors>::New();
-    renderer->SetBackground(1.0, 1.0, 1.0);              // 设置页面底部颜色值
-    renderer->SetBackground2(colors->GetColor3d("SteelBlue").GetData());         // black background
-    renderer->SetGradientBackground(1);
+    renderer->SetBackground(0.1, 0.2, 0.4);
     renderWin->AddRenderer(renderer);
 
     this->setRenderWindow(renderWin);
@@ -441,53 +448,88 @@ vtkSmartPointer<vtkTransformPolyDataFilter> QVtkViewer::MakePlane(
     return tpdPlane;
 }
 
-void QVtkViewer::setReferenceAxesSystem()
+void QVtkViewer::setReferenceAxesSystem(bool showPlanes, double originSphereRadius)
 {
-    if (this->RenderWindow)
-    {
-        vtkSmartPointer<vtkNamedColors> colors =
-            vtkSmartPointer<vtkNamedColors>::New();
+    if (!this->RenderWindow)
+        return;
 
-        if (this->RenderWindow->GetRenderers()->GetNumberOfItems() == 0) {
-
-            this->RenderWindow->AddRenderer(vtkRenderer::New());
-            //m_window->interactor()->Enable();
-        }
-
-        std::vector<vtkSmartPointer<vtkActor>> actors = MakePlanesActors(colors);
-        for (auto actor : actors) {
-            this->RenderWindow->GetRenderers()->GetFirstRenderer()->AddViewProp(actor);
-        }
-
-        vtkSmartPointer<vtkAxesActor> axesActor = vtkSmartPointer<vtkAxesActor>::New();
-        axesActor->SetShaftTypeToCylinder();
-        axesActor->SetXAxisLabelText("");
-        axesActor->SetYAxisLabelText("");
-        axesActor->SetZAxisLabelText("");
-        axesActor->GetXAxisShaftProperty()->SetColor(1, 0, 0);
-        axesActor->GetXAxisTipProperty()->SetColor(1, 0, 0);
-        axesActor->GetYAxisShaftProperty()->SetColor(0, 1, 0);
-        axesActor->GetYAxisTipProperty()->SetColor(0, 1, 0);
-        axesActor->GetZAxisShaftProperty()->SetColor(0, 0, 1);
-        axesActor->GetZAxisTipProperty()->SetColor(0, 0, 1);
-        axesActor->GetZAxisCaptionActor2D()->GetProperty()->SetColor(1, 1, 1);
-        axesActor->SetAxisLabels(1);
-        axesActor->SetTotalLength(1.5, 1.5, 1.5);
-        axesActor->SetCylinderRadius(0.500 * axesActor->GetCylinderRadius());
-        axesActor->SetConeRadius(1.025 * axesActor->GetConeRadius());
-        axesActor->SetSphereRadius(1.500 * axesActor->GetSphereRadius());
-        axesActor->SetOrigin(0., 0., 0.);
-
-        vtkTextProperty* tprop = axesActor->GetXAxisCaptionActor2D()->GetCaptionTextProperty();
-        tprop->ItalicOn();
-        tprop->ShadowOn();
-        tprop->SetFontFamilyToTimes();
-
-        this->RenderWindow->GetRenderers()->GetFirstRenderer()->AddActor(axesActor);
-        this->RenderWindow->GetRenderers()->GetFirstRenderer()->ResetCamera();
+    // ------------------------
+    // Create renderer if none exists
+    // ------------------------
+    if (this->RenderWindow->GetRenderers()->GetNumberOfItems() == 0) {
+        this->RenderWindow->AddRenderer(vtkRenderer::New());
     }
-    
+
+    vtkRenderer* renderer = this->RenderWindow->GetRenderers()->GetFirstRenderer();
+
+    // ------------------------
+    // Optionally create reference planes
+    // ------------------------
+    if (showPlanes) {
+        vtkSmartPointer<vtkNamedColors> colors = vtkSmartPointer<vtkNamedColors>::New();
+        std::vector<vtkSmartPointer<vtkActor>> planeActors = MakePlanesActors(colors);
+        for (auto& actor : planeActors) {
+            renderer->AddViewProp(actor);
+        }
+    }
+
+    // ------------------------
+    // Create coordinate axes
+    // ------------------------
+    vtkSmartPointer<vtkAxesActor> axesActor = vtkSmartPointer<vtkAxesActor>::New();
+    axesActor->SetShaftTypeToCylinder();
+    axesActor->SetXAxisLabelText("");
+    axesActor->SetYAxisLabelText("");
+    axesActor->SetZAxisLabelText("");
+
+    axesActor->GetXAxisShaftProperty()->SetColor(1, 0, 0);
+    axesActor->GetXAxisTipProperty()->SetColor(1, 0, 0);
+    axesActor->GetYAxisShaftProperty()->SetColor(0, 1, 0);
+    axesActor->GetYAxisTipProperty()->SetColor(0, 1, 0);
+    axesActor->GetZAxisShaftProperty()->SetColor(0, 0, 1);
+    axesActor->GetZAxisTipProperty()->SetColor(0, 0, 1);
+
+    axesActor->GetZAxisCaptionActor2D()->GetProperty()->SetColor(1, 1, 1);
+    axesActor->SetAxisLabels(1);
+    axesActor->SetTotalLength(1.5, 1.5, 1.5);
+    axesActor->SetCylinderRadius(0.5 * axesActor->GetCylinderRadius());
+    axesActor->SetConeRadius(1.025 * axesActor->GetConeRadius());
+    axesActor->SetSphereRadius(1.5 * axesActor->GetSphereRadius());
+    axesActor->SetOrigin(0.0, 0.0, 0.0);
+
+    vtkTextProperty* tprop = axesActor->GetXAxisCaptionActor2D()->GetCaptionTextProperty();
+    tprop->ItalicOn();
+    tprop->ShadowOn();
+    tprop->SetFontFamilyToTimes();
+
+    renderer->AddActor(axesActor);
+
+    // ------------------------
+    // Create a small sphere at origin to visualize origin point
+    // ------------------------
+    vtkSmartPointer<vtkSphereSource> originSphere = vtkSmartPointer<vtkSphereSource>::New();
+    originSphere->SetCenter(0.0, 0.0, 0.0);
+    originSphere->SetRadius(originSphereRadius);
+    originSphere->SetThetaResolution(16);
+    originSphere->SetPhiResolution(16);
+    originSphere->Update();
+
+    vtkSmartPointer<vtkPolyDataMapper> sphereMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    sphereMapper->SetInputConnection(originSphere->GetOutputPort());
+
+    vtkSmartPointer<vtkActor> sphereActor = vtkSmartPointer<vtkActor>::New();
+    sphereActor->SetMapper(sphereMapper);
+    sphereActor->GetProperty()->SetColor(1.0, 1.0, 0.0); // Yellow color for origin
+
+    renderer->AddActor(sphereActor);
+
+    // ------------------------
+    // Reset camera to fit all actors
+    // ------------------------
+    renderer->ResetCamera();
 }
+
+
 
 void QVtkViewer::setViewerType(zxViewerType type)
 {

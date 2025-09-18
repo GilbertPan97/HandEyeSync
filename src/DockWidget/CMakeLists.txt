@@ -38,6 +38,7 @@ find_package(OpenCV REQUIRED)
 # --- Source & headers ---
 set(LIB_SOURCES
     DockWidgetViewer.cpp
+    DockWidgetViewer3D.cpp
     DockWidgetLogger.cpp
     DockWidgetBrowser.cpp
     DockWidgetProperty.cpp
@@ -45,6 +46,7 @@ set(LIB_SOURCES
 
 set(LIB_HEADERS
     DockWidgetViewer.h
+    DockWidgetViewer3D.h
     DockWidgetLogger.h
     DockWidgetBrowser.h
     DockWidgetProperty.h
@@ -63,6 +65,7 @@ target_link_libraries(DockWidgetLibs PUBLIC
     QtAdvancedDocking
     QCustomPlot
     ${OpenCV_LIBS}
+    QtDataViewer
 )
 
 target_include_directories(DockWidgetLibs PUBLIC ${CMAKE_CURRENT_LIST_DIR})

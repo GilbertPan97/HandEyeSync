@@ -12,24 +12,27 @@
 #define QVTKVIEWER_H
 
 #include <iostream>
+#include <vector>
+#include <array>
 
 #include <QOpenGLWidget>
-#include <QScopedPointer> // for QScopedPointer.
+#include <QScopedPointer>
+#include <QCursor>
+#include <vtkSmartPointer.h>
 
-#include <QVTKInteractor.h>        // needed for QVTKInteractor
-#include <vtkGUISupportQtModule.h> // for export macro
-#include <vtkNew.h>                // needed for vtkNew
-#include <vtkSmartPointer.h>       // needed for vtkSmartPointer
-#include <vtkOrientationMarkerWidget.h>
-#include <vtkNamedColors.h>
-#include <vtkTransformPolyDataFilter.h>
-#include <vtkActor.h>
-#include <opencv2/opencv.hpp>       // needed for std::vector<cv::Point3f> display
+#include <opencv2/opencv.hpp> // for cv::Point3f
 
+// Forward declarations for VTK classes
+class vtkRenderWindow;
+class vtkRenderWindowInteractor;
+class vtkGenericOpenGLRenderWindow;
+class vtkOrientationMarkerWidget;
+class vtkActor;
+class vtkTransformPolyDataFilter;
+class vtkNamedColors;
 class QVTKInteractor;
 class QVTKInteractorAdapter;
 class QVTKRenderWindowAdapter;
-class vtkGenericOpenGLRenderWindow;
 
 enum class zxViewerType {
     LEFT = 1,
@@ -47,97 +50,129 @@ class QVtkViewer : public QOpenGLWidget
         typedef QOpenGLWidget Superclass;
 
 public:
+    public:
+    /**
+     * @brief Constructor with optional parent and window flags.
+     * @param parent The parent widget, default is nullptr.
+     * @param f Window flags, default is no flags.
+     */
     QVtkViewer(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+
+    /**
+     * @brief Constructor with an existing vtkGenericOpenGLRenderWindow.
+     * @param window Pointer to a vtkGenericOpenGLRenderWindow to use.
+     * @param parent The parent widget, default is nullptr.
+     * @param f Window flags, default is no flags.
+     */
     QVtkViewer(vtkGenericOpenGLRenderWindow* window, QWidget* parent = nullptr,
-        Qt::WindowFlags f = Qt::WindowFlags());
+               Qt::WindowFlags f = Qt::WindowFlags());
+
+    /** @brief Destructor, releases resources. */
     ~QVtkViewer() override;
 
+    /**
+     * @brief Display a point cloud in the viewer.
+     * @param pntCloud Vector of 3D points (cv::Point3f) to display.
+     * @param pntSize Size of the points in pixels.
+     * @return True if the points were successfully displayed.
+     */
     bool pointsDisplay(std::vector<cv::Point3f> pntCloud, int pntSize);
+
+    /**
+     * @brief Display an STL model in the viewer.
+     * @param stl_path File path to the STL model.
+     * @return True if the STL file was successfully loaded and displayed.
+     */
     bool stlDiaplay(std::string stl_path);
 
+    /** @brief Reset the render window (camera and scene) to default view. */
     void RenderWinReset();
 
-    //@{
     /**
-     * Set a render window to use. It a render window was already set, it will be
-     * finalized and all of its OpenGL resource released. If the \c win is
-     * non-null and it has no interactor set, then a QVTKInteractor instance will
-     * be created as set on the render window as the interactor.
+     * @brief Set a vtk render window to this viewer.
+     * If a render window was already set, its resources are released.
+     * If the input window has no interactor, a QVTKInteractor will be created automatically.
+     * @param win Pointer to the render window.
      */
     void setRenderWindow(vtkGenericOpenGLRenderWindow* win);
     void setRenderWindow(vtkRenderWindow* win);
-    //@}
 
+    /**
+     * @brief Get the vtkRenderWindow currently used by this viewer.
+     * @return Pointer to the vtkRenderWindow.
+     */
     vtkRenderWindow* GetRenderWindow();
+
+    /**
+     * @brief Get the vtkRenderWindowInteractor associated with this viewer.
+     * @return Pointer to the vtkRenderWindowInteractor.
+     */
     vtkRenderWindowInteractor* GetInteractor();
+
+    /**
+     * @brief Set the cursor used in the QVTK viewer.
+     * @param cursor QCursor to use.
+     */
     void setQVTKCursor(const QCursor& cursor);
 
     /**
-     * Returns the render window that is being shown in this widget.
+     * @brief Returns the render window being displayed by this widget.
+     * @return Pointer to the vtkRenderWindow.
      */
     vtkRenderWindow* renderWindow() const;
 
     /**
-     * Get the QVTKInteractor that was either created by default or set by the user.
+     * @brief Get the QVTKInteractor used by this widget.
+     * @return Pointer to the QVTKInteractor.
      */
     QVTKInteractor* interactor() const;
 
     /**
-     * @copydoc QVTKRenderWindowAdapter::defaultFormat(bool)
+     * @brief Get the default QSurfaceFormat for the viewer widget.
+     * @param stereo_capable Enable stereo rendering if true.
+     * @return QSurfaceFormat object with proper settings.
      */
     static QSurfaceFormat defaultFormat(bool stereo_capable = false);
 
-    //@{
     /**
-     * Enable or disable support for HiDPI displays. When enabled, this enabled
-     * DPI scaling i.e. `vtkWindow::SetDPI` will be called with a DPI value scaled
-     * by the device pixel ratio every time the widget is resized. The unscaled
-     * DPI value can be specified by using `setUnscaledDPI`.
+     * @brief Enable or disable HiDPI support.
+     * When enabled, the DPI is scaled according to device pixel ratio.
+     * @param enable True to enable HiDPI support.
      */
     void setEnableHiDPI(bool enable);
     bool enableHiDPI() const { return this->EnableHiDPI; }
-    //@}
 
-    //@{
     /**
-     * Set/Get unscaled DPI value. Defaults to 72, which is also the default value
-     * in vtkWindow.
+     * @brief Set or get the unscaled DPI for the render window.
+     * Default is 72.
      */
     void setUnscaledDPI(int);
     int unscaledDPI() const { return this->UnscaledDPI; }
-    //@}
 
-    //@{
     /**
-     * Set/get the default cursor to use for this widget.
+     * @brief Set or get the default cursor for the viewer.
      */
     void setDefaultCursor(const QCursor& cursor);
     const QCursor& defaultCursor() const { return this->DefaultCursor; }
-    //@}
 
-    //@{
     /**
-     * Set the axes system to use for this widget. 
-     * by-tianhh-2022.9.27
+     * @brief Set the main axes system (X/Y/Z) in the viewer for reference.
+     * @param iren vtkRenderWindowInteractor to attach the axes to.
      */
     void setAxesSystem(vtkRenderWindowInteractor* iren);
-    //@}
 
-    //@{
     /**
-     * Set the reference axes system to use for this widget.
-     * by-tianhh-2022.9.27
+     * @brief Set the reference axes system with optional planes and origin sphere.
+     * @param showPlanes True to render XY, YZ, XZ planes, false to only render axes.
+     * @param originSphereRadius Radius of a small sphere at the origin.
      */
-    void setReferenceAxesSystem();
-    //@}
+    void setReferenceAxesSystem(bool showPlanes = false, double originSphereRadius = 0.1);
 
-    //@{
     /**
-     * Set viewer type.
-     * by-tianhh-2022.9.27
+     * @brief Set the viewer type (view orientation) such as LEFT, RIGHT, TOP, ISO.
+     * @param type Enum value of zxViewerType.
      */
     void setViewerType(zxViewerType type);
-    //@}
 
 protected slots:
     /**

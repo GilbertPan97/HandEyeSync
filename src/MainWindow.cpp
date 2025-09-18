@@ -36,16 +36,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     dockManager_ = new ads::CDockManager(this);
     viewerWin_ = new DockWidgetViewer("Viewer", this);
+    viewer3DWin_ = new DockWidgetViewer3D("Viewer 3D", this);
     logWin_ = new DockWidgetLogger("Logger", this);
     browserWin_ = new DockWidgetBrowser("Data Browser", this);
     propertyWin_ = new DockWidgetProperty("Property Browser", this);
 
     viewerWin_->setFeatures(viewerWin_->features() & ~QDockWidget::DockWidgetClosable);
+    viewer3DWin_->setFeatures(viewer3DWin_->features() & ~QDockWidget::DockWidgetClosable);
     logWin_->setFeatures(logWin_->features() & ~QDockWidget::DockWidgetClosable);
     browserWin_->setFeatures(browserWin_->features() & ~QDockWidget::DockWidgetClosable);
     propertyWin_->setFeatures(propertyWin_->features() & ~QDockWidget::DockWidgetClosable);
 
-    dockManager_->addDockWidget(ads::TopDockWidgetArea, viewerWin_);
+    auto TopDockArea = dockManager_->addDockWidget(ads::TopDockWidgetArea, viewerWin_);
+    auto ViewerDockArea = dockManager_->addDockWidget(ads::CenterDockWidgetArea, viewer3DWin_, TopDockArea);
     auto rightDockWidgetArea = dockManager_->addDockWidget(ads::RightDockWidgetArea, propertyWin_);
     auto bottomDockWidgetArea = dockManager_->addDockWidget(ads::BottomDockWidgetArea, logWin_);
     auto leftDockWidgetArea = dockManager_->addDockWidget(ads::LeftDockWidgetArea, browserWin_);
@@ -58,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
     centralLayout->addWidget(dockManager_);
 
     dockWidgets_ << QPointer<ads::CDockWidget>(viewerWin_)
+                 << QPointer<ads::CDockWidget>(viewer3DWin_)
                  << QPointer<ads::CDockWidget>(logWin_)
                  << QPointer<ads::CDockWidget>(browserWin_)
                  << QPointer<ads::CDockWidget>(propertyWin_);
