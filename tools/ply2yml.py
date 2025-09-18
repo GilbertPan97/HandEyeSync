@@ -39,8 +39,8 @@ def ply_to_yml(ply_path, yml_path):
 
 if __name__ == "__main__":
     # Fixed paths (modify as needed)
-    input_ply = r"./scan_00007.ply"   # Path to the input PLY file
-    output_yml = r"./scan_00007.yml"  # Path to the output YAML file
+    input_ply = r"./tools/plys/point_cloud_00002.ply"   # Path to the input PLY file
+    output_yml = r"./tools/plys/p2.yml"  # Path to the output YAML file
 
     ply_to_yml(input_ply, output_yml)
     print(f"YAML file saved to {output_yml}")
