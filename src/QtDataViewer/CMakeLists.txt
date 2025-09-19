@@ -76,15 +76,16 @@ endif()
 set(library_name "QtDataViewer")
 
 include(CMakePackageConfigHelpers)
-# configure_package_config_file(${CMAKE_SOURCE_DIR }/cmake/project-config-version.cmake.cmake.in
-#                               ${CMAKE_CURRENT_BINARY_DIR}/${library_name}Config.cmake
-#                               INSTALL_DESTINATION lib/cmake/${library_name})
+configure_package_config_file(${CMAKE_SOURCE_DIR}/cmake/project-config-version.cmake.in
+                              ${CMAKE_CURRENT_BINARY_DIR}/${library_name}Config.cmake
+                              INSTALL_DESTINATION lib/cmake/${library_name})
 
-# write_basic_package_version_file(
-#     "${library_name}ConfigVersion.cmake"
-#     VERSION ${VERSION_SHORT}
-#     COMPATIBILITY SameMajorVersion
-# )
+set(VERSION_SHORT "1.0.0")
+write_basic_package_version_file(
+    "${library_name}ConfigVersion.cmake"
+    VERSION ${VERSION_SHORT}
+    COMPATIBILITY SameMajorVersion
+)
 
 install(TARGETS QtDataViewer
     RUNTIME DESTINATION bin

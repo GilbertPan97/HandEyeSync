@@ -76,14 +76,14 @@ public:
      * @param pntSize Size of the points in pixels.
      * @return True if the points were successfully displayed.
      */
-    bool pointsDisplay(std::vector<cv::Point3f> pntCloud, int pntSize);
+    bool renderPoints(std::vector<cv::Point3f> pntCloud, int pntSize);
 
     /**
      * @brief Display an STL model in the viewer.
      * @param stl_path File path to the STL model.
      * @return True if the STL file was successfully loaded and displayed.
      */
-    bool stlDiaplay(std::string stl_path);
+    bool loadAndRenderSTL(std::string stl_path);
 
     /** @brief Reset the render window (camera and scene) to default view. */
     void RenderWinReset();
@@ -167,6 +167,8 @@ public:
      * @param originSphereRadius Radius of a small sphere at the origin.
      */
     void setReferenceAxesSystem(bool showPlanes = false, double originSphereRadius = 0.1);
+
+    vtkSmartPointer<vtkActor> createGridGround(double sizeX=10.0, double sizeY=10.0, int divisionsX=10, int divisionsY=10);
 
     /**
      * @brief Set the viewer type (view orientation) such as LEFT, RIGHT, TOP, ISO.

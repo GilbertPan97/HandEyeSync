@@ -96,7 +96,7 @@ QVtkViewer::QVtkViewer(vtkGenericOpenGLRenderWindow* renderWin, QWidget* parentW
     
 }
 
-bool QVtkViewer::pointsDisplay(std::vector<cv::Point3f> pntCloud, int pntSize)
+bool QVtkViewer::renderPoints(std::vector<cv::Point3f> pntCloud, int pntSize)
 {
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New();
@@ -121,7 +121,7 @@ bool QVtkViewer::pointsDisplay(std::vector<cv::Point3f> pntCloud, int pntSize)
     m_actor_pnts = vtkSmartPointer<vtkActor>::New();
     m_actor_pnts->SetMapper(mapper);
     m_actor_pnts->GetProperty()->SetColor(51/255.0, 63/255.0, 80/255.0);
-    m_actor_pnts->GetProperty()->SetPointSize(pntSize);       // 点的大小为5个像素
+    m_actor_pnts->GetProperty()->SetPointSize(pntSize);
 
     this->RenderWindow->SetMapped(true);
     std::cout << "INFO: The render window is " 
@@ -141,7 +141,7 @@ bool QVtkViewer::pointsDisplay(std::vector<cv::Point3f> pntCloud, int pntSize)
     return true;
 }
 
-bool QVtkViewer::stlDiaplay(std::string stl_path)
+bool QVtkViewer::loadAndRenderSTL(std::string stl_path)
 {
     // Create STL file reader
     vtkSmartPointer<vtkSTLReader> reader = vtkSmartPointer<vtkSTLReader>::New();
@@ -232,7 +232,7 @@ void QVtkViewer::setRenderWindow(vtkGenericOpenGLRenderWindow* win)
 
             setAxesSystem(iren);
             setReferenceAxesSystem();
-            
+            createGridGround();
         }
 
         if (this->isValid())
@@ -530,6 +530,55 @@ void QVtkViewer::setReferenceAxesSystem(bool showPlanes, double originSphereRadi
 }
 
 
+vtkSmartPointer<vtkActor> QVtkViewer::createGridGround(double sizeX, double sizeY, int divisionsX, int divisionsY)
+{
+    // ------------------------
+    // Create renderer if none exists
+    // ------------------------
+    if (this->RenderWindow->GetRenderers()->GetNumberOfItems() == 0) {
+        this->RenderWindow->AddRenderer(vtkRenderer::New());
+    }
+
+    vtkRenderer* renderer = this->RenderWindow->GetRenderers()->GetFirstRenderer();
+    
+    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+    vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+
+    double stepX = sizeX / divisionsX;
+    double stepY = sizeY / divisionsY;
+    double startX = -sizeX / 2.0;
+    double startY = -sizeY / 2.0;
+
+    // Lines parallel to X axis
+    for(int i=0; i<=divisionsY; ++i){
+        double y = startY + i*stepY;
+        vtkIdType ids[2] = { points->InsertNextPoint(startX, y, 0), points->InsertNextPoint(startX + sizeX, y, 0) };
+        lines->InsertNextCell(2, ids);
+    }
+
+    // Lines parallel to Y axis
+    for(int i=0; i<=divisionsX; ++i){
+        double x = startX + i*stepX;
+        vtkIdType ids[2] = { points->InsertNextPoint(x, startY, 0), points->InsertNextPoint(x, startY + sizeY, 0) };
+        lines->InsertNextCell(2, ids);
+    }
+
+    vtkSmartPointer<vtkPolyData> gridPolyData = vtkSmartPointer<vtkPolyData>::New();
+    gridPolyData->SetPoints(points);
+    gridPolyData->SetLines(lines);
+
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputData(gridPolyData);
+
+    vtkSmartPointer<vtkActor> gridActor = vtkSmartPointer<vtkActor>::New();
+    gridActor->SetMapper(mapper);
+    gridActor->GetProperty()->SetColor(0.5, 0.5, 0.5); // gray color
+    gridActor->GetProperty()->SetLineWidth(1);
+
+    renderer->AddActor(gridActor);
+
+    return gridActor;
+}
 
 void QVtkViewer::setViewerType(zxViewerType type)
 {

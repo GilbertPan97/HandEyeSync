@@ -196,26 +196,40 @@ int main(int argc, char *argv[])
     // ------------------------
     // NOTE: This block is commented because PLY loading is not yet implemented.
     // Once implemented, vtkPLYReader will read the point cloud and mapper/actor will display it.
-    QString stlFilePath; // Store STL file path
     QObject::connect(loadPly_btn, &QPushButton::released, [&](){
-        // QString plyFilePath = QFileDialog::getOpenFileName(w, "Open PLY PointCloud", "", "PLY Files (*.ply)");
-        // if (!plyFilePath.isEmpty()) {
-        //     vtkSmartPointer<vtkPLYReader> plyReader = vtkSmartPointer<vtkPLYReader>::New();
-        //     plyReader->SetFileName(plyFilePath.toStdString().c_str());
-        //     plyReader->Update();
-        //
-        //     vtkSmartPointer<vtkPolyData> plyData = plyReader->GetOutput();
-        //
-        //     mapper->SetInputData(plyData);
-        //     actor->SetMapper(mapper);
-        // }
+        QString plyFilePath = QFileDialog::getOpenFileName(w, "Open PLY PointCloud", "", "PLY Files (*.ply)");
+        if (!plyFilePath.isEmpty()) {
+            vtkSmartPointer<vtkPLYReader> plyReader = vtkSmartPointer<vtkPLYReader>::New();
+            plyReader->SetFileName(plyFilePath.toStdString().c_str());
+            plyReader->Update();
+        
+            vtkSmartPointer<vtkPolyData> plyData = plyReader->GetOutput();
+
+            // print number of points
+            std::cout << "Number of points in PLY:" << plyData->GetNumberOfPoints();
+
+            if (plyData->GetNumberOfPoints() > 0 && plyData->GetNumberOfVerts() == 0) {
+                vtkSmartPointer<vtkCellArray> verts = vtkSmartPointer<vtkCellArray>::New();
+                for (vtkIdType i = 0; i < plyData->GetNumberOfPoints(); i++) {
+                    verts->InsertNextCell(1);
+                    verts->InsertCellPoint(i);
+                }
+                plyData->SetVerts(verts);
+            }
+
+            mapper->SetInputData(plyData);
+            actor->SetMapper(mapper);
+            actor->GetProperty()->SetColor(51/255.0, 63/255.0, 80/255.0);
+            actor->GetProperty()->SetPointSize(5);
+        }
+        show_btn->clicked();
     });
 
     // ------------------------
     // Connect Load STL button
     // ------------------------
     QObject::connect(loadStl_btn, &QPushButton::released, [&](){
-        stlFilePath = QFileDialog::getOpenFileName(w, "Open STL Model", "", "STL Files (*.stl)");
+        QString stlFilePath = QFileDialog::getOpenFileName(w, "Open STL Model", "", "STL Files (*.stl)");
         if (!stlFilePath.isEmpty()) {
             vtkSmartPointer<vtkSTLReader> stlReader = vtkSmartPointer<vtkSTLReader>::New();
             stlReader->SetFileName(stlFilePath.toStdString().c_str());
@@ -224,7 +238,7 @@ int main(int argc, char *argv[])
             mapper->SetInputConnection(stlReader->GetOutputPort()); // Connect mapper to STL output
             actor->SetMapper(mapper); // Assign mapper to actor
         }
-        renderer->Render(); // Refresh renderer
+        show_btn->clicked();
     });
 
     // ------------------------
@@ -245,6 +259,7 @@ int main(int argc, char *argv[])
     QObject::connect(clear_btn, &QPushButton::released, [&](){
         renderer->RemoveActor(actor); // Remove actor from renderer
         renderer->Render();           // Refresh the scene
+        renderWidget->renderWindow()->GetInteractor()->Render();
     });
 
     // ------------------------
