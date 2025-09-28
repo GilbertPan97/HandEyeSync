@@ -22,13 +22,13 @@ if(WIN32)
     set(BOOST_BOOTSTRAP bootstrap.bat)
     set(BOOST_B2 b2.exe)
     set(BOOST_HASH f22143b5528e081123c3c5ed437e92f648fe69748e95fa6e2bd41484e2986cc3)
-    set(BOOST_TARBALL ${CMAKE_CURRENT_SOURCE_DIR}/../.cache/boost_${BOOST_VERSION_U}.zip)
+    set(BOOST_TARBALL ${BOOST_CACHE_DIR}/src/boost_${BOOST_VERSION_U}.zip)
 else()
     set(BOOST_URL https://archives.boost.io/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.gz)
     set(BOOST_BOOTSTRAP ./bootstrap.sh)
     set(BOOST_B2 ./b2)
     set(BOOST_HASH 94ced8b72956591c4775ae2207a9763d3600b30d9d7446562c552f0a14a63be7)
-    set(BOOST_TARBALL ${CMAKE_CURRENT_SOURCE_DIR}/../.cache/boost_${BOOST_VERSION_U}.tar.gz)
+    set(BOOST_TARBALL ${BOOST_CACHE_DIR}/src/boost_${BOOST_VERSION_U}.tar.gz)
 endif()
 
 # Try to find system or existing Boost first
@@ -60,15 +60,26 @@ if(NOT Boost_FOUND)
         set(BOOST_URL ${BOOST_TARBALL})
     endif()
 
+    # Set boost build command
+    if(WIN32)
+        set(BOOST_BUILD_CMD
+            cmd /c "\"${BOOST_CACHE_DIR}/src/boost_external/${BOOST_BOOTSTRAP}\" && "
+            "\"${BOOST_CACHE_DIR}/src/boost_external/${BOOST_B2}\" -j${PROCESSOR_COUNT} --build-type=complete --with=all --prefix=\"${BOOST_INSTALL_DIR}\" install"
+        )
+    else()
+        set(BOOST_BUILD_CMD
+            "${BOOST_CACHE_DIR}/src/boost_external/${BOOST_BOOTSTRAP} && "
+            "${BOOST_CACHE_DIR}/src/boost_external/${BOOST_B2} -j${PROCESSOR_COUNT} --build-type=complete --with=all --prefix=${BOOST_INSTALL_DIR} install"
+        )
+    endif()
+
     # Use ExternalProject to download, build, and install Boost
     ExternalProject_Add(boost_external
         URL                         ${BOOST_URL}
         URL_HASH                    SHA256=${BOOST_HASH}
         PREFIX                      ${BOOST_CACHE_DIR}
         CONFIGURE_COMMAND           ""  # No separate configure step
-        BUILD_COMMAND
-            ${BOOST_CACHE_DIR}/src/boost_external/${BOOST_BOOTSTRAP}
-            && ${BOOST_CACHE_DIR}/src/boost_external/${BOOST_B2} -j${PROCESSOR_COUNT} --build-type=complete --with=all --prefix=${BOOST_INSTALL_DIR} install
+        BUILD_COMMAND               ${BOOST_BUILD_CMD}
         INSTALL_DIR                 ${BOOST_INSTALL_DIR}
         BUILD_BYPRODUCTS            ${BOOST_INSTALL_DIR}/lib
         DOWNLOAD_EXTRACT_TIMESTAMP  TRUE
