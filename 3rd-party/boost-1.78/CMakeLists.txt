@@ -91,6 +91,7 @@ else()
     message(STATUS "Boost found, no need to download/build")
 endif()
 
-if(EXISTS ${third_party})
+if(TARGET third_party)
+    message(STATUS "Package boost_external to third_party.")
     add_dependencies(third_party boost_external)
 endif()
