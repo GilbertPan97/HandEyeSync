@@ -63,8 +63,7 @@ if(NOT Boost_FOUND)
     # Set boost build command
     if(WIN32)
         set(BOOST_BUILD_CMD
-            cmd /c "\"${BOOST_CACHE_DIR}/src/boost_external/${BOOST_BOOTSTRAP}\" && "
-            "\"${BOOST_CACHE_DIR}/src/boost_external/${BOOST_B2}\" -j${PROCESSOR_COUNT} --build-type=complete --with=all --prefix=\"${BOOST_INSTALL_DIR}\" install"
+            powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${CMAKE_CURRENT_SOURCE_DIR}/build_boost.ps1"
         )
     else()
         set(BOOST_BUILD_CMD
