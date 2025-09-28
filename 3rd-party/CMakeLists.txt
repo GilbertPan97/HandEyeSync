@@ -1,4 +1,17 @@
+add_custom_target(third_party ALL)
+
 subdirs(QCustomPlot)
 subdirs(QtAdvancedDocking)
 subdirs(SARibbonBar)
 subdirs(boost-1.78)
+
+# Find libraries (automatically selects the correct version)
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/opencv-4.5.5/lib")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/eigen-3.4.0")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/json-3.11.3")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/GO_SDK")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/SR7Link")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qt5.12.0-vc15-64")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vtk-9.4.2-x64") 
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/pcl-1.13.0")
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/boost-1.78")

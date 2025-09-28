@@ -90,3 +90,7 @@ if(NOT Boost_FOUND)
 else()
     message(STATUS "Boost found, no need to download/build")
 endif()
+
+if(EXISTS ${third_party})
+    add_dependencies(third_party boost_external)
+endif()
