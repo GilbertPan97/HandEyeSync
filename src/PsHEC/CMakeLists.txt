@@ -30,8 +30,9 @@ target_compile_options(ProfScanCalibrator PRIVATE /bigobj)
 
 if (ON)
     find_package(VTK REQUIRED)
+    find_package(PCL 1.8 REQUIRED)
 
-    add_executable(ProfScanCalibratorTest demo/demo_ball.cpp)
+    add_executable(ProfScanCalibratorTest demo/demo_ball_scan.cpp)
     add_dependencies(ProfScanCalibratorTest FanucParserLibs)
 
     target_link_libraries(ProfScanCalibratorTest PRIVATE 
@@ -46,7 +47,16 @@ if (ON)
         VTK::RenderingOpenGL2
         VTK::InteractionStyle
         VTK::RenderingAnnotation
+        ${PCL_LIBRARIES}
     )
+    target_include_directories(ProfScanCalibratorTest PRIVATE ${PCL_INCLUDE_DIRS})
+
+    # Calculate Sphere Program
+    add_executable(fit_sphere demo/sphere_center.cpp)
+
+    target_link_libraries(fit_sphere ${PCL_LIBRARIES})
+    target_include_directories(fit_sphere PRIVATE ${PCL_INCLUDE_DIRS})
+    add_definitions(${PCL_DEFINITIONS})
 endif()
 
 install(TARGETS ProfScanCalibrator
