@@ -28,47 +28,54 @@ target_include_directories(ProfScanCalibrator PUBLIC ${EIGEN3_INCLUDE_DIRS} ${CM
 
 target_compile_options(ProfScanCalibrator PRIVATE /bigobj)
 
-if(ON)
-    # Try to find Boost first
-    find_package(Boost 1.78 QUIET)
-    find_package(VTK QUIET)
-    find_package(PCL 1.8 QUIET)
+# Default to enabling DEMO_BUILD
+set(DEMO_BUILD ON)
 
-    # Only build demos if Boost, VTK, and PCL are found
-    if(Boost_FOUND AND VTK_FOUND AND PCL_FOUND)
-        message(STATUS "Boost, VTK, and PCL found, building demos")
+# Try to find Boost, VTK, and PCL packages
+find_package(Boost 1.78 QUIET)
+find_package(VTK QUIET)
+find_package(PCL 1.8 QUIET)
 
-        # ProfScanCalibratorTest
-        add_executable(ProfScanCalibratorTest demo/demo_ball_scan.cpp)
-        add_dependencies(ProfScanCalibratorTest FanucParserLibs)
-        target_link_libraries(ProfScanCalibratorTest PRIVATE 
-            ProfScanCalibrator 
-            FanucParserLibs
-            VTK::CommonCore 
-            VTK::CommonDataModel 
-            VTK::IOImage 
-            VTK::RenderingCore
-            VTK::FiltersCore
-            VTK::RenderingOpenGL2
-            VTK::InteractionStyle
-            VTK::RenderingAnnotation
-            ${PCL_LIBRARIES}
-            ${Boost_LIBRARIES}
-        )
-        target_include_directories(ProfScanCalibratorTest PRIVATE 
-            ${PCL_INCLUDE_DIRS} 
-            ${Boost_INCLUDE_DIRS}
-        )
+# If Boost, VTK, or PCL is not found, disable demo build
+if(NOT Boost_FOUND OR NOT VTK_FOUND OR NOT PCL_FOUND)
+    set(DEMO_BUILD OFF)
+    message(WARNING "Boost, VTK, or PCL not found, skipping demo compilation")
+endif()
 
-        # fit_sphere
-        add_executable(fit_sphere demo/sphere_center.cpp)
-        target_link_libraries(fit_sphere PRIVATE ${PCL_LIBRARIES} ${Boost_LIBRARIES})
-        target_include_directories(fit_sphere PRIVATE ${PCL_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
-        add_definitions(${PCL_DEFINITIONS})
+# Only build demos if DEMO_BUILD is ON
+if(DEMO_BUILD)
+    message(STATUS "Boost, VTK, and PCL found, building demos")
 
-    else()
-        message(WARNING "Boost, VTK, or PCL not found, skipping demo compilation")
-    endif()
+    # ProfScanCalibratorTest
+    add_executable(ProfScanCalibratorTest demo/demo_ball_scan.cpp)
+    add_dependencies(ProfScanCalibratorTest FanucParserLibs)
+    target_link_libraries(ProfScanCalibratorTest PRIVATE 
+        ProfScanCalibrator 
+        FanucParserLibs
+        VTK::CommonCore 
+        VTK::CommonDataModel 
+        VTK::IOImage 
+        VTK::RenderingCore
+        VTK::FiltersCore
+        VTK::RenderingOpenGL2
+        VTK::InteractionStyle
+        VTK::RenderingAnnotation
+        ${PCL_LIBRARIES}
+        ${Boost_LIBRARIES}
+    )
+    target_include_directories(ProfScanCalibratorTest PRIVATE 
+        ${PCL_INCLUDE_DIRS} 
+        ${Boost_INCLUDE_DIRS}
+    )
+
+    # fit_sphere
+    add_executable(fit_sphere demo/sphere_center.cpp)
+    target_link_libraries(fit_sphere PRIVATE ${PCL_LIBRARIES} ${Boost_LIBRARIES})
+    target_include_directories(fit_sphere PRIVATE ${PCL_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+    add_definitions(${PCL_DEFINITIONS})
+
+else()
+    message(WARNING "Boost, VTK, or PCL not found, skipping demo compilation")
 endif()
 
 install(TARGETS ProfScanCalibrator

@@ -32,6 +32,7 @@ else()
 endif()
 
 # Try to find system or existing Boost first
+list(APPEND CMAKE_PREFIX_PATH ${BOOST_INSTALL_DIR})
 find_package(Boost 1.78.0 QUIET)
 
 if(NOT Boost_FOUND)
@@ -62,31 +63,50 @@ if(NOT Boost_FOUND)
 
     # Set boost build command
     if(WIN32)
+        # set(BOOST_BUILD_CMD
+        #     cmd /c "cd /d ${BOOST_CACHE_DIR}/src/boost_external && ./bootstrap.bat"
+        # )
+        # # Windows: Install boost using b2.exe
+        # set(BOOST_INSTALL_CMD
+        #     cmd /c "cd /d ${BOOST_CACHE_DIR}/src/boost_external && b2 install --prefix=${BOOST_INSTALL_DIR}"
+        # )
+
+        # Use PowerShell script for bootstrap
+        set(BUILD_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/build_boost.ps1)
         set(BOOST_BUILD_CMD
-            powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${CMAKE_CURRENT_SOURCE_DIR}/build_boost.ps1"
+            powershell -NoProfile -ExecutionPolicy Bypass -File "${BUILD_SCRIPT}" 
+                -BoostDir "${BOOST_CACHE_DIR}/src/boost_external" 
+                -Step bootstrap
+        )
+        # Use PowerShell script for install
+        set(BOOST_INSTALL_CMD
+            powershell -NoProfile -ExecutionPolicy Bypass -File "${BUILD_SCRIPT}" 
+                -BoostDir "${BOOST_CACHE_DIR}/src/boost_external" 
+                -InstallDir "${BOOST_INSTALL_DIR}" 
+                -JobCount ${PROCESSOR_COUNT} 
+                -Step install
         )
     else()
         set(BOOST_BUILD_CMD
             "${BOOST_CACHE_DIR}/src/boost_external/${BOOST_BOOTSTRAP} && "
             "${BOOST_CACHE_DIR}/src/boost_external/${BOOST_B2} -j${PROCESSOR_COUNT} --build-type=complete --with=all --prefix=${BOOST_INSTALL_DIR} install"
         )
+        set(BOOST_INSTALL_CMD make install)
     endif()
+
 
     # Use ExternalProject to download, build, and install Boost
     ExternalProject_Add(boost_external
         URL                         ${BOOST_URL}
         URL_HASH                    SHA256=${BOOST_HASH}
         PREFIX                      ${BOOST_CACHE_DIR}
-        CONFIGURE_COMMAND           ""  # No separate configure step
+        CONFIGURE_COMMAND           ""
         BUILD_COMMAND               ${BOOST_BUILD_CMD}
         INSTALL_DIR                 ${BOOST_INSTALL_DIR}
+        INSTALL_COMMAND             ${BOOST_INSTALL_CMD}
         BUILD_BYPRODUCTS            ${BOOST_INSTALL_DIR}/lib
         DOWNLOAD_EXTRACT_TIMESTAMP  TRUE
         LOG_DOWNLOAD                ON
-        LOG_CONFIGURE               ON
-        LOG_BUILD                   ON
-        LOG_INSTALL                 ON
-        LOG_OUTPUT_ON_FAILURE       ON
     )
 
     # Remove temporary cache directory after installation
@@ -101,7 +121,7 @@ else()
     message(STATUS "Boost found, no need to download/build")
 endif()
 
-if(TARGET third_party)
+if(TARGET third_party AND TARGET boost_external)
     message(STATUS "Package boost_external to third_party.")
     add_dependencies(third_party boost_external)
 endif()

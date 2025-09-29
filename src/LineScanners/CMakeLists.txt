@@ -24,9 +24,9 @@ target_include_directories(LineScannerInterface PUBLIC
 )
 
 # Create imported library for Go_SDK import libraries
-target_link_libraries(LineScannerInterface Go_Driver Sszn_Driver clogger)
+target_link_libraries(LineScannerInterface Go_Driver Sszn_Driver Clogger)
 
 if(OFF)
     add_executable(lmiTest Samples/TestLineScanner.cpp)
-    target_link_libraries(lmiTest LineScannerInterface clogger)
+    target_link_libraries(lmiTest LineScannerInterface Clogger)
 endif()

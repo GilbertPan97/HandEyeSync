@@ -15,6 +15,9 @@ build
 
 /3rd-party/.cache
 
+3rd-party/boost-1.78/include/
+3rd-party/boost-1.78/lib/
+
 # platform cache file (mac os)
 .DS_Store
 
