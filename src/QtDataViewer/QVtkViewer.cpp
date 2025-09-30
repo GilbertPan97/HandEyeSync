@@ -79,7 +79,7 @@ QVtkViewer::QVtkViewer(vtkGenericOpenGLRenderWindow* renderWin, QWidget* parentW
 
     vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkNamedColors> colors = vtkSmartPointer<vtkNamedColors>::New();
-    renderer->SetBackground(0.1, 0.2, 0.4);
+    renderer->SetBackground(53.0/255.0, 53.0/255.0, 53.0/255.0);
     renderWin->AddRenderer(renderer);
 
     this->setRenderWindow(renderWin);
