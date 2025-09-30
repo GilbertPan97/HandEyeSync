@@ -1,4 +1,4 @@
-# build export folder
+# Build export folder
 build
 
 # Ignore bin and lib folders in the root directory
@@ -18,9 +18,13 @@ build
 3rd-party/boost-1.78/include/
 3rd-party/boost-1.78/lib/
 
-# platform cache file (mac os)
+# Platform cache file (mac os)
 .DS_Store
 
 .codegpt
 
 .vscode
+
+# SSZN specific
+*.ini
+*.log
