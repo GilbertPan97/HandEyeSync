@@ -1,0 +1,42 @@
+CONST
+	k_Posn_Max					= 10
+	k_DEFAULT_TIME_OUT	= 5000
+
+TYPE
+	header_t  FROM SEND_POS_ON = STRUCTURE
+		start_word			: INTEGER
+		version					: INTEGER
+		transmit_to			: INTEGER
+		action_id				: INTEGER
+		block_type			: INTEGER
+		block_number		: INTEGER
+		block_length		:	INTEGER
+		error_code			: INTEGER
+	ENDSTRUCTURE
+
+	data_block_t  FROM SEND_POS_ON = STRUCTURE
+		index						: INTEGER
+		posn						: XYZWPR
+		tolerance				: REAL
+	ENDSTRUCTURE
+	
+	message_t  FROM SEND_POS_ON = STRUCTURE
+		header					: header_t
+		block_list			: ARRAY[k_Posn_Max] OF data_block_t
+		crc							: INTEGER
+	ENDSTRUCTURE
+
+VAR
+
+	is_simulated		IN CMOS	FROM SEND_POS_ON	: INTEGER
+	tag							IN CMOS FROM SEND_POS_ON	: STRING[4]
+	time_out				IN CMOS FROM SEND_POS_ON	: INTEGER
+	task_status			IN CMOS FROM SEND_POS_ON	: INTEGER
+	socket_fd								FROM SEND_POS_ON	: FILE
+	status									FROM SEND_POS_ON	: INTEGER
+	req_msg									FROM SEND_POS_ON	: message_t
+	rsp_msg									FROM SEND_POS_ON	: message_t
+	cycle_time			IN CMOS FROM SEND_POS_ON	: INTEGER
+	cycle_on				IN CMOS FROM SEND_POS_ON	: BOOLEAN
+	index_no								FROM SEND_POS_ON	: INTEGER
+	

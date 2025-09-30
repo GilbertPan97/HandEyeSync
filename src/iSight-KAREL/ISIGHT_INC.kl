@@ -1,0 +1,43 @@
+CONST
+	k_Posn_Max					= 10
+	k_DEFAULT_TIME_OUT	= 5000
+
+TYPE
+	header_t  FROM ISIGHT = STRUCTURE
+		start_word			: INTEGER
+		version					: INTEGER
+		transmit_to			: INTEGER
+		action_id				: INTEGER
+		block_type			: INTEGER
+		block_number		: INTEGER
+		block_length		:	INTEGER
+		error_code			: INTEGER
+	ENDSTRUCTURE
+
+	data_block_t  FROM ISIGHT = STRUCTURE
+		index						: INTEGER
+		posn						: XYZWPR
+		tolerance				: REAL
+		prog_rest_id		: INTEGER
+	ENDSTRUCTURE
+	
+	message_t  FROM ISIGHT = STRUCTURE
+		header					: header_t
+		block_list			: ARRAY[k_Posn_Max] OF data_block_t
+		crc							: INTEGER
+	ENDSTRUCTURE
+
+VAR
+
+	is_simulated		IN CMOS	FROM ISIGHT	: INTEGER
+	tag							IN CMOS FROM ISIGHT	: STRING[4]
+	time_out				IN CMOS FROM ISIGHT	: INTEGER
+	task_status			IN CMOS FROM ISIGHT	: INTEGER
+	connect_stat		IN CMOS FROM ISIGHT	: INTEGER
+	socket_fd								FROM ISIGHT	: FILE
+	status									FROM ISIGHT	: INTEGER
+	req_msg									FROM ISIGHT	: message_t
+	rsp_msg									FROM ISIGHT	: message_t
+	action_id								FROM ISIGHT	: INTEGER
+	visn_timeout						FROM ISIGHT	: INTEGER
+	timer_									FROM ISIGHT	: INTEGER

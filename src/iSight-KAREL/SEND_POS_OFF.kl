@@ -1,0 +1,25 @@
+PROGRAM SEND_POS_OFF
+
+%SYSTEM
+%ALPHABETIZE
+%COMMENT = 'V1.0'
+%NOLOCKGROUP
+%NOPAUSESHFT
+%NOABORT = ERROR + TPENABLE
+%NOPAUSE = ERROR + COMMAND + TPENABLE
+%NOBUSYLAMP
+%RWACCESS
+%STACKSIZE = 4000
+
+VAR
+
+	cycle_on				IN CMOS FROM SEND_POS_ON	: BOOLEAN
+
+-----------------------------------------------------------------------------------------
+-- MAIN --
+-----------------------------------------------------------------------------------------
+BEGIN
+
+	cycle_on = FALSE
+
+END SEND_POS_OFF

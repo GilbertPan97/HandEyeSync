@@ -1,0 +1,638 @@
+PROGRAM ISIGHT
+
+%SYSTEM
+%ALPHABETIZE
+%COMMENT = 'V1.3'
+%NOLOCKGROUP
+%NOPAUSESHFT
+%NOABORT = ERROR + COMMAND
+%NOPAUSE = ERROR + COMMAND + TPENABLE
+%NOBUSYLAMP
+%RWACCESS
+%STACKSIZE = 4000
+
+%INCLUDE ISIGHT_INC
+
+
+-----------------------------------------------------------------------------------------
+ROUTINE Check_Status(stat :INTEGER)
+BEGIN
+	IF (stat<>0) THEN
+		POST_ERR(stat,' ',0,2)
+	ENDIF
+END Check_Status
+
+-----------------------------------------------------------------------------------------
+ROUTINE Get_TPE_Int(num :INTEGER)															:INTEGER
+VAR
+	block_type		:INTEGER
+	int_value			:INTEGER
+	real_value		:REAL
+	string_value	:STRING[20]
+
+BEGIN
+	GET_TPE_PRM(num,block_type,int_value,real_value,string_value,status)
+	IF status<>0 THEN
+		POST_ERR(38000,'Get TP parameter fail',0,2)
+		ABORT
+	ELSE
+		IF block_type<>1 THEN
+			POST_ERR(38000,'Parameter data type is wrong',0,2)
+			ABORT
+		ENDIF
+	ENDIF
+	RETURN(int_value)
+END Get_TPE_Int
+
+-----------------------------------------------------------------------------------------
+ROUTINE Get_TPE_Str(num :INTEGER) 														:STRING
+VAR
+	block_type		:INTEGER
+	int_value			:INTEGER
+	real_value		:REAL
+	string_value	:STRING[254]
+
+BEGIN
+	GET_TPE_PRM(num,block_type,int_value,real_value,string_value,status)
+	IF status<>0 THEN
+		POST_ERR(38000,'Get TP parameter fail',0,2)
+		ABORT
+	ELSE
+		IF block_type<>3 THEN
+			POST_ERR(38000,'Parameter data type is wrong',0,2)
+			ABORT
+		ELSE
+			RETURN( string_value)
+		ENDIF
+	ENDIF
+END Get_TPE_Str
+
+-----------------------------------------------------------------------------------------
+--  Byte stream input/output.
+ROUTINE WriteStreamInt(binary :FILE; ref :INTEGER; field :INTEGER)
+
+BEGIN
+	WRITE binary (ref :: field)
+
+END WriteStreamInt
+
+-----------------------------------------------------------------------------------------
+ROUTINE WriteStreamReal(binary :FILE; ref :REAL)
+
+BEGIN
+	WRITE binary (ref)
+
+END WriteStreamReal
+
+-----------------------------------------------------------------------------------------
+ROUTINE ReadStreamInt(binary :FILE; ref :INTEGER; field :INTEGER)
+
+VAR
+	int_		: INTEGER
+
+BEGIN
+	READ binary (int_ :: field)
+	ref = int_
+
+END ReadStreamInt
+
+-----------------------------------------------------------------------------------------
+ROUTINE ReadStreamReal(binary :FILE; ref :REAL)
+
+BEGIN
+	READ binary (ref)
+
+END ReadStreamReal
+
+-----------------------------------------------------------------------------------------
+ROUTINE Config_Socket(simulate_cfg :INTEGER; tag_cfg :STRING; timeout_cfg,flag_cfg,connect_cfg :INTEGER)
+
+BEGIN
+	IF (UNINIT(simulate_cfg)) then
+		is_simulated = 0						--real robot
+	ELSE
+		IF simulate_cfg = 1 THEN
+			is_simulated = 1					--roboguide
+		ELSE
+			is_simulated = 0
+		ENDIF
+	ENDIF
+
+	IF (UNINIT(tag_cfg)) then
+		tag = 'C1:'
+	ELSE
+		tag = tag_cfg
+	ENDIF
+
+	IF (UNINIT(timeout_cfg)) then
+		time_out = k_DEFAULT_TIME_OUT
+	ELSE
+		time_out = timeout_cfg
+	ENDIF
+
+	IF (UNINIT(flag_cfg)) THEN
+		task_status = 1
+	ELSE
+		task_status = flag_cfg
+	ENDIF
+
+	IF (UNINIT(connect_cfg)) THEN
+		connect_stat = 1
+	ELSE
+		connect_stat = connect_cfg
+	ENDIF
+
+END Config_Socket
+
+-----------------------------------------------------------------------------------------
+ROUTINE Connect_Socket
+
+BEGIN 
+	IF(UNINIT(tag))	THEN
+		tag = 'C1:'
+		POST_ERR(38000,'Client_Tag uninit',0,0)
+	ENDIF
+	IF(UNINIT(time_out))	THEN
+		time_out = k_DEFAULT_TIME_OUT
+		POST_ERR(38000,'Time_out uninit',0,0)
+	ENDIF
+	timer_ = 0
+	MSG_DISCO(tag, status)
+	DELAY(32)
+	MSG_CONNECT(tag, status)
+	WHILE ((timer_ < time_out) AND (status <> 0)) DO
+		MSG_CONNECT(tag, status)
+		DELAY(1000)
+		timer_ = timer_ + 1000
+	ENDWHILE
+	IF ((timer_ >= time_out) AND (status <> 0)) THEN
+		POST_ERR(status,'',0,0)	
+		SET_INT_REG(connect_stat,0,status)
+	ELSE
+		SET_INT_REG(connect_stat,1,status)
+	ENDIF
+
+END Connect_Socket
+
+-----------------------------------------------------------------------------------------
+ROUTINE Disconnect_Socket
+
+BEGIN
+	IF(UNINIT(tag))	THEN
+		tag = 'C1:'
+		POST_ERR(38000,'Client_Tag uninit',0,0)
+	ENDIF
+	IF(UNINIT(time_out))	THEN
+		time_out = k_DEFAULT_TIME_OUT
+		POST_ERR(38000,'Time_out uninit',0,0)
+	ENDIF
+	timer_ = 0
+	MSG_DISCO(tag, status)
+	IF (status =67208) OR (status = 0) THEN
+	ELSE
+		WHILE ((timer_ < time_out) AND (status <> 0)) DO
+			MSG_DISCO(tag, status)
+			DELAY(1000)
+			timer_ = timer_ + 1000
+		ENDWHILE
+		IF ((timer_ >= time_out) AND (status <> 0)) THEN
+			POST_ERR(status,'',0,0)	
+			SET_INT_REG(connect_stat,0,status)
+		ELSE
+			SET_INT_REG(connect_stat,1,status)
+		ENDIF		
+	ENDIF
+
+END Disconnect_Socket
+
+-----------------------------------------------------------------------------------------
+ROUTINE Listen(socket: FILE; timeout,time_out_idx : INTEGER)
+VAR
+	num_bytes_		: INTEGER
+
+BEGIN
+	IF(UNINIT(timeout)) THEN timeout  = k_DEFAULT_TIME_OUT  ; ENDIF
+	timer_ = 0
+	BYTES_AHEAD(socket, num_bytes_, status)
+	
+	IF req_msg.header.action_id	= 39 THEN
+		visn_timeout = Get_TPE_Int(4)
+		IF(UNINIT(visn_timeout)) THEN visn_timeout = 1000  ; ENDIF
+		WHILE ((timer_ < visn_timeout) AND NOT(num_bytes_ > 0)) do
+			BYTES_AHEAD(socket, num_bytes_, status)
+			DELAY (100)
+			timer_ = timer_ + 100
+		ENDWHILE
+		IF ((timer_ >= visn_timeout) AND NOT(num_bytes_ > 0)) THEN
+			time_out_idx=1
+		ELSE
+			time_out_idx=0
+		ENDIF	
+	ELSE
+		WHILE ((timer_ < timeout) AND NOT(num_bytes_ > 0)) do
+			BYTES_AHEAD(socket, num_bytes_, status)
+			DELAY (100)
+			timer_ = timer_ + 100
+		ENDWHILE
+		IF ((timer_ >= timeout) AND NOT(num_bytes_ > 0)) THEN
+			time_out_idx=1
+		ELSE
+			time_out_idx=0
+		ENDIF		
+	ENDIF
+	
+END Listen
+
+-----------------------------------------------------------------------------------------
+ROUTINE Init_Message
+
+BEGIN
+	req_msg.header.start_word 	= (65278-65536)	--0x FE FE
+	req_msg.header.version 			= 1			--0x 00 01
+	req_msg.header.transmit_to 	= 1			--0x 01
+	req_msg.header.action_id 		= 0			--0x 00
+	req_msg.header.block_type 	= 0			--0x 00
+	req_msg.header.block_number	= 0			--0x 00
+	req_msg.header.block_length	= 0			--0x 00 00
+	req_msg.header.error_code		= 0			--0x 00 00
+	req_msg.crc									= 0			--0x 00 00
+
+	rsp_msg.header.start_word 	= 0			--0x 00 00
+	rsp_msg.header.version 			= 0			--0x 00 00
+	rsp_msg.header.transmit_to 	= 0			--0x 00
+	rsp_msg.header.action_id 		= 0			--0x 00
+	rsp_msg.header.block_type 	= 0			--0x 00
+	rsp_msg.header.block_number	= 0			--0x 00
+	rsp_msg.header.block_length	= 0			--0x 00 00
+	rsp_msg.header.error_code		= 0			--0x 00 00
+	rsp_msg.crc									= 0			--0x 00 00
+	
+	rsp_msg.block_list[1].prog_rest_id = 0
+
+END Init_Message
+
+-----------------------------------------------------------------------------------------
+ROUTINE Get_Cur_Posn			: XYZWPR
+VAR
+	uframe_id			: INTEGER
+	utool_id			: INTEGER
+
+BEGIN
+
+	uframe_id = $MNUFRAMENUM[1]
+	utool_id  = $MNUTOOLNUM[1]
+	IF uframe_id = 0 THEN
+		$UFRAME = $MOR_GRP[1].$NILPOS
+	ELSE
+		$UFRAME = $MNUFRAME[1,uframe_id]
+	ENDIF
+	$UTOOL = $MNUTOOL[1,utool_id]
+	RETURN(CURPOS(0,0))
+
+END Get_Cur_Posn
+
+
+-----------------------------------------------------------------------------------------
+ROUTINE Set_Result
+
+BEGIN
+
+	SET_INT_REG(Get_TPE_Int(3), rsp_msg.block_list[1].prog_rest_id, status)
+	Check_Status(status)
+	SELECT rsp_msg.block_list[1].prog_rest_id OF
+		CASE (0,1,2):
+		CASE (202):
+				POST_ERR(38000,'200, Server not processed yet.',0,0)
+		CASE (400):
+				POST_ERR(38000,'400, Request is wrong',0,0)
+		CASE (409):
+				POST_ERR(38000,'409, There is conflict',0,0)
+		ELSE:
+				POST_ERR(38000,'ISIGHT ResultCode is wrong',0,0)
+	ENDSELECT
+
+END Set_Result
+
+-----------------------------------------------------------------------------------------
+ROUTINE Get_Tolerance		:REAL
+VAR
+	real_flag			:BOOLEAN
+	int_value			:INTEGER
+	real_value		:REAL
+
+BEGIN
+
+	GET_REG(Get_TPE_Int(3), real_flag, int_value, real_value, status)
+	Check_Status(status)
+	IF real_flag THEN
+		RETURN(real_value)
+	ELSE
+		RETURN(int_value)
+	ENDIF
+
+END Get_Tolerance
+
+-----------------------------------------------------------------------------------------
+ROUTINE Recv_Message
+VAR
+	i_						: INTEGER
+
+BEGIN
+	ReadStreamInt(socket_fd, rsp_msg.header.start_word, 2)
+	ReadStreamInt(socket_fd, rsp_msg.header.version, 2)
+	ReadStreamInt(socket_fd, rsp_msg.header.transmit_to, 1)
+	ReadStreamInt(socket_fd, rsp_msg.header.action_id, 1)
+	ReadStreamInt(socket_fd, rsp_msg.header.block_type, 1)
+	ReadStreamInt(socket_fd, rsp_msg.header.block_number, 1)
+	ReadStreamInt(socket_fd, rsp_msg.header.block_length, 2)
+	ReadStreamInt(socket_fd, rsp_msg.header.error_code, 2)
+
+	IF (is_simulated = 1) THEN
+		SWAP_INT(rsp_msg.header.start_word, rsp_msg.header.start_word)
+		SWAP_INT(rsp_msg.header.version, rsp_msg.header.version)
+		SWAP_INT(rsp_msg.header.transmit_to, rsp_msg.header.transmit_to)
+		SWAP_INT(rsp_msg.header.action_id, rsp_msg.header.action_id)
+		SWAP_INT(rsp_msg.header.block_type, rsp_msg.header.block_type)
+		SWAP_INT(rsp_msg.header.block_number, rsp_msg.header.block_number)
+		SWAP_INT(rsp_msg.header.block_length, rsp_msg.header.block_length)
+		SWAP_INT(rsp_msg.header.error_code, rsp_msg.header.error_code)
+	ENDIF
+	SELECT rsp_msg.header.block_type OF
+			CASE (0):														--0 	0x00 空数据
+			CASE (1):														--1 	0x01 位姿数据列表
+				FOR i_ = 1 TO rsp_msg.header.block_number DO
+					ReadStreamInt	(socket_fd, rsp_msg.block_list[i_].index, 1)
+					ReadStreamReal(socket_fd, rsp_msg.block_list[i_].posn.x)
+					ReadStreamReal(socket_fd, rsp_msg.block_list[i_].posn.y)
+					ReadStreamReal(socket_fd, rsp_msg.block_list[i_].posn.z)
+					ReadStreamReal(socket_fd, rsp_msg.block_list[i_].posn.w)
+					ReadStreamReal(socket_fd, rsp_msg.block_list[i_].posn.p)
+					ReadStreamReal(socket_fd, rsp_msg.block_list[i_].posn.r)
+					IF (is_simulated =1) THEN
+						SWAP_INT(rsp_msg.block_list[i_].index, rsp_msg.block_list[i_].index)
+						SWAP_REAL(rsp_msg.block_list[i_].posn.x,rsp_msg.block_list[i_].posn.x)
+						SWAP_REAL(rsp_msg.block_list[i_].posn.y,rsp_msg.block_list[i_].posn.y)
+						SWAP_REAL(rsp_msg.block_list[i_].posn.z,rsp_msg.block_list[i_].posn.z)
+						SWAP_REAL(rsp_msg.block_list[i_].posn.w,rsp_msg.block_list[i_].posn.w)
+						SWAP_REAL(rsp_msg.block_list[i_].posn.p,rsp_msg.block_list[i_].posn.p)
+						SWAP_REAL(rsp_msg.block_list[i_].posn.r,rsp_msg.block_list[i_].posn.r)
+					ENDIF
+				ENDFOR
+			CASE (2):														--2 	0x02 检测容差值
+				FOR i_ = 1 TO rsp_msg.header.block_number DO
+					ReadStreamInt	(socket_fd, rsp_msg.block_list[i_].index, 1)
+					ReadStreamReal(socket_fd, rsp_msg.block_list[i_].tolerance)
+					IF (is_simulated =1) THEN
+						SWAP_INT (rsp_msg.block_list[i_].index, 		rsp_msg.block_list[i_].index)
+						SWAP_REAL(rsp_msg.block_list[i_].tolerance, rsp_msg.block_list[i_].tolerance)
+					ENDIF
+				ENDFOR
+			CASE (3):														--3 	0x03 程序索引号ProgIdx/视觉检测结果码ResultCode
+				FOR i_ = 1 TO rsp_msg.header.block_number DO
+					ReadStreamInt	(socket_fd, rsp_msg.block_list[i_].index, 1)
+					ReadStreamInt (socket_fd, rsp_msg.block_list[i_].prog_rest_id, 4)
+					IF (is_simulated =1) THEN
+						SWAP_INT (rsp_msg.block_list[i_].index, 		rsp_msg.block_list[i_].index)
+						SWAP_INT (rsp_msg.block_list[i_].prog_rest_id, rsp_msg.block_list[i_].prog_rest_id)
+					ENDIF
+					IF (rsp_msg.header.action_id = 38) AND (rsp_msg.block_list[1].prog_rest_id = 409) THEN
+						POST_ERR(38000,'409, Server is not ready.',0,0)
+					ENDIF
+					IF rsp_msg.header.action_id = 39 THEN
+						Set_Result
+					ENDIF
+				ENDFOR
+			ELSE:
+					POST_ERR(38000,'Read block_type is wrong',0,0)
+	ENDSELECT
+
+	ReadStreamInt(socket_fd, rsp_msg.crc, 2)
+	IF (is_simulated =1) THEN
+		SWAP_INT(rsp_msg.crc, rsp_msg.crc)
+	ENDIF
+
+END Recv_Message
+
+-----------------------------------------------------------------------------------------
+ROUTINE Send_Message
+VAR
+	i_								: INTEGER
+	block_type_SR			: INTEGER
+	block_number_SR		: INTEGER
+
+BEGIN
+
+	block_type_SR 	= req_msg.header.block_type
+	block_number_SR = req_msg.header.block_number
+
+	IF (is_simulated =1) THEN
+		SWAP_INT(req_msg.header.start_word, req_msg.header.start_word)
+		SWAP_INT(req_msg.header.version, req_msg.header.version)
+		SWAP_INT(req_msg.header.transmit_to, req_msg.header.transmit_to)
+		SWAP_INT(req_msg.header.action_id, req_msg.header.action_id)
+		SWAP_INT(req_msg.header.block_type, req_msg.header.block_type)
+		SWAP_INT(req_msg.header.block_number, req_msg.header.block_number)
+		SWAP_INT(req_msg.header.block_length, req_msg.header.block_length)
+		SWAP_INT(req_msg.header.error_code, req_msg.header.error_code)
+		SWAP_INT(req_msg.crc, req_msg.crc)
+	ENDIF	
+
+	WriteStreamInt(socket_fd, req_msg.header.start_word, 2)
+	WriteStreamInt(socket_fd, req_msg.header.version, 2)
+	WriteStreamInt(socket_fd, req_msg.header.transmit_to, 1)
+	WriteStreamInt(socket_fd, req_msg.header.action_id, 1)
+	WriteStreamInt(socket_fd, req_msg.header.block_type, 1)
+	WriteStreamInt(socket_fd, req_msg.header.block_number, 1)
+	WriteStreamInt(socket_fd, req_msg.header.block_length, 2)
+	WriteStreamInt(socket_fd, req_msg.header.error_code, 2)
+
+	SELECT block_type_SR OF
+			CASE (0):														--0 	0x00 空数据
+			CASE (1):														--1 	0x01 位姿数据列表
+				FOR i_ = 1 TO block_number_SR DO
+					IF (is_simulated =1) THEN
+						SWAP_INT (req_msg.block_list[i_].index, req_msg.block_list[i_].index)
+						SWAP_REAL(req_msg.block_list[i_].posn.x,req_msg.block_list[i_].posn.x)
+						SWAP_REAL(req_msg.block_list[i_].posn.y,req_msg.block_list[i_].posn.y)
+						SWAP_REAL(req_msg.block_list[i_].posn.z,req_msg.block_list[i_].posn.z)
+						SWAP_REAL(req_msg.block_list[i_].posn.w,req_msg.block_list[i_].posn.w)
+						SWAP_REAL(req_msg.block_list[i_].posn.p,req_msg.block_list[i_].posn.p)
+						SWAP_REAL(req_msg.block_list[i_].posn.r,req_msg.block_list[i_].posn.r)
+					ENDIF
+					WriteStreamInt (socket_fd, req_msg.block_list[i_].index, 1)
+					WriteStreamReal(socket_fd, req_msg.block_list[i_].posn.x)
+					WriteStreamReal(socket_fd, req_msg.block_list[i_].posn.y)
+					WriteStreamReal(socket_fd, req_msg.block_list[i_].posn.z)
+					WriteStreamReal(socket_fd, req_msg.block_list[i_].posn.w)
+					WriteStreamReal(socket_fd, req_msg.block_list[i_].posn.p)
+					WriteStreamReal(socket_fd, req_msg.block_list[i_].posn.r)
+				ENDFOR
+			CASE (2):													--2 	0x02 检测容差值
+				FOR i_ = 1 TO block_number_SR DO
+					IF (is_simulated =1) THEN
+						SWAP_INT (req_msg.block_list[i_].index, 		req_msg.block_list[i_].index)
+						SWAP_REAL(req_msg.block_list[i_].tolerance, req_msg.block_list[i_].tolerance)
+					ENDIF
+					WriteStreamInt (socket_fd, req_msg.block_list[i_].index, 1)
+					WriteStreamReal(socket_fd, req_msg.block_list[i_].tolerance)
+				ENDFOR
+			CASE (3):													--3 	0x03 程序索引号ProgIdx/视觉检测结果码ResultCode
+				FOR i_ = 1 TO block_number_SR DO
+					IF (is_simulated =1) THEN
+						SWAP_INT (req_msg.block_list[i_].index, 		req_msg.block_list[i_].index)
+						SWAP_INT (req_msg.block_list[i_].prog_rest_id, req_msg.block_list[i_].prog_rest_id)
+					ENDIF
+					WriteStreamInt (socket_fd, req_msg.block_list[i_].index, 1)
+					WriteStreamInt (socket_fd, req_msg.block_list[i_].prog_rest_id, 4)
+				ENDFOR
+			ELSE:
+					POST_ERR(38000,'Write block_type is wrong',0,2)
+					ABORT
+	ENDSELECT
+
+	WriteStreamInt(socket_fd, req_msg.crc, 2)
+
+END Send_Message
+
+-----------------------------------------------------------------------------------------
+ROUTINE Creat_Message
+VAR
+	pr_num_str					: STRING[5]
+
+BEGIN
+	Init_Message
+	action_id = Get_TPE_Int(2)
+	SELECT action_id OF
+			CASE (0):			--0 	0x00 无动作  发送请求
+
+			CASE (1):			--1 	0x01 Cycle on 发送请求
+					req_msg.header.action_id 			= 1			--0x 01
+
+			CASE (2):			--2 	0x02 Cycle off 发送请求
+					req_msg.header.action_id			= 2			--0x 02
+
+			CASE (35):		--35  0x23 机器人当前位姿 发送请求
+					req_msg.header.action_id			= 35		--0x 23
+					req_msg.header.block_type			= 1			--0x 01
+					req_msg.header.block_number		= 1			--0x 01
+					req_msg.header.block_length		= 25		--0x 19
+					req_msg.block_list[1].index		= 1			--0x 01
+					req_msg.block_list[1].posn		= Get_Cur_Posn
+
+			CASE (36):		--36  0x24 机器人PR[]寄存器位置数据 发送请求
+					req_msg.header.action_id			= 36		--0x 24
+					req_msg.header.block_type			= 1			--0x 01
+					req_msg.header.block_number		= 1			--0x 01
+					req_msg.header.block_length		= 25		--0x 19
+					req_msg.block_list[1].index		= 1			--0x 01
+					req_msg.block_list[1].posn		= GET_POS_REG(Get_TPE_Int(3), status)
+					Check_Status(status)
+					IF UNINIT(req_msg.block_list[1].posn) THEN
+						CNV_INT_STR(Get_TPE_Int(3), 0, 0, pr_num_str)
+						POST_ERR(38000,'PR['+pr_num_str+'] is uninitialized.',0,2)
+						ABORT
+					ENDIF
+
+			CASE (37):		--37  0x25 视觉检测容差值 发送请求
+					req_msg.header.action_id			= 37		--0x 25
+					req_msg.header.block_type			= 2			--0x 02
+					req_msg.header.block_number		= 1			--0x 01
+					req_msg.header.block_length		= 5			--0x 05
+					req_msg.block_list[1].index		= 1			--0x 01
+					req_msg.block_list[1].tolerance = Get_Tolerance
+
+			CASE (38):		--38  0x26 程序索引号ProgIdx 发送请求
+					req_msg.header.action_id			= 38		--0x 26
+					req_msg.header.block_type			= 3			--0x 03
+					req_msg.header.block_number		= 1			--0x 01
+					req_msg.header.block_length		= 5			--0x 05
+					req_msg.block_list[1].index		= 1			--0x 01
+					req_msg.block_list[1].prog_rest_id = Get_TPE_Int(3)
+
+			CASE (39):		--39  0x27 视觉检测结果码 发送请求
+					req_msg.header.action_id			= 39		--0x 27
+					req_msg.header.block_type			= 3			--0x 03
+					req_msg.header.block_number		= 1			--0x 01
+					req_msg.header.block_length		= 5			--0x 05
+					req_msg.block_list[1].index		= 1			--0x 01
+					req_msg.block_list[1].prog_rest_id = 0
+					SET_INT_REG(Get_TPE_Int(3), 0, status)
+					Check_Status(status)
+			ELSE:
+				POST_ERR(38000,'ISIGHT Para_2 is wrong',0,2)
+				ABORT
+	ENDSELECT
+
+END Creat_Message
+
+-----------------------------------------------------------------------------------------
+ROUTINE Trans_Message
+VAR
+	time_out_index					: INTEGER
+
+BEGIN
+	SET_FILE_ATR(socket_fd, ATR_IA)
+	SET_FILE_ATR(socket_fd, ATR_UF)
+	SET_FILE_ATR(socket_fd, ATR_READAHD, 2)
+	OPEN FILE socket_fd('rw',tag)
+	status = IO_STATUS(socket_fd)
+	Check_Status(status)
+
+	Send_Message
+	status = IO_STATUS(socket_fd)
+	Check_Status(status)
+	DELAY(32)
+
+	Listen(socket_fd, time_out, time_out_index)
+	IF time_out_index = 1 THEN
+		IF action_id = 39 THEN
+			rsp_msg.block_list[1].prog_rest_id = 404
+			SET_INT_REG(Get_TPE_Int(3), 404, status)
+			Check_Status(status)
+		ENDIF
+		POST_ERR(38000,'Recv Message Time_out.',0,0)
+		SET_INT_REG(connect_stat,0,status)
+	ELSE
+		SET_INT_REG(connect_stat,1,status)
+		Recv_Message
+		status = IO_STATUS(socket_fd)
+		Check_Status(status)
+
+		CLOSE FILE socket_fd
+		status = IO_STATUS(socket_fd)
+		Check_Status(status)
+
+		IF req_msg.header.action_id = 0 THEN
+		ELSE
+			FLG[task_status] = ON
+		ENDIF
+	ENDIF
+
+END Trans_Message
+
+-----------------------------------------------------------------------------------------
+-- MAIN --
+-----------------------------------------------------------------------------------------
+BEGIN
+
+	SELECT Get_TPE_Int(1) OF
+		CASE (0):							--0 设置SM通讯连接参数
+				Config_Socket(Get_TPE_Int(2), Get_TPE_Str(3), Get_TPE_Int(4), Get_TPE_Int(5), Get_TPE_Int(6))
+
+		CASE (1):							--1 建立SM连接
+				Connect_Socket
+
+		CASE (2):							--2 断开SM连接
+				Disconnect_Socket
+
+		CASE (3):							--3 发送/接收 数据
+				FLG[task_status] = OFF
+				Creat_Message
+				Trans_Message
+
+		ELSE:
+				POST_ERR(38000,'ISIGHT Para_1 is wrong',0,2)
+				ABORT
+	ENDSELECT
+
+END ISIGHT
