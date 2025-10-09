@@ -19,6 +19,42 @@
     powershell -File build_boost.ps1 -BoostDir "C:\boost\src" -InstallDir "C:\boost\install" -JobCount 4 -Step install
 #>
 
+function Find-VcVarsAll {
+    <#
+    .SYNOPSIS
+        Search for vcvarsall.bat in typical Visual Studio installation paths.
+    .OUTPUTS
+        Returns the full path to vcvarsall.bat if found, otherwise $null
+    #>
+
+    # Common VS editions
+    $vsEditions = @("Community", "Professional", "Enterprise", "BuildTools")
+
+    # Default VS installation root
+    $vsRoot = "C:\Program Files\Microsoft Visual Studio\2022"
+
+    foreach ($edition in $vsEditions) {
+        $candidate = Join-Path -Path $vsRoot -ChildPath "$edition\VC\Auxiliary\Build\vcvarsall.bat"
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    # Optionally, check environment variable if VSINSTALLDIR is set
+    if ($env:VSINSTALLDIR) {
+        $candidate = Join-Path -Path $env:VSINSTALLDIR -ChildPath "VC\Auxiliary\Build\vcvarsall.bat"
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    return $null
+}
+
+# Example usage (just for testing, not actually called in your current script)
+# $vcvarsPath = Find-VcVarsAll
+# Write-Host "Found vcvarsall.bat at: $vcvarsPath"
+
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)]
@@ -86,8 +122,8 @@ switch ($Step) {
             exit 1
         }
 
-        # Run b2 with job count and installation prefix
-        & $b2Exe install --prefix="$InstallDir" $JobOption
+        # Run b2 with job count, 64-bit address model, and installation prefix
+        & $b2Exe install --prefix="$InstallDir" address-model=64 architecture=x86 threading=multi $JobOption
         if ($LASTEXITCODE -ne 0) {
             Write-Error "b2 install failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
